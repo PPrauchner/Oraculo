@@ -1,6 +1,4 @@
 """
-core/ingestion/filter.py
-
 Responsabilidade:
     Recebe a pasta extraída pelo decompressor e entrega apenas os arquivos
     .py relevantes para o parsing.
