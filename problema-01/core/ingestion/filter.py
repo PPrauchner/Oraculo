@@ -1,8 +1,14 @@
 """
+Módulo responsável pela filtragem de arquivos e diretórios.
 
-This module contains the Filter class, which is responsible for filtering data.
+Aplica regras definidas pelo usuário para ignorar arquivos ou diretórios
+irrelevantes para a análise (ex: tests/, docs/).
 
+Entrada:
+- Lista de arquivos do projeto
+- Regras de exclusão
 
+Saída:
+- Lista filtrada de arquivos relevantes para análise
 """
-
 # --- IGNORE ---

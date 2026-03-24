@@ -1,5 +1,13 @@
 """
-This module contains the Decompressor class, which is responsible for decompressing files.
-"""
+Módulo responsável pela exportação de relatórios em formato CSV.
 
-#   --- IGNORE ---
+Converte estruturas de dados (ex: DataFrame) em arquivos CSV
+para download ou armazenamento.
+
+Entrada:
+- Estrutura de dados tabular (DataFrame)
+
+Saída:
+- Dados em formato CSV (bytes ou string)
+"""
+# --- IGNORE ---
