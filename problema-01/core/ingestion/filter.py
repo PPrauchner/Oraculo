@@ -1,15 +1,16 @@
 """
-Responsabilidade:
-    Recebe a pasta extraída pelo decompressor e entrega apenas os arquivos
-    .py relevantes para o parsing.
+Módulo responsável pela filtragem de arquivos e diretórios.
 
-    É chamado entre o decompressor e o parsing:
-        decompressor.py  →  filter.py  →  parsing/
+Aplica regras definidas pelo usuário para ignorar arquivos ou diretórios
+irrelevantes para a análise (ex: tests/, docs/).
 
-Função exportada:
-    filter_python_files(root_dir, exclusions)
+Entrada:
+- Lista de arquivos do projeto
+- Regras de exclusão
+
+Saída:
+- Lista filtrada de arquivos relevantes para análise
 """
-
 import os
 from pathlib import Path
 
