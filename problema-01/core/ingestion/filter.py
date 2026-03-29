@@ -13,19 +13,7 @@ Saída:
 """
 import os
 from pathlib import Path
-
-_DEFAULT_IGNORED_DIRS = [
-    ".venv", "venv", ".env", "env",
-    "__pycache__", ".git", ".mypy_cache",
-    ".pytest_cache", ".ruff_cache",
-    "node_modules", "dist", "build",
-    ".eggs",
-]
-
-_DEFAULT_IGNORED_SUFFIXES = [".egg-info"]
-
-_CONFIG_FILES = {"requirements.txt", "pyproject.toml"}
-
+from core.constants import _DEFAULT_IGNORED_DIRS, _DEFAULT_IGNORED_SUFFIXES, _CONFIG_FILES
 
 def filter_python_files(root_dir, exclusions=None):
     """Retorna uma lista com os caminhos de todos os arquivos
