@@ -8,6 +8,6 @@ _DEFAULT_IGNORED_DIRS = [
 
 _DEFAULT_IGNORED_SUFFIXES = [".egg-info"]
 
-_CONFIG_FILES = {"requirements.txt", "pyproject.toml"}
+_CONFIG_FILES = {"requirements.txt", "pyproject.toml", "uv .lock"}
 
 PYPI_BASE_URL = "https://pypi.org/pypi"
