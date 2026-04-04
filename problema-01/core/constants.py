@@ -1,8 +1,16 @@
 _DEFAULT_IGNORED_DIRS = [
-    ".venv", "venv", ".env", "env",
-    "__pycache__", ".git", ".mypy_cache",
-    ".pytest_cache", ".ruff_cache",
-    "node_modules", "dist", "build",
+    ".venv",
+    "venv",
+    ".env",
+    "env",
+    "__pycache__",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "node_modules",
+    "dist",
+    "build",
     ".eggs",
 ]
 

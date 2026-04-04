@@ -1,15 +1,19 @@
 """
-Módulo principal da aplicação.
-
-Responsável por orquestrar todo o fluxo do sistema, integrando
-as etapas de ingestão, parsing, análise, consulta ao PyPI,
-geração de relatório e exibição na interface.
-
-Entrada:
-- Arquivo ZIP do projeto
-- Configurações do usuário
-
-Saída:
-- Relatório final exibido e exportável
+This is the main entry point for the application.
 """
-# --- IGNORE ---
+
+import streamlit as st
+
+# 1. Configurações iniciais da página (opcional, mas recomendado)
+st.set_page_config(page_title="Projeto Problema-01", page_icon="🔍", layout="wide")
+
+
+pg = st.navigation(
+    [
+        st.Page("pages/home.py", title="Página Inicial", default=True),
+        st.Page("pages/report.py", title="Relatório da Análise"),
+        st.Page("pages/loading.py", title="Carregamento", visibility="hidden"),
+    ]
+)
+
+pg.run()

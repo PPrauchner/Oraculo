@@ -60,3 +60,21 @@ def analyze_outdated_dependencies(normalized_dependencies: Dict[str, Any]) -> Di
             })
             
     return results
+
+
+# ============================================================= #
+#                         Dados  Mock                           #
+list_outdated = [
+    {
+        "name": "outdated-package-1",
+        "current_version": "1.0.0",
+        "pypi_version": "2.0.0",
+        "status": "Desatualizado",
+    },
+    {
+        "name": "outdated-package-2",
+        "current_version": "1.5.0",
+        "pypi_version": "2.5.0",
+        "status": "Desatualizado",
+    },
+]

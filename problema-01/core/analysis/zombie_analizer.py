@@ -11,4 +11,20 @@ Entrada:
 Saída:
 - Conjunto de dependências zumbis
 """
-# --- IGNORE ---
+
+# ============================================================= #
+#                         Dados  Mock                           #
+list_zombies = [
+    {
+        "name": "zombie-package-1",
+        "current_version": "2.0.0",
+        "pypi_version": "2.0.0",
+        "status": "Atualizado",
+    },
+    {
+        "name": "zombie-package-2",
+        "current_version": "2.5.0",
+        "pypi_version": "2.5.0",
+        "status": "Atualizado",
+    },
+]
