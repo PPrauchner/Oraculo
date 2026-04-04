@@ -7,8 +7,8 @@ incluindo navegação e opções de configuração.
 
 """
 
-from utils_gui.constants import BLUE
-from utils_gui.constants import SVG_LUPA
+from utils.constants import BLUE
+from utils.constants import SVG_LUPA
 import streamlit as st
 
 

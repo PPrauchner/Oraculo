@@ -13,10 +13,10 @@ Saída:
 """
 
 import streamlit as st
-from utils_gui.sidebar import sidebar
-from utils_gui.constants import ARQUIVOS
+from utils.sidebar import sidebar
+from utils.constants import ARQUIVOS
 
-st.set_page_config(page_title="Baita Auditor", layout="wide")
+
 sidebar()
 
 
@@ -61,7 +61,6 @@ def principal_action():
             return
         st.session_state["file_uploaded"] = True
         st.switch_page("pages/loading.py")
-        
 
 
 visual_css()

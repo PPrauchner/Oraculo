@@ -13,9 +13,9 @@ Saída:
 
 import time
 import streamlit as st
-from utils_gui.sidebar import sidebar
+from utils.sidebar import sidebar
 
-st.set_page_config(page_title="Baita -Auditor - Analisando", layout="wide")
+
 sidebar()
 
 

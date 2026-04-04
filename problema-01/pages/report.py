@@ -13,10 +13,10 @@ Saída:
 
 import streamlit as st
 import plotly.express as px
-from utils_gui.sidebar import sidebar
+from utils.sidebar import sidebar
 from core.report.make_report import make_report
 from core.report.export import export_to_csv, export_to_json
-from utils_gui.constants import GERADORES, MAPA_CORES_STATUS
+from utils.constants import GERADORES, MAPA_CORES_STATUS
 import pandas as pd
 
 
@@ -181,13 +181,11 @@ def popup_exportacao(report_data: dict = GERADORES):
     )
 
 
-st.set_page_config(page_title="Relatório", layout="wide")
-
 sidebar()
 
 st.title("📊 Relatório de Dependências")
 
-if 'file_uploaded' not in st.session_state: 
+if "file_uploaded" not in st.session_state:
     st.warning("⚠️ Nenhum dado encontrado. Volte para a Home e inicie a auditoria.")
     st.stop()
 else:

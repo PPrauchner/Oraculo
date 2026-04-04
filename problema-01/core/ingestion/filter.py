@@ -13,7 +13,7 @@ Saída:
 """
 import os
 from pathlib import Path
-from utils_gui.constants import _DEFAULT_IGNORED_DIRS, _DEFAULT_IGNORED_SUFFIXES, _CONFIG_FILES
+from utils.constants import _DEFAULT_IGNORED_DIRS, _DEFAULT_IGNORED_SUFFIXES, _CONFIG_FILES
 
 def filter_python_files(root_dir, exclusions=None):
     """Retorna uma lista com os caminhos de todos os arquivos
