@@ -5,7 +5,7 @@ This is the main entry point for the application.
 import streamlit as st
 
 # 1. Configurações iniciais da página (opcional, mas recomendado)
-st.set_page_config(page_title="DP-Auditor", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="Dp-Auditor", page_icon="🔍", layout="wide")
 
 
 pg = st.navigation(

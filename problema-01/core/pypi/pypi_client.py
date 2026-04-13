@@ -14,36 +14,24 @@ Saída:
 """
 
 import requests
-from requests.exceptions import RequestException
-from typing import Optional
-from core.constants import PYPI_BASE_URL
+from utils.constants import PYPI_BASE_URL
 
 
-def get_latest_version(package_name: str) -> Optional[str]:
+def get_latest_version(package_name: str) -> str:
     """
-    Consulta a API do PyPI e retorna a versão mais recente de um pacote.
-
-    Args:
-        package_name (str): O nome padronizado do pacote (ex: 'pandas').
-
-    Returns:
-        Optional[str]: A string da versão mais recente (ex: '2.1.0') se o pacote
-                       for encontrado e a requisição for bem-sucedida.
-                       Retorna None se o pacote não existir ou se houver um erro de rede.
+    Faz uma requisição à API do PyPI para descobrir a versão mais recente de um pacote.
+    Possui tratamento de erros de rede para não travar o sistema.
     """
-    if not package_name:
-        return None
-
     url = f"{PYPI_BASE_URL}/{package_name}/json"
 
     try:
         response = requests.get(url, timeout=5)
 
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("info", {}).get("version")
+        response.raise_for_status()
 
-        return None
+        data = response.json()
+        return data["info"]["version"]
 
-    except RequestException:
+    except requests.exceptions.RequestException as e:
+        print(f"Não foi possível checar o pacote '{package_name}' no PyPI. ({e})")
         return None

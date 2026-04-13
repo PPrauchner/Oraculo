@@ -5,11 +5,6 @@ Define valores fixos e configurações utilizadas em toda a aplicação,
 como temas, cores, fontes e outros parâmetros de estilo.
 """
 
-from core.parsin.normalization import list_all
-from core.analysis.ghost_analizer import list_ghosts
-from core.analysis.zombie_analizer import list_zombies
-from core.analysis.outdated_analizer import list_outdated
-
 # ============ Cores =================#
 
 MAPA_CORES_STATUS = {
@@ -32,21 +27,69 @@ SVG_LUPA = """
     </svg>
     """
 
-ARQUIVOS = [
-    "venv",
-    "env",
-    "__pycache__",
-    "node_modules",
-    "dist",
-    "build",
-    "target",
-    ".git",
-    ".svn",
-    ".hg",
+
+list_all= [
+    {
+        "Pacote": "pacote",
+        "Versão Atual" : "2.0",
+        "Versão Pypi" : "2.0",
+        "Status" : "Atualizada",
+    },
+    {
+        "Pacote": "pacote-2",
+        "Versão Atual" : "2.0",
+        "Versão Pypi" : "2.0",
+        "Status" : "Atualizada",
+    }
 ]
+list_zombies = []
+list_ghosts = []
+list_outdated = []
+
+
+
 GERADORES = {
     "Todas as Dependências": list_all,
     "Zumbis": list_zombies,
     "Fantasmas": list_ghosts,
-    "Desatualizadas": list_outdated,
+    "Desatualizadas" : list_outdated,
+}
+
+PYPI_BASE_URL = "https://pypi.org/pypi"
+
+# Lista de módulos nativos do Python (stdlib)
+PYTHON_STDLIB_MODULES = {
+    # Built-in modules
+    "abc", "aifc", "argparse", "array", "ast", "asynchat", "asyncio", "atexit",
+    "audioop", "base64", "bdb", "binascii", "binhex", "bisect", "builtins",
+    "bz2", "calendar", "cgi", "cgitb", "chunk", "cmath", "cmd", "code",
+    "codecs", "codeop", "collections", "colorsys", "compileall", "concurrent",
+    "configparser", "contextlib", "contextvars", "copy", "copyreg", "cProfile",
+    "crypt", "csv", "ctypes", "curses", "dataclasses", "datetime", "dbm",
+    "decimal", "difflib", "dis", "distutils", "doctest", "dummy_thread",
+    "dummy_threading", "email", "encodings", "ensurepip", "enum", "errno",
+    "faulthandler", "fcntl", "filecmp", "fileinput", "fnmatch", "formatter",
+    "fractions", "ftplib", "functools", "gc", "getopt", "getpass", "gettext",
+    "glob", "grp", "gzip", "hashlib", "heapq", "hmac", "html", "http",
+    "imaplib", "imghdr", "imp", "importlib", "inspect", "io", "ipaddress",
+    "itertools", "json", "keyword", "linecache", "locale", "logging", "lzma",
+    "mailbox", "mailcap", "marshal", "math", "mimetypes", "mmap", "modulefinder",
+    "msilib", "msvcrt", "multiprocessing", "netrc", "nis", "nntplib", "numbers",
+    "operator", "optparse", "os", "ossaudiodev", "parser", "pathlib", "pdb",
+    "pickle", "pickletools", "pipes", "pkgutil", "platform", "plistlib", "poplib",
+    "posix", "posixpath", "pprint", "profile", "pstats", "pty", "pwd", "py_compile",
+    "pyclbr", "pydoc", "queue", "quopri", "random", "re", "readline", "reprlib",
+    "resource", "rlcompleter", "runpy", "sched", "secrets", "select", "selectors",
+    "shelve", "shlex", "shutil", "signal", "site", "smtpd", "smtplib", "sndhdr",
+    "socket", "socketserver", "spwd", "sqlite3", "ssl", "stat", "statistics",
+    "string", "stringprep", "struct", "subprocess", "sunau", "symbol", "symtable",
+    "sys", "sysconfig", "syslog", "tabnanny", "tarfile", "telnetlib", "tempfile",
+    "termios", "test", "textwrap", "threading", "time", "timeit", "tkinter",
+    "token", "tokenize", "trace", "traceback", "tracemalloc", "tty", "turtle",
+    "types", "typing", "typing_extensions", "unicodedata", "unittest", "urllib",
+    "uu", "uuid", "venv", "warnings", "wave", "weakref", "webbrowser", "winreg",
+    "winsound", "wsgiref", "xdrlib", "xml", "xmlrpc", "zipapp", "zipfile",
+    "zipimport", "zlib",
+    # Common internal modules (should be filtered)
+    "__future__", "__main__",
 }

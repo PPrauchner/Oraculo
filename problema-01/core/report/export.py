@@ -48,6 +48,5 @@ def export_to_json(report_data: list[dict]) -> bytes:
     Returns:
         bytes: Conteúdo do arquivo JSON em formato de bytes.
     """
-    import json
 
     return json.dumps(report_data, indent=4).encode("utf-8")

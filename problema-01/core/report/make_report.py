@@ -15,7 +15,7 @@ Saída:
 
 def make_report(list_analyzed: list) -> list[dict]:
     """
-    Constrói um DataFrame consolidando os resultados das análises.
+    Constrói um Dicionário consolidando os resultados das análises.
 
     Args:
         list_analyzed (list): Lista de dependências com seus resultados de análise.
@@ -29,10 +29,10 @@ def make_report(list_analyzed: list) -> list[dict]:
     for dep in list_analyzed:
         rows.append(
             {
-                "Pacote": dep.get("name", "N/A"),
-                "Versão Atual": dep.get("current_version", "N/A"),
-                "Versão PyPI": dep.get("pypi_version", "N/A"),
-                "Status": dep.get("status", "Desconhecido"),
+                "Pacote": dep.get("Pacote", "N/A"),
+                "Versão Atual": dep.get("Versão Atual", "N/A"),
+                "Versão PyPI": dep.get("Versão PyPI", "N/A"),
+                "Status": dep.get("Status", "Desconhecido"),
             }
         )
 

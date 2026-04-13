@@ -12,19 +12,14 @@ Saída:
 - Conjunto de dependências fantasmas
 """
 
-# ============================================================= #
-#                         Dados  Mock                           #
-list_ghosts = [
-    {
-        "name": "ghost-package-1",
-        "current_version": "2.0.0",
-        "pypi_version": "2.0.0",
-        "status": "Atualizado",
-    },
-    {
-        "name": "ghost-package-2",
-        "current_version": "2.5.0",
-        "pypi_version": "2.5.0",
-        "status": "Atualizado",
-    },
-]
+
+def analyze_ghost_dependencies(declared: list[dict], imports: list[dict]) -> list[dict]:
+    """Identifica dependências fantasmas comparando imports com dependências declaradas."""
+    declared_names = {d["Pacote"].lower().replace("-", "_") for d in declared}
+    ghosts = []
+    for imp in imports:
+        imp_name = imp["Pacote"].lower().replace("-", "_")
+        if imp_name not in declared_names:
+            ghosts.append(imp)
+
+    return ghosts

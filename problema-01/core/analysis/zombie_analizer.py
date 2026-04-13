@@ -12,19 +12,16 @@ Saída:
 - Conjunto de dependências zumbis
 """
 
-# ============================================================= #
-#                         Dados  Mock                           #
-list_zombies = [
-    {
-        "name": "zombie-package-1",
-        "current_version": "2.0.0",
-        "pypi_version": "2.0.0",
-        "status": "Atualizado",
-    },
-    {
-        "name": "zombie-package-2",
-        "current_version": "2.5.0",
-        "pypi_version": "2.5.0",
-        "status": "Atualizado",
-    },
-]
+
+def analyze_zombie_dependencies(
+    declared: list[dict], imports: list[dict]
+) -> list[dict]:
+    """Identifica dependências zumbis comparando dependências declaradas com imports."""
+    imp_names = {d["Pacote"].lower().replace("-", "_") for d in imports}
+    zombies = []
+    for imp in declared:
+        declared_name = imp["Pacote"].lower().replace("-", "_")
+        if declared_name not in imp_names:
+            zombies.append(imp)
+
+    return zombies

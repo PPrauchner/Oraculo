@@ -11,70 +11,67 @@ Entrada:
 Saída:
 - Lista filtrada de arquivos relevantes para análise
 """
-import os
-from pathlib import Path
-from utils.constants import _DEFAULT_IGNORED_DIRS, _DEFAULT_IGNORED_SUFFIXES, _CONFIG_FILES
 
-def filter_python_files(root_dir, exclusions=None):
-    """Retorna uma lista com os caminhos de todos os arquivos
-    relevantes encontrados dentro da pasta do projeto.
+from typing import List
+
+
+def get_unique_folders(extracted_files: list) -> list:
+    if not extracted_files:
+        return []
+
+    folders = set()
+    for file in extracted_files:
+        path = getattr(file, "filename", None) or getattr(file, "name", None)
+        if path:
+            parts = path.split("/")
+            for i in range(len(parts) - 1):
+                folders.add(parts[i])
+
+    return sorted(list(folders))
+
+
+def is_path_in_ignored_folders(file_path: str, ignore_folders: List[str]) -> bool:
+    """
+    Verifica se um caminho de arquivo está dentro de uma pasta ignorada.
 
     Args:
-        root_dir (str): Caminho da pasta extraída pelo decompressor.
-        exclusions (list): Pastas a ignorar definidas pelo usuário.
-                           Exemplo: ["tests", "docs"]
+        file_path: Caminho do arquivo (ex: "tests/requirements.txt")
+        ignore_folders: Lista de pastas a ignorar (ex: ["tests", "docs"])
 
     Returns:
-        list[str]: Lista com os caminhos completos dos arquivos válidos.
+        True se o arquivo está em uma pasta ignorada, False caso contrário
     """
+    if not ignore_folders:
+        return False
 
-    root = Path(root_dir).resolve()
+    if not file_path:
+        return False
 
-    if not root.exists() or not root.is_dir():
-        raise ValueError(f"Diretório inválido ou não encontrado: {root}")
+    # Normalizar o caminho
+    normalized_path = file_path.lstrip("./").replace("\\", "/")
 
-    if exclusions is None:
-        exclusions = []
+    # Verificar se qualquer folder no caminho está na lista de ignorados
+    for folder in ignore_folders:
+        normalized_folder = folder.lstrip("./").replace("\\", "/")
 
-    user_exclusions = [e.strip().lower() for e in exclusions]
-    files = []
-
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if not _should_ignore_dir(d, user_exclusions)]
-
-        for name in filenames:
-            name_without_ext = Path(name).stem.lower()
-
-            if name.lower() in user_exclusions or name_without_ext in user_exclusions:
-                continue
-
-            is_python = name.endswith(".py")
-            is_config = name.lower() in _CONFIG_FILES
-
-            if not (is_python or is_config):
-                continue
-
-            files.append(str(Path(dirpath) / name))
-
-    return sorted(files)
-
-
-def _should_ignore_dir(dir_name, user_exclusions):
-    """Verifica se uma pasta deve ser ignorada.
-
-    Retorna True se a pasta deve ser ignorada, False caso contrário.
-
-    Args:
-        dir_name (str): Nome da pasta sendo verificada.
-        user_exclusions (list): Exclusões definidas pelo usuário em lowercase.
-    """
-    name_lower = dir_name.lower()
-
-    if name_lower in _DEFAULT_IGNORED_DIRS or name_lower in user_exclusions:
-        return True
-
-    for suffix in _DEFAULT_IGNORED_SUFFIXES:
-        if name_lower.endswith(suffix):
+        if (
+            normalized_path.startswith(normalized_folder + "/")
+            or normalized_path == normalized_folder
+        ):
             return True
 
     return False
+
+
+def should_skip_file(file_path: str, ignore_folders: List[str]) -> bool:
+    """
+    Verifica se um arquivo deve ser ignorado.
+
+    Args:
+        file_path: Caminho do arquivo
+        ignore_folders: Lista de pastas a ignorar
+
+    Returns:
+        True se arquivo deve ser ignorado, False caso contrário
+    """
+    return is_path_in_ignored_folders(file_path, ignore_folders)

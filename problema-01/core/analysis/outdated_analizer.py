@@ -11,70 +11,57 @@ Entrada:
 Saída:
 - Lista de dependências desatualizadas com suas versões
 """
+
+import re
 from core.pypi.pypi_client import get_latest_version
-from typing import Dict, Any, List
+from packaging.version import parse as parse_version
 
-def analyze_outdated_dependencies(normalized_dependencies: Dict[str, Any]) -> Dict[str, List[Dict[str, str]]]:
+
+def _extract_version_number(version_string: str) -> str:
     """
-    Analisa um conjunto de dependências e verifica seus status de atualização no PyPI.
-    
-    Args:
-        normalized_dependencies (Dict[str, Any]): Dicionário contendo os pacotes 
-            e suas versões locais, proveniente do módulo de normalização.
-            Ex: {"pandas": {"version": "==1.0.0"}}
-            
-    Returns:
-        Dict[str, List[Dict[str, str]]]: Um dicionário contendo três listas categorizadas:
-            - 'up_to_date': pacotes que estão na versão mais recente.
-            - 'outdated': pacotes com versão inferior à do PyPI.
-            - 'unknown': pacotes não encontrados no PyPI ou com erro de verificação.
+    Extrai apenas o número de versão de uma string que pode conter especificadores.
+
+    Ex: ">=1.2.3" -> "1.2.3", "==2.0.0" -> "2.0.0", "1.0.0" -> "1.0.0"
     """
-    results = {
-        "outdated": [],
-        "up_to_date": [],
-        "unknown": []
-    }
-    
-    for package_name, info in normalized_dependencies.items():
-        installed_version = info.get('version', '')
-        
-        clean_version = installed_version.replace("=", "").replace(">", "").replace("<", "").replace("~", "").strip()
-        
-        latest_version = get_latest_version(package_name)
-        
-        if latest_version:
-            package_info = {
-                "package": package_name,
-                "current_version": clean_version,
-                "new_version": latest_version
-            }
-            
-            if clean_version != latest_version:
-                results["outdated"].append(package_info)
-            else:
-                results["up_to_date"].append(package_info)
+    if not version_string:
+        return ""
+
+    version_string = version_string.strip()
+    match = re.search(r"(\d+\.\d+\.\d+|\d+\.\d+|\d+)", version_string)
+
+    if match:
+        return match.group(1)
+    return ""
+
+
+def analyze_dependency_status(dependencies: list[dict]) -> list[dict]:
+    """Analisa o status de cada dependência comparando com o PyPI."""
+    if dependencies is None:
+        return []
+
+    for dep in dependencies:
+        pypi_version = get_latest_version(dep["Pacote"])
+        versao_atual_raw = dep["Versão Atual"].strip() if dep["Versão Atual"] else ""
+        versao_atual = _extract_version_number(versao_atual_raw)
+
+        if versao_atual:
+            dep["Versão Atual"] = versao_atual
+
+        if pypi_version is None:
+            dep["Versão PyPI"] = "N/A"
+            dep["Status"] = "Desconhecido"
         else:
-            results["unknown"].append({
-                "package": package_name,
-                "current_version": clean_version
-            })
-            
-    return results
+            dep["Versão PyPI"] = pypi_version
 
-
-# ============================================================= #
-#                         Dados  Mock                           #
-list_outdated = [
-    {
-        "name": "outdated-package-1",
-        "current_version": "1.0.0",
-        "pypi_version": "2.0.0",
-        "status": "Desatualizado",
-    },
-    {
-        "name": "outdated-package-2",
-        "current_version": "1.5.0",
-        "pypi_version": "2.5.0",
-        "status": "Desatualizado",
-    },
-]
+            if not versao_atual:
+                dep["Versão Atual"] = pypi_version
+                dep["Status"] = "Atualizado"
+            else:
+                try:
+                    if parse_version(versao_atual) < parse_version(pypi_version):
+                        dep["Status"] = "Desatualizado"
+                    else:
+                        dep["Status"] = "Atualizado"
+                except Exception:
+                    dep["Status"] = "Versão Inválida"
+    return dependencies

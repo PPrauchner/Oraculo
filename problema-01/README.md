@@ -1,194 +1,274 @@
-# 🔍 Dependency Analyzer Tool
+# Problema 01
 
-## 📌 Descrição
 
-Ferramenta para análise de dependências em projetos Python.
+📂 parsin/ (já refinado)
+🔹 dependency_parser.py
 
-A aplicação recebe um projeto compactado em `.zip`, analisa seus arquivos de configuração e código-fonte, e gera um relatório detalhado sobre o uso e o estado das dependências.
+Extrai dependências declaradas
 
----
+Lê pyproject.toml e requirements.txt
 
-## 🎯 Objetivo
+Retorna:
 
-A ferramenta tem como objetivo:
+nome
 
-* Analisar arquivos de dependências:
+versão
 
-  * `pyproject.toml`
-  * `requirements.txt`
-* Analisar o código-fonte (`.py`)
-* Cruzar as informações para identificar:
+🔹 import_parser.py
 
-### 🧟 Dependências zumbis
+Varre código-fonte
 
-Dependências declaradas, mas não utilizadas no código.
+Identifica imports usados
 
-### 👻 Dependências fantasmas
+Respeita diretórios ignorados
 
-Dependências utilizadas no código, mas não declaradas.
+🔹 normalization.py
 
-### ⏳ Dependências desatualizadas
+Padroniza nomes
 
-Dependências com versão inferior à disponível no PyPI.
+Resolve diferenças entre:
 
----
+nome do pacote
 
-## 🌐 Consulta ao PyPI
+nome do import
 
-A verificação de versões é realizada utilizando a API pública:
+📂 ingestion/
 
-```
-https://pypi.org/pypi/<nome-do-pacote>/json
-```
+Aqui começa o “poder” da ferramenta: dados externos.
 
----
+🔹 filter.py
+👉 Responsabilidade:
 
-## ⚙️ Funcionalidades
+Filtrar e preparar dados antes da análise
 
-### 📊 Relatório completo
+📌 Ele deve:
 
-A ferramenta gera um relatório contendo:
+Aplicar regras de exclusão:
 
-#### 🔹 Total de dependências
+diretórios ignorados
 
-* Lista de dependências
-* Quantidade
-* Tamanho
-* Idade (data atual - data de lançamento da versão)
+arquivos irrelevantes
 
-#### 🔹 Dependências zumbis
+Remover:
 
-* Lista
-* Quantidade
-* Tamanho
-* Idade
+dependências padrão da linguagem (stdlib)
 
-#### 🔹 Dependências fantasmas
+Garantir que só dados relevantes avancem
 
-* Lista
-* Quantidade
-* Tamanho
-* Idade
+🔹 decompressor.py
+👉 Responsabilidade:
 
----
+Preparar o projeto para análise
 
-### 💾 Exportação
+📌 Ele deve:
 
-* Visualização via interface gráfica
-* Exportação em formato **CSV**
+Lidar com entradas como:
 
----
+.zip
 
-### ⚙️ Configuração
+.tar.gz
 
-O usuário pode:
+Extrair conteúdo para análise
 
-* Definir o diretório raiz
-* Ignorar diretórios (ex: `tests/`, `docs/`)
+👉 Se teu projeto não recebe arquivos compactados, ele pode ser simplificado ou removido.
 
----
+🔥 (IMPORTANTE – faltando conceitualmente)
 
-## 🧱 Arquitetura do Projeto
+Tu vai precisar de algo como:
 
-### 📁 Estrutura de Pastas
+🔹 pypi_client (mesmo que não esteja no projeto ainda)
+👉 Responsabilidade:
 
-```
-Projeto
-│
-├── core
-│   └── analysis
-│       ├── ghost_analyzer.py
-│       ├── outdated_analyzer.py
-│       └── zombie_analyzer.py
-│
-├── ingestion
-│   ├── decompressor.py
-│   └── filter.py
-│
-├── parsin
-│   ├── dependency_parser.py
-│   ├── import_parser.py
-│   └── normalization.py
-│
-├── pypi
-│   └── pypi_client.py
-│
-├── report
-│   ├── make_report.py
-│   └── csv_export.py
-│
-├── gui
-│   ├── pages
-│   │   ├── report.py
-│   │   └── loading.py
-│   │
-│   ├── utils
-│   │   └── sidebar.py
-│   │
-│   └── home.py
-│
-├── main.py
-├── pyproject.toml
-├── README.md
-├── .python-version
-└── .gitkeep
-```
+Buscar dados no PyPI
 
----
+📌 Ele deve:
 
-### 🧠 Organização por responsabilidade
+Consultar:
 
-```
-Projeto
-│
-├── ingestion   → entrada de dados (ZIP, arquivos)
-├── parsin      → interpretação (imports e dependências)
-├── core        → regras de negócio (análises)
-├── pypi        → integração externa (consulta de versões)
-├── report      → geração e exportação de relatórios
-├── gui         → interface gráfica (Streamlit)
-│
-└── main.py     → orquestra todo o fluxo da aplicação
-```
+versão mais recente
 
----
+data de release
 
-## 🔄 Fluxo de Execução
+Retornar:
 
-1. Upload do projeto (`.zip`)
-2. Leitura dos arquivos
-3. Filtragem de arquivos relevantes
-4. Parsing:
+latest_version
 
-   * Dependências declaradas
-   * Imports utilizados
-5. Análise:
+release_date
 
-   * Dependências zumbis
-   * Dependências fantasmas
-   * Dependências desatualizadas
-6. Consulta ao PyPI
-7. Geração do relatório
-8. Exibição e exportação
+histórico (se quiser evoluir)
 
----
+📂 analysis/
 
-## ⚠️ Requisitos
+Aqui acontece a lógica principal do problema.
 
-* Python
-* Paradigma de programação procedural
-* Arquitetura modular
-* Uso da API pública do PyPI
-* Interface gráfica para interação do usuário
+🔹 ghost_analyzer.py
+👉 Responsabilidade:
 
----
+Detectar dependências fantasmas
 
-## 🚀 Possíveis Evoluções
+📌 Regra:
+import usado no código
+MAS não está declarado
+📌 Entrada:
 
-* Exportação para Excel
-* Histórico de análises
-* Integração com CI/CD
-* Análise incremental de dependências
-* Suporte a múltiplos projetos
+imports usados
 
----
+dependências declaradas
+
+📌 Saída:
+
+lista de fantasmas
+
+🔹 zombie_analyzer.py
+👉 Responsabilidade:
+
+Detectar dependências zumbis
+
+📌 Regra:
+dependência declarada
+MAS não é usada no código
+📌 Entrada:
+
+dependências declaradas
+
+imports usados
+
+📌 Saída:
+
+lista de zumbis
+
+🔹 outdated_analyzer.py
+👉 Responsabilidade:
+
+Detectar dependências desatualizadas
+
+📌 Regra:
+versão usada < versão mais recente no PyPI
+📌 Entrada:
+
+dependências declaradas
+
+dados do PyPI
+
+📌 Saída:
+
+lista com:
+
+versão atual
+
+versão latest
+
+diferença
+
+📂 report/
+
+Transforma dados técnicos em algo utilizável.
+
+🔹 make_report.py
+👉 Responsabilidade:
+
+Construir o relatório estruturado
+
+📌 Ele deve:
+
+Consolidar:
+
+todas dependências
+
+zumbis
+
+fantasmas
+
+desatualizadas
+
+Calcular:
+
+quantidade
+
+idade (data atual - release)
+
+tamanho (se disponível)
+
+📌 Saída:
+
+estrutura pronta para GUI e exportação
+
+🔹 csv_export.py
+👉 Responsabilidade:
+
+Exportar relatório
+
+📌 Ele deve:
+
+Gerar CSV com:
+
+categorias separadas
+
+dados organizados
+
+Permitir histórico (salvar múltiplas execuções)
+
+📂 gui/
+
+Interface com o usuário.
+
+🔹 home.py
+👉 Responsabilidade:
+
+Tela inicial
+
+📌 Deve permitir:
+
+Upload ou seleção do projeto
+
+Configurar:
+
+diretórios ignorados
+
+Iniciar análise
+
+🔹 report.py
+👉 Responsabilidade:
+
+Exibir resultados
+
+📌 Deve mostrar:
+
+métricas gerais
+
+listas:
+
+dependências
+
+zumbis
+
+fantasmas
+
+desatualizadas
+
+📌 Extras importantes:
+
+botão de exportar CSV
+
+visualização clara (tabelas/gráficos)
+
+📄 main.py
+👉 Responsabilidade:
+
+Orquestração geral
+
+📌 Ele deve:
+
+Conectar tudo:
+
+parsing
+
+ingestion
+
+analysis
+
+report
+
+gui
+
+👉 É o “controlador” da aplicação
