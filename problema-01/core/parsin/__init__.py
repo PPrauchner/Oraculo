@@ -8,7 +8,7 @@ Combina:
 - normalization.py: Resolve diferenças entre nomes de pacote e import
 """
 
-from .readers import parse_requirements, parse_uv_lock
+from .readers import parse_requirements, parse_lock, parse_environment_yml
 from .dependency_parser import (
     parse_dependencies,
     normalize_dependency,
@@ -18,7 +18,8 @@ from .import_parser import parse_imports, parse_imports_with_filter
 
 __all__ = [
     "parse_requirements",
-    "parse_uv_lock",
+    "parse_lock",
+    "parse_environment_yml",
     "parse_dependencies",
     "normalize_dependency",
     "parse_dependencies_with_filter",

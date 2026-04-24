@@ -17,7 +17,7 @@ Saída:
 
 from typing import Dict, List, Optional
 from utils.functions import READERS
-
+from core.ingestion.filter import is_path_in_ignored_folders
 
 def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
     """
@@ -95,7 +95,7 @@ def parse_dependencies_with_filter(
     Returns:
         Lista vazia se arquivo está em pasta ignorada, senão lista normalizada
     """
-    from core.ingestion.filter import is_path_in_ignored_folders
+    
 
     if is_path_in_ignored_folders(file_path, ignore_folders):
         return []

@@ -57,27 +57,25 @@ def _build_report_dictionary() -> dict[str, list]:
     }
 
 
-def _calculate_healthy_dependencies(report_dict: dict[str, list]) -> int:
-    """
-    Calcula quantidade de dependências em bom estado.
+def _calculate_healthy_dependencies(report_dict: dict[str, list[dict]]) -> int:
+    all_deps = report_dict.get(CATEGORY_NAMES["all_dependencies"], [])
 
-    Dependências "saudáveis" = total - (zumbis + fantasmas + desatualizadas).
-    Desacoplado de categorias hardcoded: opera sobre quaisquer chaves que não sejam
-    a categoria "Todas as Dependências".
-
-    Args:
-        report_dict: Estrutura de relatório com categorias e listas.
-
-    Returns:
-        Quantidade de dependências sem problemas.
-    """
-    total = len(report_dict.get(CATEGORY_NAMES["all_dependencies"], []))
+    # Criamos um set apenas com os IDs/Nomes das dependências problemáticas
+    problematic_ids = set()
 
     for category_key, category_label in CATEGORY_NAMES.items():
         if category_key != "all_dependencies" and category_label in report_dict:
-            total -= len(report_dict[category_label])
+            for dep in report_dict[category_label]:
+                # Guardamos apenas o identificador único (ex: o nome da lib)
+                problematic_ids.add(dep["Pacote"])
 
-    return max(total, 0)
+    # Contamos quantas deps do total NÃO estão no set de IDs problemáticos
+    healthy_count = 0
+    for dep in all_deps:
+        if dep["Pacote"] not in problematic_ids:
+            healthy_count += 1
+
+    return healthy_count
 
 
 def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
@@ -173,53 +171,85 @@ def _render_donut_chart(report_dict: dict[str, list]) -> None:
 def _show_export_dialog(report_dict: dict[str, list]) -> None:
     """
     Exibe modal de diálogo para seleção e exportação de dados.
-
-    Permite escolher quais categorias exportar e formato (CSV ou JSON).
-    Gera download com nome padrão 'report_dp_auditor.{extensão}'.
-
-    Args:
-        report_dict: Estrutura de relatório com categorias e listas.
     """
     if not report_dict:
         st.warning("Não há dados para exportar.")
         return
 
-    st.write("### 1. Selecione as categorias")
-    selected_categories = []
+    ALL_LABEL = CATEGORY_NAMES["all_dependencies"]
+    other_labels = [label for label in report_dict.keys() if label != ALL_LABEL]
 
-    for category_label in report_dict.keys():
-        if st.checkbox(
-            category_label, value=True, key=f"export_category_{category_label}"
-        ):
-            selected_categories.append(category_label)
+    def on_change_all():
+        """Sincroniza todas as categorias com o checkbox 'Todas'."""
+        new_val = st.session_state[f"cb_{ALL_LABEL}"]
+        for label in other_labels:
+            st.session_state[f"cb_{label}"] = new_val
+
+    def on_change_individual():
+        """Sincroniza o checkbox 'Todas' com as categorias individuais."""
+        all_checked = all(
+            st.session_state.get(f"cb_{label}", False) for label in other_labels
+        )
+        st.session_state[f"cb_{ALL_LABEL}"] = all_checked
+
+    st.write("### 1. Selecione as categorias")
+
+    st.checkbox(
+        ALL_LABEL,
+        key=f"cb_{ALL_LABEL}",
+        on_change=on_change_all,
+        value=st.session_state.get(f"cb_{ALL_LABEL}", True),  # Valor padrão inicial
+    )
+
+    cols = st.columns(len(other_labels))
+    for i, label in enumerate(other_labels):
+        cols[i].checkbox(
+            label,
+            key=f"cb_{label}",
+            on_change=on_change_individual,
+            value=st.session_state.get(f"cb_{label}", True),  # Valor padrão inicial
+        )
 
     st.divider()
+
     st.write("### 2. Formato do arquivo")
     file_format = st.radio("Escolha o formato:", ["CSV", "JSON"], horizontal=True)
 
-    if not selected_categories:
+    selected_labels = [l for l in report_dict.keys() if st.session_state.get(f"cb_{l}")]
+
+    if not selected_labels:
         st.error("Selecione pelo menos uma categoria.")
         return
 
-    data_to_export = []
-    for category_label in selected_categories:
-        data_to_export.extend(report_dict[category_label])
+    unique_data = {}
+
+    if st.session_state.get(f"cb_{ALL_LABEL}"):
+        data_to_process = report_dict[ALL_LABEL]
+    else:
+        data_to_process = []
+        for label in selected_labels:
+            data_to_process.extend(report_dict[label])
+
+    for dep in data_to_process:
+
+        dep_id = tuple(sorted(dep.items()))
+        unique_data[dep_id] = dep
+
+    final_list = list(unique_data.values())
 
     if file_format == "CSV":
-        exported_data = export_to_csv(data_to_export)
-        mime_type = "text/csv"
-        file_extension = "csv"
+        exported_data = export_to_csv(final_list)
+        mime_type, file_ext = "text/csv", "csv"
     else:
-        exported_data = export_to_json(data_to_export)
-        mime_type = "application/json"
-        file_extension = "json"
+        exported_data = export_to_json(final_list)
+        mime_type, file_ext = "application/json", "json"
 
     st.divider()
 
     st.download_button(
-        label=f"Baixar Relatório .{file_extension} 📥",
+        label=f"Baixar Relatório ({len(final_list)} itens) .{file_ext} 📥",
         data=exported_data,
-        file_name=f"report_dp_auditor.{file_extension}",
+        file_name=f"report_dp_auditor.{file_ext}",
         mime=mime_type,
         use_container_width=True,
     )

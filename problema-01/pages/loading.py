@@ -16,7 +16,7 @@ from core.analysis.zombie_analizer import analyze_zombie_dependencies
 from core.analysis.ghost_analizer import analyze_ghost_dependencies
 from core.analysis.outdated_analizer import analyze_dependency_status
 from core.ingestion.decompressor import get_archive_files
-from core.ingestion.filter import is_path_in_ignored_folders
+from core.ingestion.filter import is_path_in_ignored_folders, validate_archive_structure
 
 sidebar()
 
@@ -88,6 +88,32 @@ def _find_dependency_file(archive) -> tuple[str | None, list]:
     return None, []
 
 
+def _validate_archive_requirements(archive) -> bool:
+    """
+    Valida se o arquivo contém os requisitos mínimos para análise.
+
+    Função de segurança adicional que verifica:
+    1. Arquivo não é None
+    2. Arquivo contém pelo menos um .py
+    3. Arquivo contém arquivo de dependências
+
+    Args:
+        archive: Objeto ZipFile ou TarFile
+
+    Returns:
+        True se válido, False caso contrário
+        (Exibe mensagem de erro antes de retornar False)
+    """
+    ignore_folders = st.session_state.get("ignore_folders", [])
+    is_valid, error_msg = validate_archive_structure(archive, ignore_folders)
+
+    if not is_valid:
+        st.error(error_msg)
+        return False
+
+    return True
+
+
 def _render_progress_steps(step_labels: list[str], current_step: int) -> str:
     """
     Gera HTML para renderizar o progresso visual das etapas de análise.
@@ -99,7 +125,7 @@ def _render_progress_steps(step_labels: list[str], current_step: int) -> str:
     Returns:
         String contendo HTML com styling inline para exibição no Streamlit.
     """
-    html = '<div class="main-loader"><div class="loader-ring"></div><div style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;">Analysis in Progress...</div><div class="step-list">'
+    html = '<div class="main-loader"><div class="loader-ring"></div><div style="font-size:2.0rem; font-weight:bold; margin-bottom:15px;">Analysis in Progress...</div><div class="step-list">'
     for j, label in enumerate(step_labels):
         if j < current_step:
             color, opacity, cursor = "#4CAF50", "1", " ✅"
@@ -153,6 +179,10 @@ def _execute_analysis_pipeline() -> None:
         st.error(
             "❌ Nenhum arquivo foi processado. Volte para Home e faça upload de um arquivo compactado válido."
         )
+        st.stop()
+
+    # Validação de segurança: verificar requisitos mínimos
+    if not _validate_archive_requirements(archive):
         st.stop()
 
     ignore_folders = st.session_state.get("ignore_folders", [])
@@ -233,19 +263,66 @@ def _render_loading_ui() -> None:
     Exibe spinner, título e progresso das etapas. Após conclusão,
     redireciona para a página de relatório.
     """
+
+
+def _render_loading_ui() -> None:
+    """
+    Renderiza a interface visual de carregamento e inicia a análise.
+
+    Exibe spinner, título e progresso das etapas. Após conclusão,
+    redireciona para a página de relatório.
+    """
+
     st.markdown(
-        """
-        <style>
-        * { margin: 0 !important; padding: 0 !important; }
-        html, body { overflow: hidden !important; height: 100vh !important; width: 100vw !important; }
-        [data-testid="stAppViewContainer"] { overflow: hidden !important; height: 100vh !important; }
-        [data-testid="stMain"] { overflow: hidden !important; height: 100vh !important; padding: 0 !important; }
-        .main-loader { position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; background: radial-gradient(circle at center, #1a3a3a 0%, #0e1117 70%) !important; color: white !important; font-family: 'Inter', sans-serif !important; z-index: 9999 !important; padding: 40px !important; border-radius: 10px !important; }
-        .loader-ring { width: 70px !important; height: 70px !important; border: 5px solid rgba(255,255,255,0.1) !important; border-top: 5px solid #3498db !important; border-right: 5px solid #2ecc71 !important; border-radius: 50% !important; animation: spin 1.5s linear infinite !important; margin-bottom: 5px !important; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .step-list { font-family: 'Courier New', monospace !important; line-height: 1.6 !important; text-align: left !important; width: 450px !important; margin-top: 5px !important; font-size: 0.9rem !important; }
-        </style>
-        """,
+        """<style>
+    /* Centraliza sem quebrar sidebar */
+    [data-testid="stMain"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    /* Loader */
+    .main-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at center, #1a3a3a 0%, #0e1117 50%);
+        color: white;
+        font-family: 'Inter', sans-serif;
+        padding: 80px;
+        border-radius: 10px;
+        min-height: 150vh;
+    }
+
+    .loader-ring {
+        width: 250px;
+        height: 250px;
+        border: 5px solid rgba(255,255,255,0.1);
+        border-top: 5px solid #3498db;
+        border-right: 5px solid #2ecc71;
+        border-radius: 70%;
+        animation: spin 1.5s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .step-list {
+     font-family: 'Roboto', sans-serif;
+        line-height: 1.6;
+        text-align: left;
+        width: 450px;
+        margin-top: 10px;
+        font-size: 1.0rem;
+    }
+
+    </style>
+    """,
         unsafe_allow_html=True,
     )
 
