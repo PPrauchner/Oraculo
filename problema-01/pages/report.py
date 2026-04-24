@@ -8,7 +8,7 @@ visualizações e tabelas, com opcionalidade de exportação em CSV/JSON.
 import streamlit as st
 import plotly.express as px
 from utils.sidebar import sidebar
-from core.report.make_report import make_report
+from core.report.normalization import normalize
 from core.report.export import export_to_csv, export_to_json
 from utils.constants import MAPA_CORES_STATUS
 
@@ -82,7 +82,7 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     """
     Renderiza abas interativas com tabelas de dependências por categoria.
 
-    Cada aba contém uma tabela formatada via make_report() associada
+    Cada aba contém uma tabela formatada via normalize() associada
     a uma categoria de dependências.
 
     Args:
@@ -91,7 +91,7 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     tabs = st.tabs(list(report_dict.keys()))
     for tab, (category_label, dependencies) in zip(tabs, report_dict.items()):
         with tab:
-            st.table(make_report(dependencies))
+            st.table(normalize(dependencies))
 
 
 def _render_metrics(report_dict: dict[str, list]) -> None:

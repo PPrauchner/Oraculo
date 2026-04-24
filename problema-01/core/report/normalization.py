@@ -13,7 +13,7 @@ Saída:
 """
 
 
-def make_report(list_analyzed: list) -> list[dict]:
+def normalize(list_analyzed: list) -> list[dict]:
     """
     Constrói um Dicionário consolidando os resultados das análises.
 
