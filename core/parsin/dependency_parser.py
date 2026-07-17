@@ -1,12 +1,13 @@
 """
 Módulo responsável por normalizar e estruturar dependências declaradas.
 
-Recebe a saída processada de readers.py (lista de dicts com Pacote e Versão Atual)
-e retorna uma lista padronizada com a estrutura completa incluindo:
+Recebe a saída processada de readers.py (lista de dicts com Pacote, Versão Atual
+e Origem) e retorna uma lista padronizada com a estrutura completa incluindo:
 - Pacote
 - Versão Atual
 - Versão Pypi (inicialmente "N/A")
 - Status (inicialmente "Desconhecido")
+- Origem (Produção quando não informada)
 
 Entrada:
 - Lista de dicionários processada por readers.py
@@ -16,6 +17,7 @@ Saída:
 """
 
 from typing import Dict, List, Optional
+from utils.constants import ORIGIN_PRODUCTION
 from utils.functions import READERS
 from core.ingestion.filter import is_path_in_ignored_folders
 
@@ -26,8 +28,12 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
     Recebe um dict com 'Pacote' e 'Versão Atual' e retorna um dict
     padronizado com todos os campos obrigatórios.
 
+    A Origem é preservada: é ela que permite isentar Dependências de
+    Desenvolvimento da classificação Zumbi (ADR-0003). Na ausência dela,
+    assume-se Produção — o recorte conservador.
+
     Args:
-        dep: Dicionário com 'Pacote' e 'Versão Atual'
+        dep: Dicionário com 'Pacote', 'Versão Atual' e, opcionalmente, 'Origem'
 
     Returns:
         Dicionário padronizado ou None se inválido
@@ -47,6 +53,7 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
         "Versão Atual": versao_atual,
         "Versão PyPI": "N/A",
         "Status": "Desconhecido",
+        "Origem": dep.get("Origem", ORIGIN_PRODUCTION),
     }
 
 

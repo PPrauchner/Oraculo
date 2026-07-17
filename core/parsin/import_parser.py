@@ -26,17 +26,106 @@ from core.ingestion.decompressor import get_archive_files
 from core.ingestion.filter import is_path_in_ignored_folders
 from utils.constants import PYTHON_STDLIB_MODULES
 
+# Pasta que apenas embrulha os Módulos Próprios num layout `src/`
+SRC_LAYOUT_FOLDER = "src"
 
-def is_valid_import(module_name: str) -> bool:
+
+def _normalize_paths(file_paths: List[str]) -> List[str]:
+    """
+    Uniformiza os caminhos vindos da ingestão (archive ou diretório).
+
+    Args:
+        file_paths: Caminhos crus, possivelmente com separador do Windows,
+            prefixo "./" ou barra final (entradas de pasta do archive).
+
+    Returns:
+        Lista de caminhos com separador "/" e sem entradas vazias.
+    """
+    normalized = []
+
+    for path in file_paths:
+        clean = path.replace("\\", "/").rstrip("/")
+        if clean.startswith("./"):
+            clean = clean[2:]
+        if clean:
+            normalized.append(clean)
+
+    return normalized
+
+
+def _strip_project_root(file_paths: List[str]) -> List[str]:
+    """
+    Remove a pasta que apenas embrulha o Projeto-Alvo, se houver.
+
+    Um archive normalmente contém tudo dentro de uma pasta raiz
+    (`grupo-03/core/...`); nesse caso o topo do projeto é dentro dela. A pasta só
+    é embrulho se não for, ela mesma, um pacote.
+
+    Args:
+        file_paths: Caminhos já normalizados.
+
+    Returns:
+        Caminhos relativos à raiz do Projeto-Alvo.
+    """
+    top_segments = {path.split("/")[0] for path in file_paths}
+    if len(top_segments) != 1:
+        return file_paths
+
+    root = top_segments.pop()
+
+    # Raiz que é um pacote (ou um arquivo solto) não é embrulho
+    if root.endswith(".py") or f"{root}/__init__.py" in file_paths:
+        return file_paths
+
+    return [path[len(root) + 1 :] for path in file_paths if path != root]
+
+
+def infer_own_modules(file_paths: List[str]) -> Set[str]:
+    """
+    Infere os Módulos Próprios a partir do layout do Projeto-Alvo.
+
+    Um Módulo Próprio é um pacote definido pelo próprio Projeto-Alvo, reconhecível
+    por existir como pasta de topo com `__init__.py`. A inferência usa apenas os
+    caminhos já disponíveis na ingestão (archive ou diretório), sem I/O extra.
+
+    Args:
+        file_paths: Caminhos dos arquivos do Projeto-Alvo, relativos à sua raiz.
+
+    Returns:
+        Conjunto de nomes de Módulos Próprios, em lowercase.
+    """
+    own_modules = set()
+
+    for path in file_paths:
+        parts = path.split("/")
+
+        # Num layout `src/`, os Módulos Próprios são as pastas dentro dele
+        if parts[0] == SRC_LAYOUT_FOLDER:
+            parts = parts[1:]
+
+        # Pasta de topo com __init__.py: pacote do Projeto-Alvo
+        if len(parts) >= 2 and parts[1] == "__init__.py":
+            own_modules.add(parts[0].lower())
+
+        # Arquivo .py de topo: módulo do Projeto-Alvo
+        elif len(parts) == 1 and parts[0].endswith(".py"):
+            own_modules.add(parts[0][: -len(".py")].lower())
+
+    return own_modules
+
+
+def is_valid_import(module_name: str, own_modules: Set[str] | None = None) -> bool:
     """
     Verifica se um import é válido para análise de dependências.
 
     Rejeita:
     - Imports que começam com underscore (ex: _pytest, _internal)
     - Módulos nativos do Python (stdlib)
+    - Módulos Próprios do Projeto-Alvo (nunca são Fantasmas)
 
     Args:
         module_name: Nome do módulo importado (em lowercase)
+        own_modules: Módulos Próprios inferidos do layout do Projeto-Alvo
 
     Returns:
         True se o import é válido, False caso contrário
@@ -49,10 +138,14 @@ def is_valid_import(module_name: str) -> bool:
     if module_name in PYTHON_STDLIB_MODULES:
         return False
 
+    # Rejeitar Módulos Próprios: são do Projeto-Alvo, não do PyPI
+    if own_modules and module_name in own_modules:
+        return False
+
     return True
 
 
-def extract_imports_from_code(code: str) -> Set[str]:
+def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) -> Set[str]:
     """
     Extrai nomes de módulos importados de um código Python.
 
@@ -62,10 +155,11 @@ def extract_imports_from_code(code: str) -> Set[str]:
     - from xxx.yyy import zzz
 
     Normaliza para o nome do pacote raíz (ex: "django.core" → "django")
-    Filtra imports inválidos (comecoam com _, módulos stdlib)
+    Filtra imports inválidos (comecoam com _, módulos stdlib, Módulos Próprios)
 
     Args:
         code: Código Python em formato string
+        own_modules: Módulos Próprios inferidos do layout do Projeto-Alvo
 
     Returns:
         Conjunto de nomes de módulos únicos
@@ -83,12 +177,12 @@ def extract_imports_from_code(code: str) -> Set[str]:
                         for alias in node.names:
                             module_name = alias.name
                             root_module = module_name.split(".")[0].lower()
-                            if is_valid_import(root_module):
+                            if is_valid_import(root_module, own_modules):
                                 imports.add(root_module)
                     elif isinstance(node, ast.ImportFrom):
                         if node.module and node.level == 0:  # Ignorar relative imports
                             root_module = node.module.split(".")[0].lower()
-                            if is_valid_import(root_module):
+                            if is_valid_import(root_module, own_modules):
                                 imports.add(root_module)
             except SyntaxError:
                 # Continuar com próxima linha
@@ -102,12 +196,12 @@ def extract_imports_from_code(code: str) -> Set[str]:
                     for alias in node.names:
                         module_name = alias.name
                         root_module = module_name.split(".")[0].lower()
-                        if is_valid_import(root_module):
+                        if is_valid_import(root_module, own_modules):
                             imports.add(root_module)
                 elif isinstance(node, ast.ImportFrom):
                     if node.module and node.level == 0:
                         root_module = node.module.split(".")[0].lower()
-                        if is_valid_import(root_module):
+                        if is_valid_import(root_module, own_modules):
                             imports.add(root_module)
         except SyntaxError:
             pass
@@ -179,6 +273,12 @@ def parse_imports(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
     all_imports = set()
     file_list = get_archive_files(archive)
 
+    # Módulos Próprios saem do layout do próprio archive, sem I/O extra
+    archive_paths = _normalize_paths(
+        [get_file_path_from_archive_member(member) for member in file_list]
+    )
+    own_modules = infer_own_modules(_strip_project_root(archive_paths))
+
     for member in file_list:
         file_path = get_file_path_from_archive_member(member)
 
@@ -196,7 +296,7 @@ def parse_imports(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
             continue
 
         # Extrair imports
-        imports = extract_imports_from_code(content)
+        imports = extract_imports_from_code(content, own_modules)
         all_imports.update(imports)
 
     # Converter para lista de dicionários padronizada

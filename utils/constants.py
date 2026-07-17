@@ -32,4 +32,12 @@ SVG_LUPA = """
 
 PYPI_BASE_URL = "https://pypi.org/pypi"
 
+# ============ Origem =================#
+# De qual Declaração — e de qual seção dela — um pacote veio. Separa Dependência
+# de Produção de Dependência de Desenvolvimento (ver CONTEXT.md e ADR-0003).
+
+ORIGIN_PRODUCTION = "Produção"
+ORIGIN_DEVELOPMENT = "Desenvolvimento"
+# ============ Origem =================#
+
 PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())

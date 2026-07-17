@@ -11,11 +11,12 @@ Entrada:
 - Conteúdo do arquivo de configuração (string)
 
 Saída:
-- Lista de dicionários contendo 'Pacote' e 'Versão Atual'
+- Lista de dicionários contendo 'Pacote', 'Versão Atual' e 'Origem'
 """
 
 import re
 from typing import Dict, List, Optional
+from utils.constants import ORIGIN_DEVELOPMENT, ORIGIN_PRODUCTION
 from utils.functions import READERS, registrar
 
 try:
@@ -95,29 +96,100 @@ def _clean_conda_dep(dep_string: str) -> Optional[Dict[str, str]]:
     return parse_dependency_string(dep_string)
 
 
-@registrar(READERS, "requirements.txt")
-def parse_requirements(content: str) -> List[Dict[str, str]]:
+def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, str]]:
     """
-    Lê um arquivo requirements.txt e extrai suas dependências.
+    Analisa uma lista de declarações PEP 508 e carimba a Origem de cada uma.
+
+    Ignora 'python', que é o interpretador e não um pacote do PyPI.
+
+    Args:
+        entries: Linhas de declaração (ex: ["requests>=2.33.0"]).
+        origin: Origem a atribuir a cada pacote da lista.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    dependencies = []
+    for entry in entries:
+        result = parse_dependency_string(str(entry))
+        if result and result["Pacote"] != "python":
+            result["Origem"] = origin
+            dependencies.append(result)
+    return dependencies
+
+
+def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[str, str]]:
+    """
+    Analisa uma tabela de dependências do Poetry e carimba a Origem de cada uma.
+
+    O Poetry declara dependências como pares nome/especificador, onde o
+    especificador pode ser uma string ("^2.33.0") ou uma tabela com a versão
+    e opções extras ({version = "^2.33.0", extras = ["security"]}).
+
+    Args:
+        table: Tabela nome → especificador de versão.
+        origin: Origem a atribuir a cada pacote da tabela.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    entries = []
+    for name, spec in table.items():
+        if isinstance(spec, dict):
+            spec = spec.get("version", "")
+        entries.append(f"{name}{spec}")
+    return _parse_dependency_list(entries, origin)
+
+
+def _parse_requirements_content(content: str, origin: str) -> List[Dict[str, str]]:
+    """
+    Lê o conteúdo de um requirements e carimba a Origem de cada dependência.
 
     Suporta linhas com e sem versão, ignora comentários e linhas
     de opções do pip (ex: -r, --index-url).
 
     Args:
         content: Conteúdo completo do arquivo como string.
+        origin: Origem a atribuir a cada pacote declarado.
 
     Returns:
-        Lista de dicts com 'Pacote' e 'Versão Atual'.
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
     """
-    dependencies = []
-    for line in content.split("\n"):
-        line = line.strip()
-        if line.startswith("-"):
-            continue
-        result = parse_dependency_string(line)
-        if result:
-            dependencies.append(result)
-    return dependencies
+    lines = [line.strip() for line in content.split("\n")]
+    return _parse_dependency_list(
+        [line for line in lines if not line.startswith("-")], origin
+    )
+
+
+@registrar(READERS, "requirements.txt")
+def parse_requirements(content: str) -> List[Dict[str, str]]:
+    """
+    Lê um requirements.txt, cujas dependências são de Produção.
+
+    Args:
+        content: Conteúdo completo do arquivo como string.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    return _parse_requirements_content(content, ORIGIN_PRODUCTION)
+
+
+@registrar(READERS, "requirements-dev.txt")
+def parse_requirements_dev(content: str) -> List[Dict[str, str]]:
+    """
+    Lê um requirements-dev.txt, cujas dependências são de Desenvolvimento.
+
+    Precisa de registro próprio: 'requirements-dev.txt' não termina em
+    'requirements.txt', então nunca casaria com o reader de Produção.
+
+    Args:
+        content: Conteúdo completo do arquivo como string.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    return _parse_requirements_content(content, ORIGIN_DEVELOPMENT)
 
 
 @registrar(READERS, "environment.yml")
@@ -131,11 +203,14 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
 
     Ignora entradas que não são pacotes Python (ex: "python=3.11").
 
+    O environment.yml descreve o ambiente de execução do Projeto-Alvo, então
+    seus pacotes são Dependências de Produção.
+
     Args:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote' e 'Versão Atual'.
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
     """
     if yaml is None:
         return []
@@ -157,14 +232,67 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
                 continue
             result = _clean_conda_dep(entry)
             if result:
+                result["Origem"] = ORIGIN_PRODUCTION
                 dependencies.append(result)
             continue
 
         if isinstance(entry, dict) and "pip" in entry:
-            for pip_dep in entry.get("pip", []):
-                result = parse_dependency_string(str(pip_dep))
-                if result:
-                    dependencies.append(result)
+            dependencies += _parse_dependency_list(
+                entry.get("pip", []), ORIGIN_PRODUCTION
+            )
+
+    return dependencies
+
+
+@registrar(READERS, "pyproject.toml")
+def parse_pyproject(content: str) -> List[Dict[str, str]]:
+    """
+    Lê um pyproject.toml (PEP 621 e Poetry) e extrai suas dependências.
+
+    Preserva a Origem de cada pacote:
+    - [project].dependencies e [tool.poetry].dependencies → Produção
+    - [dependency-groups] e [project.optional-dependencies] → Desenvolvimento
+    - [tool.poetry.group.<nome>.dependencies] → Desenvolvimento, qualquer que
+      seja o nome do grupo
+
+    Args:
+        content: Conteúdo completo do arquivo como string.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    if tomllib is None:
+        return []
+
+    try:
+        data = tomllib.loads(content)
+    except Exception:
+        return []
+
+    if not isinstance(data, dict):
+        return []
+
+    project = data.get("project", {})
+
+    dependencies = _parse_dependency_list(
+        project.get("dependencies", []), ORIGIN_PRODUCTION
+    )
+
+    for extra in project.get("optional-dependencies", {}).values():
+        dependencies += _parse_dependency_list(extra, ORIGIN_DEVELOPMENT)
+
+    for group in data.get("dependency-groups", {}).values():
+        dependencies += _parse_dependency_list(group, ORIGIN_DEVELOPMENT)
+
+    poetry = data.get("tool", {}).get("poetry", {})
+    dependencies += _parse_dependency_table(
+        poetry.get("dependencies", {}), ORIGIN_PRODUCTION
+    )
+
+    for group in poetry.get("group", {}).values():
+        dependencies += _parse_dependency_table(
+            group.get("dependencies", {}), ORIGIN_DEVELOPMENT
+        )
 
     return dependencies
 
@@ -177,11 +305,14 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
     Ambos os gerenciadores armazenam pacotes em uma lista 'package'
     com os campos 'name' e 'version'.
 
+    O Lock resolve versões, não define o conjunto auditado (ADR-0002): ele não
+    separa produção de desenvolvimento, então seus pacotes ficam como Produção.
+
     Args:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote' e 'Versão Atual'.
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
     """
     if tomllib is None:
         return []
@@ -201,6 +332,7 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
                 {
                     "Pacote": name.lower(),
                     "Versão Atual": version if version else "",
+                    "Origem": ORIGIN_PRODUCTION,
                 }
             )
 
