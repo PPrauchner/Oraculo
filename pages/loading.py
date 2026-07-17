@@ -8,84 +8,14 @@ incluindo feedback visual ao usuário durante o processamento.
 import time
 import streamlit as st
 from utils.sidebar import sidebar
-from utils.functions import READERS
-import core.parsin.readers
-from core.parsin.dependency_parser import parse_dependencies
+from core.parsin.declaration_collector import collect_declarations
 from core.parsin.import_parser import parse_imports_with_filter
 from core.analysis.zombie_analizer import analyze_zombie_dependencies
 from core.analysis.ghost_analizer import analyze_ghost_dependencies
 from core.analysis.outdated_analizer import analyze_dependency_status
-from core.ingestion.decompressor import get_archive_files
-from core.ingestion.filter import is_path_in_ignored_folders, validate_archive_structure
+from core.ingestion.filter import validate_archive_structure
 
 sidebar()
-
-
-def _find_dependency_file(archive) -> tuple[str | None, list]:
-    """
-    Localiza e extrai dependências declaradas do arquivo principal de configuração.
-
-    Busca por requirements.txt ou arquivos .lock respeitando
-    pastas ignoradas configuradas pelo usuário.
-
-    Args:
-        archive: Objeto zipfile.ZipFile ou tarfile.TarFile do projeto compactado.
-
-    Returns:
-        Tupla (caminho_do_arquivo, lista_dependências). Se não encontrado,
-        retorna (None, []).
-
-    Raises:
-        Nenhuma exceção é lançada; erros são silenciosamente ignorados.
-    """
-
-    if archive is None:
-        st.error(
-            "❌ Erro: O arquivo não foi processado corretamente. Certifique-se de enviar um ZIP, TAR ou TAR.GZ válido."
-        )
-        st.stop()
-
-    ignore_folders = st.session_state.get("ignore_folders", [])
-
-    try:
-        file_list = get_archive_files(archive)
-        if not file_list:
-            st.error("❌ O arquivo compactado está vazio.")
-            st.stop()
-    except Exception as e:
-        st.error(f"❌ Erro ao ler arquivos: {str(e)}")
-        st.stop()
-
-    for member in file_list:
-        file_path = getattr(member, "filename", None) or getattr(member, "name", None)
-        if not file_path:
-            continue
-
-        if is_path_in_ignored_folders(file_path, ignore_folders):
-            continue
-
-        file_name = file_path.lower()
-
-        for extension, reader_func in READERS.items():
-            if file_name.endswith(extension):
-                try:
-                    if hasattr(member, "filename"):
-                        content = archive.read(member.filename).decode(
-                            "utf-8", errors="ignore"
-                        )
-                    else:
-                        f = archive.extractfile(member)
-                        if f is None:
-                            continue
-                        content = f.read().decode("utf-8", errors="ignore")
-
-                    dependencies = reader_func(content)
-                    if dependencies:
-                        return file_path, dependencies
-                except Exception:
-                    continue
-
-    return None, []
 
 
 def _validate_archive_requirements(archive) -> bool:
@@ -193,14 +123,14 @@ def _execute_analysis_pipeline() -> None:
         )
         time.sleep(1.0)
 
-        dep_file_path, raw_dependencies = _find_dependency_file(archive)
-        if not raw_dependencies:
+        declared_dependencies = collect_declarations(archive, ignore_folders)
+        if not declared_dependencies:
             st.error(
-                "❌ Nenhum arquivo de dependências encontrado (requirements.txt ou .lock)"
+                "❌ Nenhuma Declaração encontrada (requirements.txt, pyproject.toml ou "
+                "environment.yml). O Lock sozinho não define o conjunto auditado."
             )
             st.stop()
 
-        declared_dependencies = parse_dependencies(raw_dependencies)
         st.session_state["declared_dependencies"] = declared_dependencies
 
         placeholder.markdown(
