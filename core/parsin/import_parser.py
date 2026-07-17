@@ -145,6 +145,33 @@ def is_valid_import(module_name: str, own_modules: Set[str] | None = None) -> bo
     return True
 
 
+def _collect_imports_from_tree(
+    tree: ast.AST, imports: Set[str], own_modules: Set[str] | None
+) -> None:
+    """
+    Coleta os Imports Raiz válidos de uma AST no conjunto acumulador.
+
+    Percorre toda a árvore (não só o topo), então imports indentados — dentro de
+    `try:`, funções, `if`, `with` — também são coletados.
+
+    Args:
+        tree: AST do código (ou de uma linha isolada, no fallback).
+        imports: Conjunto acumulador, alterado in-place com os Imports Raiz.
+        own_modules: Módulos Próprios inferidos do layout do Projeto-Alvo.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root_module = alias.name.split(".")[0].lower()
+                if is_valid_import(root_module, own_modules):
+                    imports.add(root_module)
+        elif isinstance(node, ast.ImportFrom):
+            if node.module and node.level == 0:  # Ignorar relative imports
+                root_module = node.module.split(".")[0].lower()
+                if is_valid_import(root_module, own_modules):
+                    imports.add(root_module)
+
+
 def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) -> Set[str]:
     """
     Extrai nomes de módulos importados de um código Python.
@@ -167,44 +194,17 @@ def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) ->
     imports = set()
 
     try:
-        # Extrair imports válidos antes do primeiro erro
-        lines = code.split("\n")
-        for line in lines:
+        # Caso normal: o arquivo é Python válido; um parse do arquivo inteiro
+        # enxerga imports em qualquer nível de indentação.
+        _collect_imports_from_tree(ast.parse(code), imports, own_modules)
+    except SyntaxError:
+        # Fallback para arquivo não-parseável (ex.: Python 2): recupera o que der,
+        # linha a linha, salvando imports antes do primeiro erro de sintaxe.
+        for line in code.split("\n"):
             try:
-                tree = ast.parse(line)
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.Import):
-                        for alias in node.names:
-                            module_name = alias.name
-                            root_module = module_name.split(".")[0].lower()
-                            if is_valid_import(root_module, own_modules):
-                                imports.add(root_module)
-                    elif isinstance(node, ast.ImportFrom):
-                        if node.module and node.level == 0:  # Ignorar relative imports
-                            root_module = node.module.split(".")[0].lower()
-                            if is_valid_import(root_module, own_modules):
-                                imports.add(root_module)
+                _collect_imports_from_tree(ast.parse(line), imports, own_modules)
             except SyntaxError:
-                # Continuar com próxima linha
                 continue
-    except Exception:
-        # Fallback: tentar parse do arquivo todo
-        try:
-            tree = ast.parse(code)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    for alias in node.names:
-                        module_name = alias.name
-                        root_module = module_name.split(".")[0].lower()
-                        if is_valid_import(root_module, own_modules):
-                            imports.add(root_module)
-                elif isinstance(node, ast.ImportFrom):
-                    if node.module and node.level == 0:
-                        root_module = node.module.split(".")[0].lower()
-                        if is_valid_import(root_module, own_modules):
-                            imports.add(root_module)
-        except SyntaxError:
-            pass
 
     return imports
 
