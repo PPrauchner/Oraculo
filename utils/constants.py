@@ -40,4 +40,10 @@ ORIGIN_PRODUCTION = "Produção"
 ORIGIN_DEVELOPMENT = "Desenvolvimento"
 # ============ Origem =================#
 
+# ============ Lock =================#
+# Extensão dos arquivos de Lock (uv.lock, poetry.lock). O Lock resolve versões,
+# não define o conjunto auditado (ADR-0002).
+LOCK_EXTENSION = ".lock"
+# ============ Lock =================#
+
 PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())
