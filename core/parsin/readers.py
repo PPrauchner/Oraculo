@@ -109,6 +109,9 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, st
     Returns:
         Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
     """
+    if not isinstance(entries, list):
+        return []
+
     dependencies = []
     for entry in entries:
         result = parse_dependency_string(str(entry))
@@ -116,6 +119,22 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, st
             result["Origem"] = origin
             dependencies.append(result)
     return dependencies
+
+
+def _as_dict(value: object) -> Dict[str, object]:
+    """Retorna value se for uma tabela; caso contrário, uma tabela vazia.
+
+    Um pyproject.toml de Projeto-Alvo arbitrário pode ser malformado (ex.:
+    [tool.poetry.group] declarado como string). Normalizar cada seção para
+    dict antes de varrer evita AttributeError e degrada de forma limpa.
+
+    Args:
+        value: Valor lido do TOML, de tipo desconhecido.
+
+    Returns:
+        O próprio value quando for dict; senão, um dict vazio.
+    """
+    return value if isinstance(value, dict) else {}
 
 
 def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[str, str]]:
@@ -133,6 +152,9 @@ def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[
     Returns:
         Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
     """
+    if not isinstance(table, dict):
+        return []
+
     entries = []
     for name, spec in table.items():
         if isinstance(spec, dict):
@@ -272,26 +294,26 @@ def parse_pyproject(content: str) -> List[Dict[str, str]]:
     if not isinstance(data, dict):
         return []
 
-    project = data.get("project", {})
+    project = _as_dict(data.get("project"))
 
     dependencies = _parse_dependency_list(
         project.get("dependencies", []), ORIGIN_PRODUCTION
     )
 
-    for extra in project.get("optional-dependencies", {}).values():
+    for extra in _as_dict(project.get("optional-dependencies")).values():
         dependencies += _parse_dependency_list(extra, ORIGIN_DEVELOPMENT)
 
-    for group in data.get("dependency-groups", {}).values():
+    for group in _as_dict(data.get("dependency-groups")).values():
         dependencies += _parse_dependency_list(group, ORIGIN_DEVELOPMENT)
 
-    poetry = data.get("tool", {}).get("poetry", {})
+    poetry = _as_dict(_as_dict(data.get("tool")).get("poetry"))
     dependencies += _parse_dependency_table(
         poetry.get("dependencies", {}), ORIGIN_PRODUCTION
     )
 
-    for group in poetry.get("group", {}).values():
+    for group in _as_dict(poetry.get("group")).values():
         dependencies += _parse_dependency_table(
-            group.get("dependencies", {}), ORIGIN_DEVELOPMENT
+            _as_dict(group).get("dependencies", {}), ORIGIN_DEVELOPMENT
         )
 
     return dependencies
