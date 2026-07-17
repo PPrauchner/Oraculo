@@ -11,10 +11,10 @@ import sys
 
 
 MAPA_CORES_STATUS = {
-    " OK ✅": "#2ECC71",  # GREEN
-    " Zumbis 🧟": "#9B59B6",  # PURPLE
-    " Fantasmas  ghosts 👻": "#E74C3C",  # RED
-    " Desatualizadas ⏳": "#3498DB",  # BLUE
+    "OK ✅": "#2ECC71",  # GREEN
+    "Zumbis": "#9B59B6",  # PURPLE
+    "Fantasmas": "#E74C3C",  # RED
+    "Desatualizadas": "#3498DB",  # BLUE
 }
 COR_PADRAO = "#95A5A6"
 BLUE = "#3498DB"
