@@ -118,6 +118,29 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, st
     return dependencies
 
 
+def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[str, str]]:
+    """
+    Analisa uma tabela de dependências do Poetry e carimba a Origem de cada uma.
+
+    O Poetry declara dependências como pares nome/especificador, onde o
+    especificador pode ser uma string ("^2.33.0") ou uma tabela com a versão
+    e opções extras ({version = "^2.33.0", extras = ["security"]}).
+
+    Args:
+        table: Tabela nome → especificador de versão.
+        origin: Origem a atribuir a cada pacote da tabela.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    entries = []
+    for name, spec in table.items():
+        if isinstance(spec, dict):
+            spec = spec.get("version", "")
+        entries.append(f"{name}{spec}")
+    return _parse_dependency_list(entries, origin)
+
+
 def _parse_requirements_content(content: str, origin: str) -> List[Dict[str, str]]:
     """
     Lê o conteúdo de um requirements e carimba a Origem de cada dependência.
@@ -217,6 +240,52 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
             dependencies += _parse_dependency_list(
                 entry.get("pip", []), ORIGIN_PRODUCTION
             )
+
+    return dependencies
+
+
+@registrar(READERS, "pyproject.toml")
+def parse_pyproject(content: str) -> List[Dict[str, str]]:
+    """
+    Lê um pyproject.toml (PEP 621 e Poetry) e extrai suas dependências.
+
+    Preserva a Origem de cada pacote:
+    - [project].dependencies e [tool.poetry].dependencies → Produção
+    - [dependency-groups] e [project.optional-dependencies] → Desenvolvimento
+
+    Args:
+        content: Conteúdo completo do arquivo como string.
+
+    Returns:
+        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+    """
+    if tomllib is None:
+        return []
+
+    try:
+        data = tomllib.loads(content)
+    except Exception:
+        return []
+
+    if not isinstance(data, dict):
+        return []
+
+    project = data.get("project", {})
+
+    dependencies = _parse_dependency_list(
+        project.get("dependencies", []), ORIGIN_PRODUCTION
+    )
+
+    for extra in project.get("optional-dependencies", {}).values():
+        dependencies += _parse_dependency_list(extra, ORIGIN_DEVELOPMENT)
+
+    for group in data.get("dependency-groups", {}).values():
+        dependencies += _parse_dependency_list(group, ORIGIN_DEVELOPMENT)
+
+    poetry = data.get("tool", {}).get("poetry", {})
+    dependencies += _parse_dependency_table(
+        poetry.get("dependencies", {}), ORIGIN_PRODUCTION
+    )
 
     return dependencies
 
