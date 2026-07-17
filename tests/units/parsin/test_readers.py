@@ -179,3 +179,64 @@ pandas = ">=3.0.1"
         {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
         {"Pacote": "pandas", "Versão Atual": "3.0.1", "Origem": "Produção"},
     ]
+
+
+def test_grupo_dev_do_poetry_tem_origem_de_desenvolvimento():
+    """[tool.poetry.group.dev.dependencies] são de Desenvolvimento (ADR-0003)."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+ruff = "^0.6.0"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "pytest", "Versão Atual": "8.0.0", "Origem": "Desenvolvimento"},
+        {"Pacote": "ruff", "Versão Atual": "0.6.0", "Origem": "Desenvolvimento"},
+    ]
+
+
+def test_python_nao_e_tratado_como_pacote_dentro_de_grupo_poetry():
+    """'python' segue sendo o interpretador, também dentro de um grupo."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.group.dev.dependencies]
+python = "^3.11"
+pytest = "^8.0.0"
+"""
+
+    result = parse_pyproject(content)
+
+    assert [dep["Pacote"] for dep in result] == ["pytest"]
+
+
+def test_grupo_poetry_de_nome_arbitrario_convive_com_producao():
+    """Qualquer [tool.poetry.group.<nome>] é Desenvolvimento; produção não muda."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = "^2.33.0"
+
+[tool.poetry.group.lint.dependencies]
+mypy = "^1.11.0"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.0"
+"""
+
+    result = parse_pyproject(content)
+
+    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    assert origens == {
+        "requests": "Produção",
+        "mypy": "Desenvolvimento",
+        "mkdocs": "Desenvolvimento",
+    }
