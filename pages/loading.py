@@ -264,15 +264,6 @@ def _render_loading_ui() -> None:
     redireciona para a página de relatório.
     """
 
-
-def _render_loading_ui() -> None:
-    """
-    Renderiza a interface visual de carregamento e inicia a análise.
-
-    Exibe spinner, título e progresso das etapas. Após conclusão,
-    redireciona para a página de relatório.
-    """
-
     st.markdown(
         """<style>
     /* Centraliza sem quebrar sidebar */
