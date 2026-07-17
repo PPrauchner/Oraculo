@@ -13,6 +13,11 @@ dependencies = [
     "streamlit>=1.37.0",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
 # O projeto é virtual: core/, utils/ e pages/ nunca são instalados no venv.
 # Sem isto a coleta falha com "No module named 'core'".
 [tool.pytest.ini_options]

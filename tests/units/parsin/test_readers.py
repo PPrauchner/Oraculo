@@ -35,10 +35,10 @@ def test_pyproject_do_proprio_baita_auditor_e_lido():
 
     result = parse_pyproject(content)
 
-    declarados = {dep["Pacote"] for dep in result}
-    assert "streamlit" in declarados
-    assert "pandas" in declarados
-    assert all(dep["Origem"] == "Produção" for dep in result)
+    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    assert origens["streamlit"] == "Produção"
+    assert origens["pandas"] == "Produção"
+    assert origens["pytest"] == "Desenvolvimento"
 
 
 def test_pyproject_esta_registrado_como_reader():
