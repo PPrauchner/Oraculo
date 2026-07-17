@@ -252,6 +252,8 @@ def parse_pyproject(content: str) -> List[Dict[str, str]]:
     Preserva a Origem de cada pacote:
     - [project].dependencies e [tool.poetry].dependencies → Produção
     - [dependency-groups] e [project.optional-dependencies] → Desenvolvimento
+    - [tool.poetry.group.<nome>.dependencies] → Desenvolvimento, qualquer que
+      seja o nome do grupo
 
     Args:
         content: Conteúdo completo do arquivo como string.
@@ -286,6 +288,11 @@ def parse_pyproject(content: str) -> List[Dict[str, str]]:
     dependencies += _parse_dependency_table(
         poetry.get("dependencies", {}), ORIGIN_PRODUCTION
     )
+
+    for group in poetry.get("group", {}).values():
+        dependencies += _parse_dependency_table(
+            group.get("dependencies", {}), ORIGIN_DEVELOPMENT
+        )
 
     return dependencies
 
