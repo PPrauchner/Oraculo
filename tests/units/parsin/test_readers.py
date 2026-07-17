@@ -216,6 +216,83 @@ pytest = "^8.0.0"
     assert [dep["Pacote"] for dep in result] == ["pytest"]
 
 
+def test_group_do_poetry_com_valor_nao_tabela_nao_derruba_pipeline():
+    """[tool.poetry.group] com valor não-tabela degrada sem exceção (issue #19)."""
+    content = """
+[tool.poetry]
+name = "alvo"
+group = "dev"
+
+[tool.poetry.dependencies]
+requests = "^2.33.0"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
+    ]
+
+
+def test_grupo_poetry_com_dependencies_nao_tabela_e_ignorado_sem_quebrar_os_demais():
+    """Um grupo com 'dependencies' não-tabela é ignorado; os demais sobrevivem."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = "^2.33.0"
+
+[tool.poetry.group.dev]
+dependencies = "pytest"
+
+[tool.poetry.group.lint.dependencies]
+mypy = "^1.11.0"
+"""
+
+    result = parse_pyproject(content)
+
+    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    assert origens == {
+        "requests": "Produção",
+        "mypy": "Desenvolvimento",
+    }
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        'project = "alvo"\n',
+        '[project]\nname = "alvo"\noptional-dependencies = "dev"\n',
+        'dependency-groups = "dev"\n[project]\nname = "alvo"\n',
+        'tool = "poetry"\n',
+    ],
+)
+def test_secoes_malformadas_degradam_sem_excecao(content):
+    """Seções não-tabela (project, tool e os laços dev) não derrubam o pipeline."""
+    result = parse_pyproject(content)
+
+    assert isinstance(result, list)
+
+
+def test_dependency_group_com_valor_string_e_tratado_como_vazio():
+    """Um grupo cujo valor é string vira vazio, sem gerar pacotes de um caractere."""
+    content = """
+[project]
+name = "alvo"
+dependencies = ["requests>=2.33.0"]
+
+[dependency-groups]
+dev = "pytest"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
+    ]
+
+
 def test_grupo_poetry_de_nome_arbitrario_convive_com_producao():
     """Qualquer [tool.poetry.group.<nome>] é Desenvolvimento; produção não muda."""
     content = """
