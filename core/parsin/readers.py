@@ -11,7 +11,7 @@ Entrada:
 - Conteúdo do arquivo de configuração (string)
 
 Saída:
-- Lista de dicionários contendo 'Pacote', 'Versão Atual' e 'Origem'
+- Lista de dicionários contendo 'Pacote', 'Versão Usada' e 'Origem'
 """
 
 import re
@@ -35,12 +35,17 @@ except ImportError:
 
 def parse_dependency_string(line: str) -> Optional[Dict[str, str]]:
     """
-    Analisa uma linha de texto e retorna nome e versão da dependência.
+    Analisa uma linha de texto e retorna nome e Versão Usada da dependência.
+
+    Só um pin exato determina a Versão Usada; um especificador de faixa não fixa
+    versão nenhuma e devolve "" (ADR-0002). Sem isso, `!=1.25.0,>=1.21.1` cairia
+    na armadilha de reportar a versão *excluída* como usada.
 
     Trata os seguintes casos do PEP 508 e formatos comuns:
-    - Marcadores de ambiente: numpy>=1.26; python_version < '3.14'  → numpy | 1.26
-    - Extras entre colchetes: requests[security]>=2.28              → requests | 2.28
-    - Múltiplos especificadores: urllib3!=1.25.0,>=1.21.1           → urllib3 | 1.25.0
+    - Pin exato:                 requests==2.31.0                  → requests | 2.31.0
+    - Marcadores de ambiente: numpy>=1.26; python_version < '3.14'  → numpy | ""
+    - Extras entre colchetes: requests[security]>=2.28              → requests | ""
+    - Múltiplos especificadores: urllib3!=1.25.0,>=1.21.1           → urllib3 | ""
     - Apenas nome sem versão:    Pillow                             → pillow | ""
     - Dependência condicional sem versão: tzdata; sys_platform==... → tzdata | ""
 
@@ -48,7 +53,7 @@ def parse_dependency_string(line: str) -> Optional[Dict[str, str]]:
         line: Linha de texto com a declaração da dependência.
 
     Returns:
-        Dict com 'Pacote' e 'Versão Atual', ou None se a linha for inválida.
+        Dict com 'Pacote' e 'Versão Usada', ou None se a linha for inválida.
     """
     line = line.split("#")[0].strip()
     if not line:
@@ -67,10 +72,13 @@ def parse_dependency_string(line: str) -> Optional[Dict[str, str]]:
 
     name = match.group(1).strip().lower()
     version_raw = match.group(2).strip()
-    version_match = re.search(r"(\d+[\d\.]*)", version_raw)
-    version = version_match.group(1) if version_match else ""
 
-    return {"Pacote": name, "Versão Atual": version}
+    # Só um pin exato (== do PEP 508, === do PEP 440) fixa a Versão Usada; um
+    # especificador de faixa (>=, <, !=, ^, ~=) não determina versão (ADR-0002).
+    pin_match = re.match(r"={2,3}\s*(\d[^\s,;]*)", version_raw)
+    version = pin_match.group(1) if pin_match else ""
+
+    return {"Pacote": name, "Versão Usada": version}
 
 
 def _clean_conda_dep(dep_string: str) -> Optional[Dict[str, str]]:
@@ -84,7 +92,7 @@ def _clean_conda_dep(dep_string: str) -> Optional[Dict[str, str]]:
         dep_string: String da dependência conda.
 
     Returns:
-        Dict com 'Pacote' e 'Versão Atual', ou None se inválida.
+        Dict com 'Pacote' e 'Versão Usada', ou None se inválida.
     """
     dep_string = str(dep_string).strip()
 
@@ -107,7 +115,7 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, st
         origin: Origem a atribuir a cada pacote da lista.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     if not isinstance(entries, list):
         return []
@@ -150,7 +158,7 @@ def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[
         origin: Origem a atribuir a cada pacote da tabela.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     if not isinstance(table, dict):
         return []
@@ -175,7 +183,7 @@ def _parse_requirements_content(content: str, origin: str) -> List[Dict[str, str
         origin: Origem a atribuir a cada pacote declarado.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     lines = [line.strip() for line in content.split("\n")]
     return _parse_dependency_list(
@@ -192,7 +200,7 @@ def parse_requirements(content: str) -> List[Dict[str, str]]:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     return _parse_requirements_content(content, ORIGIN_PRODUCTION)
 
@@ -209,7 +217,7 @@ def parse_requirements_dev(content: str) -> List[Dict[str, str]]:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     return _parse_requirements_content(content, ORIGIN_DEVELOPMENT)
 
@@ -232,7 +240,7 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     if yaml is None:
         return []
@@ -281,7 +289,7 @@ def parse_pyproject(content: str) -> List[Dict[str, str]]:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     if tomllib is None:
         return []
@@ -334,7 +342,7 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
         content: Conteúdo completo do arquivo como string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Atual' e 'Origem'.
+        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
     if tomllib is None:
         return []
@@ -353,7 +361,7 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
             dependencies.append(
                 {
                     "Pacote": name.lower(),
-                    "Versão Atual": version if version else "",
+                    "Versão Usada": version if version else "",
                     "Origem": ORIGIN_PRODUCTION,
                 }
             )
