@@ -214,6 +214,61 @@ pandas = ">=3.0.1"
     ]
 
 
+def test_pin_exato_do_poetry_define_a_versao_usada():
+    """No Poetry, `requests = "2.33.0"` (sem operador) é pin exato (#11 AC2).
+
+    Sem tratar o especificador nu, o nome absorvia a versão ("requests2.33.0") e
+    o pin — única fonte de Versão Usada fora do Lock — se perdia.
+    """
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = "2.33.0"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+    ]
+
+
+def test_pin_exato_do_poetry_em_tabela_define_a_versao_usada():
+    """O pin nu também vale quando a dependência vem como tabela com extras."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = { version = "2.33.0", extras = ["security"] }
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+    ]
+
+
+def test_curinga_do_poetry_nao_define_versao_usada():
+    """`*` aceita qualquer versão, logo não fixa Versão Usada (ADR-0002)."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = "*"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
+    ]
+
+
 def test_grupo_dev_do_poetry_tem_origem_de_desenvolvimento():
     """[tool.poetry.group.dev.dependencies] são de Desenvolvimento (ADR-0003)."""
     content = """

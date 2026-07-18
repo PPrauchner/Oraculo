@@ -145,6 +145,29 @@ def _as_dict(value: object) -> Dict[str, object]:
     return value if isinstance(value, dict) else {}
 
 
+def _as_pep_508_specifier(spec: object) -> str:
+    """Converte um especificador do Poetry para a forma que o PEP 508 escreve.
+
+    O Poetry aceita pin exato sem operador (`requests = "2.33.0"`), que em PEP 508
+    se escreve `requests==2.33.0`. Sem a conversão o número gruda no nome
+    ("requests2.33.0") e o pin se perde — e ele é a única fonte de Versão Usada
+    fora do Lock (ADR-0002). Faixas (`^`, `~`, `>=`) e o curinga `*` passam
+    intactos: não fixam versão.
+
+    Args:
+        spec: Especificador lido do TOML.
+
+    Returns:
+        O especificador pronto para concatenar ao Nome de Distribuição.
+    """
+    text = str(spec).strip()
+
+    if text[:1].isdigit():
+        return f"=={text}"
+
+    return text
+
+
 def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[str, str]]:
     """
     Analisa uma tabela de dependências do Poetry e carimba a Origem de cada uma.
@@ -167,7 +190,7 @@ def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[
     for name, spec in table.items():
         if isinstance(spec, dict):
             spec = spec.get("version", "")
-        entries.append(f"{name}{spec}")
+        entries.append(f"{name}{_as_pep_508_specifier(spec)}")
     return _parse_dependency_list(entries, origin)
 
 
