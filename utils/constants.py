@@ -40,6 +40,20 @@ ORIGIN_PRODUCTION = "Produção"
 ORIGIN_DEVELOPMENT = "Desenvolvimento"
 # ============ Origem =================#
 
+# ============ Categoria =================#
+# Classificação de uma dependência no relatório/exportação. Derivada das listas de
+# análise (Zumbi, Fantasma) — o restante auditado é Saudável. Desatualizada NÃO é
+# Categoria: é coluna própria, pois uma dependência pode ser Zumbi e Desatualizada ao
+# mesmo tempo (ver CONTEXT.md e a issue US-06/US-07).
+CATEGORY_ZOMBIE = "Zumbi"
+CATEGORY_GHOST = "Fantasma"
+CATEGORY_HEALTHY = "Saudável"
+
+# Marca da coluna Desatualizada na exportação (booleano legível).
+OUTDATED_YES = "Sim"
+OUTDATED_NO = "Não"
+# ============ Categoria =================#
+
 # ============ Lock =================#
 # Extensão dos arquivos de Lock (uv.lock, poetry.lock). O Lock resolve versões,
 # não define o conjunto auditado (ADR-0002).
