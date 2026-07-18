@@ -39,8 +39,17 @@ def fetch_package_data(package_name: str) -> dict | None:
 
 
 def get_latest_version(data: dict) -> str:
-    """Extrai a versão mais recente dos metadados já buscados."""
-    return data["info"]["version"]
+    """Extrai a versão mais recente dos metadados já buscados.
+
+    Args:
+        data: Metadados já buscados via `fetch_package_data`.
+
+    Returns:
+        A versão publicada, ou "" quando a resposta não a traz — uma resposta
+        malformada é indisponibilidade de um pacote, não motivo para abortar a
+        análise dos demais.
+    """
+    return data.get("info", {}).get("version", "")
 
 
 def _release_files(data: dict, version: str) -> list[dict]:
@@ -56,9 +65,14 @@ def get_release_size(data: dict, version: str) -> int | None:
         version: Versão exata cujo Tamanho se quer (a Versão Usada).
 
     Returns:
-        Os bytes do primeiro wheel (`bdist_wheel`); na falta de wheel, os do
-        sdist; ``None`` quando a versão não tem artefatos ou não existe na
-        resposta.
+        Os bytes de um wheel (`bdist_wheel`); na falta de wheel, os do sdist;
+        ``None`` quando a versão não tem artefatos ou não existe na resposta.
+
+    Um pacote com wheels por plataforma publica dezenas de artefatos da mesma
+    versão, de tamanhos bem diferentes. A escolha é fixada pela ordem alfabética do
+    nome do arquivo, não pela ordem em que o PyPI devolveu: o ADR-0004 exige que o
+    mesmo pacote dê sempre o mesmo número, senão a série temporal da US-07 inventa
+    variação que não houve.
     """
     files = _release_files(data, version)
     if not files:
@@ -66,9 +80,10 @@ def get_release_size(data: dict, version: str) -> int | None:
 
     wheels = [f for f in files if f.get("packagetype") == "bdist_wheel"]
     sdists = [f for f in files if f.get("packagetype") == "sdist"]
-    chosen = wheels or sdists or files
+    candidates = wheels or sdists or files
+    chosen = min(candidates, key=lambda f: f.get("filename", ""))
 
-    return chosen[0].get("size")
+    return chosen.get("size")
 
 
 def _parse_upload_time(raw: str) -> date | None:

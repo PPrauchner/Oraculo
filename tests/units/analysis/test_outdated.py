@@ -141,6 +141,101 @@ def test_pacote_ausente_do_pypi_nao_quebra_os_demais():
     assert by_name["pandas"]["Tamanho"] == 100  # os demais seguem analisados
 
 
+def test_versao_com_sufixo_pep_440_le_a_propria_release():
+    """`2.0.0b1` não é `2.0.0`: Tamanho/Idade saem da release da Versão Usada."""
+    data = _data(
+        "2.0.0",
+        {
+            "2.0.0b1": [_release("bdist_wheel", 111)],
+            "2.0.0": [_release("bdist_wheel", 999)],
+        },
+    )
+    deps = [{"Pacote": "pandas", "Versão Usada": "2.0.0b1", "Origem": "Produção"}]
+
+    with _with_pypi_data(data):
+        result = analyze_dependency_status(deps)
+
+    assert result[0]["Tamanho"] == 111  # a pré-release, não os 999 da final
+    assert result[0]["Status"] == "Desatualizado"  # 2.0.0b1 < 2.0.0
+
+
+def test_versao_post_release_le_a_propria_release():
+    """`2.9.0.post0` (forma que o uv.lock deste projeto pina) não vira `2.9.0`."""
+    data = _data(
+        "2.9.0.post0",
+        {
+            "2.9.0": [_release("bdist_wheel", 100)],
+            "2.9.0.post0": [_release("bdist_wheel", 222)],
+        },
+    )
+    deps = [{"Pacote": "pandas", "Versão Usada": "2.9.0.post0", "Origem": "Produção"}]
+
+    with _with_pypi_data(data):
+        result = analyze_dependency_status(deps)
+
+    assert result[0]["Tamanho"] == 222
+    assert result[0]["Status"] == "Atualizado"
+
+
+def test_versao_usada_que_nao_e_pep_440_conta_como_indisponivel():
+    """Um valor que não é versão PEP 440 não vira chave de `releases[]`."""
+    deps = [{"Pacote": "pandas", "Versão Usada": "não-é-versão", "Origem": "Produção"}]
+
+    with _with_pypi_data(_DEFAULT):
+        result = analyze_dependency_status(deps)
+
+    assert result[0]["Versão Usada"] == VERSION_UNAVAILABLE
+    assert result[0]["Tamanho"] == VERSION_UNAVAILABLE
+
+
+def test_fantasma_ausente_do_pypi_reporta_versao_usada_indisponivel():
+    """Fantasma cujo Nome de Import não existe no PyPI (`yaml`) reporta N/D.
+
+    O sentinela é o mesmo do caminho com PyPI: não conhecer a Versão Usada é
+    indisponibilidade, não um "N/A" herdado do extrator de imports.
+    """
+    ghost = [{"Pacote": "yaml", "Versão Usada": "N/A"}]  # sem Origem
+
+    with patch(
+        "core.analysis.outdated_analizer.fetch_package_data", return_value=None
+    ):
+        result = analyze_dependency_status(ghost)
+
+    assert result[0]["Versão Usada"] == VERSION_UNAVAILABLE
+
+
+def test_pin_de_pacote_ausente_do_pypi_e_preservado():
+    """Pacote privado com pin mantém a Versão Usada que a Declaração fixou."""
+    deps = [{"Pacote": "pacote-interno", "Versão Usada": "1.0.0", "Origem": "Produção"}]
+
+    with patch(
+        "core.analysis.outdated_analizer.fetch_package_data", return_value=None
+    ):
+        result = analyze_dependency_status(deps)
+
+    assert result[0]["Versão Usada"] == "1.0.0"
+
+
+def test_resposta_do_pypi_sem_versao_nao_quebra_a_analise():
+    """Resposta malformada é tratada como indisponível, não sobe KeyError."""
+    deps = [
+        {"Pacote": "quebrado", "Versão Usada": "1.0.0", "Origem": "Produção"},
+        {"Pacote": "pandas", "Versão Usada": "1.5.0", "Origem": "Produção"},
+    ]
+
+    def fake_fetch(name):
+        return {} if name == "quebrado" else _DEFAULT
+
+    with patch(
+        "core.analysis.outdated_analizer.fetch_package_data", side_effect=fake_fetch
+    ):
+        result = analyze_dependency_status(deps)
+
+    by_name = {dep["Pacote"]: dep for dep in result}
+    assert by_name["quebrado"]["Status"] == "Desconhecido"
+    assert by_name["pandas"]["Tamanho"] == 100  # os demais seguem analisados
+
+
 def test_um_unico_request_por_pacote():
     """Versão, Tamanho e Idade saem de um único request por pacote (AC3)."""
     deps = [{"Pacote": "pandas", "Versão Usada": "1.5.0", "Origem": "Produção"}]

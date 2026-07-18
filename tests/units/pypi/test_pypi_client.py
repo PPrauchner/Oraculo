@@ -82,6 +82,24 @@ def test_pacote_ausente_do_pypi_devolve_none():
         assert fetch_package_data("pacote-interno-privado") is None
 
 
+def test_tamanho_nao_depende_da_ordem_dos_wheels_na_resposta():
+    """Vários wheels da mesma versão dão sempre o mesmo Tamanho (ADR-0004).
+
+    Um pacote com wheels por plataforma (numpy publica dezenas, com 4x de variação
+    de tamanho) não pode mudar de Tamanho porque o PyPI reordenou a lista — a US-07
+    leria um crescimento que não houve.
+    """
+    wheels = [
+        {"packagetype": "bdist_wheel", "filename": "n-2.0.0-cp311-macosx.whl", "size": 21_219_203},
+        {"packagetype": "bdist_wheel", "filename": "n-2.0.0-cp311-manylinux.whl", "size": 4_977_729},
+        {"packagetype": "bdist_wheel", "filename": "n-2.0.0-cp312-win.whl", "size": 6_000_000},
+    ]
+    data = {"info": {"version": "2.0.0"}, "releases": {"2.0.0": wheels}}
+    reordered = {"info": {"version": "2.0.0"}, "releases": {"2.0.0": list(reversed(wheels))}}
+
+    assert get_release_size(data, "2.0.0") == get_release_size(reordered, "2.0.0")
+
+
 def test_versao_ausente_nao_tem_tamanho_nem_idade():
     """Versão que não consta em `releases` devolve None (indisponível, não zero)."""
     assert get_release_size(_SAMPLE, "9.9.9") is None
