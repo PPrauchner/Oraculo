@@ -12,7 +12,17 @@ Saída:
 - Estrutura de dados organizada (ex: Dicionário)
 """
 
-from utils.constants import VERSION_UNAVAILABLE
+from utils.constants import (
+    CATEGORY_GHOST,
+    CATEGORY_HEALTHY,
+    CATEGORY_ZOMBIE,
+    OUTDATED_NO,
+    OUTDATED_YES,
+    VERSION_UNAVAILABLE,
+)
+
+_OUTDATED_STATUS = "Desatualizado"
+_ORIGIN_UNAVAILABLE = "N/A"
 
 _BYTES_PER_KB = 1024
 _BYTES_PER_MB = 1024 * 1024
@@ -118,3 +128,94 @@ def normalize(list_analyzed: list) -> list[dict]:
             }
         ]
     return rows
+
+
+def build_export_rows(
+    dependencies: list[dict],
+    zombies: list[dict],
+    ghosts: list[dict],
+    project_name: str,
+    analysis_date: str,
+) -> list[dict]:
+    """Monta as linhas da exportação (US-06/US-07), uma por dependência.
+
+    O esquema acrescenta um eixo temporal (Data da Análise) e de identidade
+    (Projeto), e estratifica por Categoria (Zumbi, Fantasma, Saudável). Desatualizada
+    é coluna própria — uma dependência pode ser Zumbi *e* Desatualizada ao mesmo
+    tempo, o que um único campo Categoria perderia.
+
+    Tamanho e Idade saem crus (bytes e dias inteiros) ou como o sentinela de
+    indisponibilidade, nunca formatados nem 0: o CSV é para diffing/concatenação ao
+    longo do tempo, não para leitura humana direta (essa é a `normalize`).
+
+    Args:
+        dependencies: Todas as dependências auditadas (Declaradas + Fantasmas),
+            já deduplicadas.
+        zombies: Dependências Zumbi identificadas pela análise.
+        ghosts: Dependências Fantasma identificadas pela análise.
+        project_name: Identificador do Projeto-Alvo (mesmo valor em toda linha).
+        analysis_date: Data da Análise (mesmo valor em toda linha da exportação).
+
+    Returns:
+        Uma linha por dependência, na ordem das colunas do esquema.
+    """
+    zombie_names = {dep["Pacote"] for dep in zombies}
+    ghost_names = {dep["Pacote"] for dep in ghosts}
+
+    rows = []
+    for dep in dependencies:
+        package = dep.get("Pacote", "N/A")
+
+        if package in zombie_names:
+            category = CATEGORY_ZOMBIE
+        elif package in ghost_names:
+            category = CATEGORY_GHOST
+        else:
+            category = CATEGORY_HEALTHY
+
+        outdated = OUTDATED_YES if dep.get("Status") == _OUTDATED_STATUS else OUTDATED_NO
+
+        rows.append(
+            {
+                "Data da Análise": analysis_date,
+                "Projeto": project_name,
+                "Pacote": package,
+                "Categoria": category,
+                # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
+                "Origem": dep.get("Origem", _ORIGIN_UNAVAILABLE),
+                "Versão Usada": dep.get("Versão Usada", "N/A"),
+                "Versão PyPI": dep.get("Versão PyPI", "N/A"),
+                "Desatualizada": outdated,
+                "Tamanho": dep.get("Tamanho", VERSION_UNAVAILABLE),
+                "Idade": dep.get("Idade", VERSION_UNAVAILABLE),
+            }
+        )
+
+    return rows
+
+
+def filter_export_rows(
+    rows: list[dict],
+    categories: set[str],
+    include_outdated: bool,
+) -> list[dict]:
+    """Seleciona as linhas de exportação pedidas, sem repetir nenhuma dependência.
+
+    Desatualizada não é Categoria, então entra como critério à parte. Uma linha que
+    satisfaz os dois critérios (ex.: Zumbi *e* Desatualizada) sai uma única vez —
+    filtrar preserva a regra de uma linha por dependência.
+
+    Args:
+        rows: Linhas produzidas por `build_export_rows`.
+        categories: Categorias selecionadas (Zumbi, Fantasma, Saudável).
+        include_outdated: Se as Dependências Desatualizadas também entram.
+
+    Returns:
+        As linhas selecionadas, na ordem original.
+    """
+    return [
+        row
+        for row in rows
+        if row["Categoria"] in categories
+        or (include_outdated and row["Desatualizada"] == OUTDATED_YES)
+    ]
