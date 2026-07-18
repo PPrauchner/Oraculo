@@ -38,6 +38,9 @@ PYPI_BASE_URL = "https://pypi.org/pypi"
 
 ORIGIN_PRODUCTION = "Produção"
 ORIGIN_DEVELOPMENT = "Desenvolvimento"
+# Fantasma não vem de Declaração, logo não tem Origem: é assim que ele se identifica
+# no relatório e na exportação (ver `is_ghost`).
+ORIGIN_UNAVAILABLE = "N/A"
 # ============ Origem =================#
 
 # ============ Categoria =================#
@@ -71,10 +74,15 @@ PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())
 
 # ============ Alias de Import =================#
 # Mapeia Nome de Distribuição (normalizado: minúsculas e "-" -> "_") para os Nomes
-# de Import que o pacote expõe. Sem isso, um mesmo pacote vira Fantasma e Zumbi ao
-# mesmo tempo (ex.: PyYAML ↔ yaml). Ver CONTEXT.md (Alias de Import) e a limitação
-# documentada no README: pacotes fora desta tabela ainda geram o par de falsos
-# positivos. Um pacote pode expor mais de um Nome de Import (ex.: setuptools).
+# de Import que o pacote expõe *além do próprio nome* — `import_names_for` já
+# acrescenta o nome normalizado, então repeti-lo aqui é redundante. Sem esta tabela um
+# mesmo pacote vira Fantasma e Zumbi ao mesmo tempo (ex.: PyYAML ↔ yaml). Ver
+# CONTEXT.md (Alias de Import) e a limitação documentada no README: pacotes fora desta
+# tabela ainda geram o par de falsos positivos.
+#
+# Namespace compartilhado não entra: mapear `protobuf` para `google` faria um projeto
+# que importa `google.cloud.storage` "usar" um protobuf declarado e ocioso — falso
+# negativo na US-03, o inverso do que a tabela resolve.
 IMPORT_ALIASES: dict[str, list[str]] = {
     "pyyaml": ["yaml"],  # PyYAML
     "scikit_learn": ["sklearn"],  # scikit-learn
@@ -86,9 +94,8 @@ IMPORT_ALIASES: dict[str, list[str]] = {
     "python_dotenv": ["dotenv"],  # python-dotenv
     "python_docx": ["docx"],  # python-docx
     "python_pptx": ["pptx"],  # python-pptx
-    "protobuf": ["google"],  # protobuf
     "pycryptodome": ["Crypto"],  # pycryptodome
-    "setuptools": ["setuptools", "pkg_resources"],  # múltiplos Nomes de Import
-    "attrs": ["attr", "attrs"],  # múltiplos Nomes de Import
+    "setuptools": ["pkg_resources"],  # expõe mais de um Nome de Import
+    "attrs": ["attr"],  # expõe mais de um Nome de Import
 }
 # ============ Alias de Import =================#
