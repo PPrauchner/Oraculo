@@ -12,7 +12,7 @@ Saída:
 - Lista de dicionários com imports encontrados:
   {
     "Pacote": "nome_do_modulo",
-    "Versão Atual": "N/A",
+    "Versão Usada": "N/A",
     "Versão Pypi": "N/A",
     "Status": "Desconhecido"
   }
@@ -305,7 +305,7 @@ def parse_imports(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
         result.append(
             {
                 "Pacote": import_name,
-                "Versão Atual": "N/A",
+                "Versão Usada": "N/A",
                 "Versão PyPI": "N/A",
                 "Status": "Desconhecido",
             }

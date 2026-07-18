@@ -6,7 +6,7 @@ def test_normalize_with_valid_data():
     input_data = [
         {
             "Pacote": "pandas",
-            "Versão Atual": "1.5.0",
+            "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
             "Status": "Desatualizado",
             "Origem": "Produção",
@@ -17,7 +17,7 @@ def test_normalize_with_valid_data():
     expected = [
         {
             "Pacote": "pandas",
-            "Versão Atual": "1.5.0",
+            "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
             "Status": "Desatualizado",
             "Origem": "Produção",
@@ -34,7 +34,7 @@ def test_normalize_with_missing_keys():
     
     result = normalize(input_data)
     
-    assert result[0]["Versão Atual"] == "N/A"
+    assert result[0]["Versão Usada"] == "N/A"
     assert result[0]["Status"] == "Desconhecido"
 
 def test_normalize_empty_list():

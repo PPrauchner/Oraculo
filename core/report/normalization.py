@@ -30,7 +30,7 @@ def normalize(list_analyzed: list) -> list[dict]:
         rows.append(
             {
                 "Pacote": dep.get("Pacote", "N/A"),
-                "Versão Atual": dep.get("Versão Atual", "N/A"),
+                "Versão Usada": dep.get("Versão Usada", "N/A"),
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
                 "Status": dep.get("Status", "Desconhecido"),
                 "Origem": dep.get("Origem", "N/A"),
@@ -41,7 +41,7 @@ def normalize(list_analyzed: list) -> list[dict]:
         return [
             {
                 "Pacote": "N/A",
-                "Versão Atual": "N/A",
+                "Versão Usada": "N/A",
                 "Versão PyPI": "N/A",
                 "Status": "N/A",
                 "Origem": "N/A",
