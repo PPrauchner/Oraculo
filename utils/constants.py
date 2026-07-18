@@ -38,7 +38,24 @@ PYPI_BASE_URL = "https://pypi.org/pypi"
 
 ORIGIN_PRODUCTION = "Produção"
 ORIGIN_DEVELOPMENT = "Desenvolvimento"
+# Fantasma não vem de Declaração, logo não tem Origem: é assim que ele se identifica
+# no relatório e na exportação (ver `is_ghost`).
+ORIGIN_UNAVAILABLE = "N/A"
 # ============ Origem =================#
+
+# ============ Categoria =================#
+# Classificação de uma dependência no relatório/exportação. Derivada das listas de
+# análise (Zumbi, Fantasma) — o restante auditado é Saudável. Desatualizada NÃO é
+# Categoria: é coluna própria, pois uma dependência pode ser Zumbi e Desatualizada ao
+# mesmo tempo (ver CONTEXT.md e a issue US-06/US-07).
+CATEGORY_ZOMBIE = "Zumbi"
+CATEGORY_GHOST = "Fantasma"
+CATEGORY_HEALTHY = "Saudável"
+
+# Marca da coluna Desatualizada na exportação (booleano legível).
+OUTDATED_YES = "Sim"
+OUTDATED_NO = "Não"
+# ============ Categoria =================#
 
 # ============ Lock =================#
 # Extensão dos arquivos de Lock (uv.lock, poetry.lock). O Lock resolve versões,
@@ -46,4 +63,39 @@ ORIGIN_DEVELOPMENT = "Desenvolvimento"
 LOCK_EXTENSION = ".lock"
 # ============ Lock =================#
 
+# ============ Versão Usada =================#
+# Valor reportado quando a Versão Usada é indisponível: sem Lock e sem pin, não se
+# conhece a versão que o Projeto-Alvo executa, então Idade/Tamanho ficam indefinidos
+# (ADR-0002). Nunca assumir a versão do PyPI nesse caso.
+VERSION_UNAVAILABLE = "N/D"
+# ============ Versão Usada =================#
+
 PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())
+
+# ============ Alias de Import =================#
+# Mapeia Nome de Distribuição (normalizado: minúsculas e "-" -> "_") para os Nomes
+# de Import que o pacote expõe *além do próprio nome* — `import_names_for` já
+# acrescenta o nome normalizado, então repeti-lo aqui é redundante. Sem esta tabela um
+# mesmo pacote vira Fantasma e Zumbi ao mesmo tempo (ex.: PyYAML ↔ yaml). Ver
+# CONTEXT.md (Alias de Import) e a limitação documentada no README: pacotes fora desta
+# tabela ainda geram o par de falsos positivos.
+#
+# Namespace compartilhado não entra: mapear `protobuf` para `google` faria um projeto
+# que importa `google.cloud.storage` "usar" um protobuf declarado e ocioso — falso
+# negativo na US-03, o inverso do que a tabela resolve.
+IMPORT_ALIASES: dict[str, list[str]] = {
+    "pyyaml": ["yaml"],  # PyYAML
+    "scikit_learn": ["sklearn"],  # scikit-learn
+    "opencv_python": ["cv2"],  # opencv-python
+    "opencv_python_headless": ["cv2"],  # opencv-python-headless
+    "pillow": ["PIL"],  # Pillow
+    "beautifulsoup4": ["bs4"],  # beautifulsoup4
+    "python_dateutil": ["dateutil"],  # python-dateutil
+    "python_dotenv": ["dotenv"],  # python-dotenv
+    "python_docx": ["docx"],  # python-docx
+    "python_pptx": ["pptx"],  # python-pptx
+    "pycryptodome": ["Crypto"],  # pycryptodome
+    "setuptools": ["pkg_resources"],  # expõe mais de um Nome de Import
+    "attrs": ["attr"],  # expõe mais de um Nome de Import
+}
+# ============ Alias de Import =================#

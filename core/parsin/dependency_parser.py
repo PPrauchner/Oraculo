@@ -1,10 +1,10 @@
 """
 Módulo responsável por normalizar e estruturar dependências declaradas.
 
-Recebe a saída processada de readers.py (lista de dicts com Pacote, Versão Atual
+Recebe a saída processada de readers.py (lista de dicts com Pacote, Versão Usada
 e Origem) e retorna uma lista padronizada com a estrutura completa incluindo:
 - Pacote
-- Versão Atual
+- Versão Usada
 - Versão Pypi (inicialmente "N/A")
 - Status (inicialmente "Desconhecido")
 - Origem (Produção quando não informada)
@@ -25,7 +25,7 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
     """
     Normaliza um dicionário de dependência individual.
 
-    Recebe um dict com 'Pacote' e 'Versão Atual' e retorna um dict
+    Recebe um dict com 'Pacote' e 'Versão Usada' e retorna um dict
     padronizado com todos os campos obrigatórios.
 
     A Origem é preservada: é ela que permite isentar Dependências de
@@ -33,7 +33,7 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
     assume-se Produção — o recorte conservador.
 
     Args:
-        dep: Dicionário com 'Pacote', 'Versão Atual' e, opcionalmente, 'Origem'
+        dep: Dicionário com 'Pacote', 'Versão Usada' e, opcionalmente, 'Origem'
 
     Returns:
         Dicionário padronizado ou None se inválido
@@ -43,14 +43,14 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
 
     # Validar campos obrigatórios
     pacote = dep.get("Pacote", "").strip()
-    versao_atual = dep.get("Versão Atual", "").strip()
+    versao_usada = dep.get("Versão Usada", "").strip()
 
     if not pacote:
         return None
 
     return {
         "Pacote": pacote,
-        "Versão Atual": versao_atual,
+        "Versão Usada": versao_usada,
         "Versão PyPI": "N/A",
         "Status": "Desconhecido",
         "Origem": dep.get("Origem", ORIGIN_PRODUCTION),
@@ -65,10 +65,10 @@ def parse_dependencies(dependencies: List[Dict[str, str]]) -> List[Dict[str, str
     e retorna uma lista de dependências com estrutura padronizada.
 
     Args:
-        dependencies: Lista de dicients com 'Pacote' e 'Versão Atual'
+        dependencies: Lista de dicients com 'Pacote' e 'Versão Usada'
 
     Returns:
-        Lista de dicionários padronizada com campos: Pacote, Versão Atual, Versão Pypi, Status
+        Lista de dicionários padronizada com campos: Pacote, Versão Usada, Versão Pypi, Status
     """
     if not dependencies:
         return []
@@ -95,7 +95,7 @@ def parse_dependencies_with_filter(
     Caso contrário, processa e retorna as dependências normalizadas.
 
     Args:
-        dependencies: Lista de dicts com 'Pacote' e 'Versão Atual'
+        dependencies: Lista de dicts com 'Pacote' e 'Versão Usada'
         file_path: Caminho do arquivo de origem (ex: "tests/requirements.txt")
         ignore_folders: Lista de pastas a ignorar (ex: ["tests", "docs"])
 

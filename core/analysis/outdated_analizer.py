@@ -12,63 +12,117 @@ Saída:
 - Lista de dependências desatualizadas com suas versões
 """
 
-import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from core.pypi.pypi_client import get_latest_version
-from packaging.version import parse as parse_version
+from core.analysis.ghost_analizer import is_ghost
+from core.pypi.pypi_client import (
+    fetch_package_data,
+    get_latest_version,
+    get_release_age_days,
+    get_release_size,
+)
+from packaging.version import InvalidVersion, parse as parse_version
+from utils.constants import VERSION_UNAVAILABLE
 
 
-def _extract_version_number(version_string: str) -> str:
+def _used_version(dep: dict) -> str:
+    """Devolve a Versão Usada exatamente como o PyPI a publica, ou "" se indisponível.
+
+    A Versão Usada já chega resolvida (Lock ou pin exato), então não há
+    especificador a extrair — e extrair mutilaria versão válida: truncar o sufixo
+    PEP 440 faria `2.0.0b1` virar a chave `2.0.0` e ler a release *errada* em
+    `releases[]` (ADR-0004). O valor só é aceito se for uma versão PEP 440; "N/A"
+    (Fantasma) e "N/D" contam como indisponível.
+
+    Args:
+        dep: Dependência com a chave 'Versão Usada'.
+
+    Returns:
+        A versão exata, ou "" quando não há Versão Usada conhecida.
     """
-    Extrai apenas o número de versão de uma string que pode conter especificadores.
+    raw = (dep.get("Versão Usada") or "").strip()
 
-    Ex: ">=1.2.3" -> "1.2.3", "==2.0.0" -> "2.0.0", "1.0.0" -> "1.0.0"
-    """
-    if not version_string:
+    try:
+        parse_version(raw)
+    except InvalidVersion:
         return ""
 
-    version_string = version_string.strip()
-    match = re.search(r"(\d+\.\d+\.\d+|\d+\.\d+|\d+)", version_string)
+    return raw
 
-    if match:
-        return match.group(1)
-    return ""
+
+def _set_size_and_age(dep: dict, data: dict, version: str | None) -> None:
+    """Preenche 'Tamanho' e 'Idade' da versão de referência a partir dos metadados.
+
+    Guarda os valores crus (bytes e dias inteiros) ou o sentinela de
+    indisponibilidade; a formatação legível fica a cargo da camada de exibição.
+
+    Args:
+        dep: Dependência a preencher.
+        data: Metadados já buscados no PyPI.
+        version: Versão de referência (Versão Usada, ou a mais recente para
+            Fantasmas). ``None`` quando não há referência (Versão Usada N/D de uma
+            Dependência Declarada): Tamanho e Idade ficam indisponíveis, nunca 0.
+    """
+    if version is None:
+        dep["Tamanho"] = VERSION_UNAVAILABLE
+        dep["Idade"] = VERSION_UNAVAILABLE
+        return
+
+    size = get_release_size(data, version)
+    age = get_release_age_days(data, version)
+    dep["Tamanho"] = size if size is not None else VERSION_UNAVAILABLE
+    dep["Idade"] = age if age is not None else VERSION_UNAVAILABLE
 
 
 def _checar_dependencia(dep: dict) -> dict:
     """
-    Consulta o PyPI para uma única dependência e preenche os campos
-    'Versão PyPI' e 'Status' diretamente no dicionário.
+    Consulta o PyPI para uma única dependência (um request) e preenche
+    'Versão PyPI', 'Status', 'Tamanho' e 'Idade' diretamente no dicionário.
 
     Chamada em paralelo pelo ThreadPoolExecutor.
 
     Args:
-        dep: Dicionário com pelo menos 'Pacote' e 'Versão Atual'.
+        dep: Dicionário com pelo menos 'Pacote' e 'Versão Usada'.
 
     Returns:
-        O mesmo dicionário com 'Versão PyPI' e 'Status' preenchidos.
+        O mesmo dicionário com 'Versão PyPI', 'Status', 'Tamanho' e 'Idade'
+        preenchidos.
     """
-    pypi_version    = get_latest_version(dep["Pacote"])
-    versao_atual_raw = dep["Versão Atual"].strip() if dep["Versão Atual"] else ""
-    versao_atual    = _extract_version_number(versao_atual_raw)
+    data = fetch_package_data(dep["Pacote"])
+    versao_usada = _used_version(dep)
+    pypi_version = get_latest_version(data) if data else ""
 
-    if pypi_version is None:
+    if not pypi_version:
+        # Pacote ausente do PyPI (privado/interno), falha de rede ou resposta sem
+        # versão: indisponível, sem quebrar a análise dos demais pacotes.
         dep["Versão PyPI"] = "N/A"
         dep["Status"]      = "Desconhecido"
-    else:
-        dep["Versão PyPI"] = pypi_version
+        if not versao_usada:
+            # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
+            # indisponibilidade, independente de o pacote existir no PyPI.
+            dep["Versão Usada"] = VERSION_UNAVAILABLE
+        _set_size_and_age(dep, data={}, version=None)
+        return dep
 
-        if not versao_atual:
-            dep["Versão Atual"] = pypi_version
-            dep["Status"]       = "Atualizado"
-        else:
-            try:
-                if parse_version(versao_atual) < parse_version(pypi_version):
-                    dep["Status"] = "Desatualizado"
-                else:
-                    dep["Status"] = "Atualizado"
-            except Exception:
-                dep["Status"] = "Versão Inválida"
+    dep["Versão PyPI"] = pypi_version
+
+    if not versao_usada:
+        # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma
+        # "Atualizado" nem se copia a versão do PyPI (ADR-0002).
+        dep["Versão Usada"] = VERSION_UNAVAILABLE
+        dep["Status"]       = VERSION_UNAVAILABLE
+        # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): usa a
+        # versão mais recente como referência de Tamanho/Idade. Uma Dependência
+        # Declarada sem Versão Usada não tem referência — fica indisponível.
+        _set_size_and_age(dep, data, pypi_version if is_ghost(dep) else None)
+    else:
+        _set_size_and_age(dep, data, versao_usada)
+        try:
+            if parse_version(versao_usada) < parse_version(pypi_version):
+                dep["Status"] = "Desatualizado"
+            else:
+                dep["Status"] = "Atualizado"
+        except Exception:
+            dep["Status"] = "Versão Inválida"
 
     return dep
 
@@ -82,10 +136,11 @@ def analyze_dependency_status(dependencies: list[dict]) -> list[dict]:
     em relação ao número de dependências.
 
     Args:
-        dependencies: Lista de dicts com 'Pacote' e 'Versão Atual'.
+        dependencies: Lista de dicts com 'Pacote' e 'Versão Usada'.
 
     Returns:
-        A mesma lista com 'Versão PyPI' e 'Status' preenchidos em cada item.
+        A mesma lista com 'Versão PyPI', 'Status', 'Tamanho' e 'Idade'
+        preenchidos em cada item.
     """
     if not dependencies:
         return []

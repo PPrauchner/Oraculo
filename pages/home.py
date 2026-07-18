@@ -15,6 +15,8 @@ Saída:
 - Dados iniciais para execução da análise
 """
 
+from pathlib import Path
+
 import streamlit as st
 from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
@@ -62,6 +64,9 @@ def entering_data():
             st.session_state["archive"] = archive
             st.session_state["file_list"] = file_list
             st.session_state["folder_list"] = folders
+            # Identidade do Projeto-Alvo na exportação: o nome do arquivo sem a
+            # extensão (".tar.gz" deixa um ".tar" residual no stem).
+            st.session_state["project_name"] = Path(file.name).stem.removesuffix(".tar")
 
             # Validar requisitos mínimos
             ignore_folders = st.session_state.get("ignore_folders", [])

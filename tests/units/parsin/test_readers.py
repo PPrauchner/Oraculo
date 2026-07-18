@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from core.parsin.readers import (
+    parse_dependency_string,
     parse_environment_yml,
     parse_lock,
     parse_pyproject,
@@ -10,6 +11,38 @@ from core.parsin.readers import (
     parse_requirements_dev,
 )
 from utils.functions import READERS
+
+
+def test_pin_exato_define_versao_usada():
+    """Um pin exato (==X.Y.Z) determina a Versão Usada."""
+    assert parse_dependency_string("requests==2.31.0") == {
+        "Pacote": "requests",
+        "Versão Usada": "2.31.0",
+    }
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "altair<5",
+        "numpy>=1.26",
+        "urllib3!=1.25.0,>=1.21.1",
+        "requests^2.33.0",
+        "Pillow",
+    ],
+)
+def test_especificador_nao_pinado_nao_define_versao_usada(line):
+    """Sem pin exato, o especificador não determina Versão Usada (ADR-0002)."""
+    result = parse_dependency_string(line)
+
+    assert result["Versão Usada"] == ""
+
+
+def test_versao_excluida_nao_vira_versao_usada():
+    """`!=1.25.0,>=1.21.1` não devolve a versão excluída (1.25.0) como usada."""
+    result = parse_dependency_string("urllib3!=1.25.0,>=1.21.1")
+
+    assert result == {"Pacote": "urllib3", "Versão Usada": ""}
 
 
 def test_pep621_dependencies_tem_origem_de_producao():
@@ -23,8 +56,8 @@ dependencies = ["requests>=2.33.0", "pandas>=3.0.1"]
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
-        {"Pacote": "pandas", "Versão Atual": "3.0.1", "Origem": "Produção"},
+        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
+        {"Pacote": "pandas", "Versão Usada": "", "Origem": "Produção"},
     ]
 
 
@@ -97,7 +130,7 @@ version = "2.33.0"
     result = parse_lock(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
+        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
     ]
 
 
@@ -176,8 +209,63 @@ pandas = ">=3.0.1"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
-        {"Pacote": "pandas", "Versão Atual": "3.0.1", "Origem": "Produção"},
+        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
+        {"Pacote": "pandas", "Versão Usada": "", "Origem": "Produção"},
+    ]
+
+
+def test_pin_exato_do_poetry_define_a_versao_usada():
+    """No Poetry, `requests = "2.33.0"` (sem operador) é pin exato (#11 AC2).
+
+    Sem tratar o especificador nu, o nome absorvia a versão ("requests2.33.0") e
+    o pin — única fonte de Versão Usada fora do Lock — se perdia.
+    """
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = "2.33.0"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+    ]
+
+
+def test_pin_exato_do_poetry_em_tabela_define_a_versao_usada():
+    """O pin nu também vale quando a dependência vem como tabela com extras."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = { version = "2.33.0", extras = ["security"] }
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+    ]
+
+
+def test_curinga_do_poetry_nao_define_versao_usada():
+    """`*` aceita qualquer versão, logo não fixa Versão Usada (ADR-0002)."""
+    content = """
+[tool.poetry]
+name = "alvo"
+
+[tool.poetry.dependencies]
+requests = "*"
+"""
+
+    result = parse_pyproject(content)
+
+    assert result == [
+        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
     ]
 
 
@@ -195,8 +283,8 @@ ruff = "^0.6.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "pytest", "Versão Atual": "8.0.0", "Origem": "Desenvolvimento"},
-        {"Pacote": "ruff", "Versão Atual": "0.6.0", "Origem": "Desenvolvimento"},
+        {"Pacote": "pytest", "Versão Usada": "", "Origem": "Desenvolvimento"},
+        {"Pacote": "ruff", "Versão Usada": "", "Origem": "Desenvolvimento"},
     ]
 
 
@@ -230,7 +318,7 @@ requests = "^2.33.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
+        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
     ]
 
 
@@ -289,7 +377,7 @@ dev = "pytest"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Atual": "2.33.0", "Origem": "Produção"},
+        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
     ]
 
 
