@@ -4,6 +4,7 @@ Módulo parsin - Leitura, parsing e normalização de dependências.
 Combina:
 - readers.py: Extrai dados brutos de requirements.txt e arquivos .lock
 - dependency_parser.py: Normaliza e estrutura as dependências
+- declaration_collector.py: Une as Declarações no conjunto auditado (Lock fora)
 - import_parser.py: Identifica imports usados no código-fonte
 - normalization.py: Resolve diferenças entre nomes de pacote e import
 """
@@ -14,6 +15,7 @@ from .dependency_parser import (
     normalize_dependency,
     parse_dependencies_with_filter,
 )
+from .declaration_collector import collect_declarations
 from .import_parser import parse_imports, parse_imports_with_filter
 
 __all__ = [
@@ -23,6 +25,7 @@ __all__ = [
     "parse_dependencies",
     "normalize_dependency",
     "parse_dependencies_with_filter",
+    "collect_declarations",
     "parse_imports",
     "parse_imports_with_filter",
 ]

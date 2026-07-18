@@ -11,10 +11,10 @@ import sys
 
 
 MAPA_CORES_STATUS = {
-    " OK ✅": "#2ECC71",  # GREEN
-    " Zumbis 🧟": "#9B59B6",  # PURPLE
-    " Fantasmas  ghosts 👻": "#E74C3C",  # RED
-    " Desatualizadas ⏳": "#3498DB",  # BLUE
+    "OK ✅": "#2ECC71",  # GREEN
+    "Zumbis": "#9B59B6",  # PURPLE
+    "Fantasmas": "#E74C3C",  # RED
+    "Desatualizadas": "#3498DB",  # BLUE
 }
 COR_PADRAO = "#95A5A6"
 BLUE = "#3498DB"
@@ -39,5 +39,11 @@ PYPI_BASE_URL = "https://pypi.org/pypi"
 ORIGIN_PRODUCTION = "Produção"
 ORIGIN_DEVELOPMENT = "Desenvolvimento"
 # ============ Origem =================#
+
+# ============ Lock =================#
+# Extensão dos arquivos de Lock (uv.lock, poetry.lock). O Lock resolve versões,
+# não define o conjunto auditado (ADR-0002).
+LOCK_EXTENSION = ".lock"
+# ============ Lock =================#
 
 PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())

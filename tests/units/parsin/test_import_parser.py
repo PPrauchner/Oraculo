@@ -1,7 +1,7 @@
 import io
 import zipfile
 
-from core.parsin.import_parser import parse_imports
+from core.parsin.import_parser import extract_imports_from_code, parse_imports
 
 
 def _make_zip(files: dict[str, str]) -> zipfile.ZipFile:
@@ -16,6 +16,37 @@ def _make_zip(files: dict[str, str]) -> zipfile.ZipFile:
 def _packages(archive, ignore_folders: list[str] | None = None) -> set[str]:
     """Devolve o conjunto de Imports Raiz encontrados pelo parser."""
     return {item["Pacote"] for item in parse_imports(archive, ignore_folders or [])}
+
+
+def test_indented_imports_are_detected_as_root_imports():
+    """Imports em `try:` e no corpo de função também são Imports Raiz (issue #18)."""
+    code = (
+        "import requests\n"
+        "\n"
+        "try:\n"
+        "    import yaml\n"
+        "except ImportError:\n"
+        "    yaml = None\n"
+        "\n"
+        "def f():\n"
+        "    import pandas\n"
+    )
+
+    assert extract_imports_from_code(code) == {"requests", "yaml", "pandas"}
+
+
+def test_indented_imports_are_still_filtered():
+    """Filtros valem mesmo indentados: stdlib, Módulo Próprio, underscore, relativo."""
+    code = (
+        "def f():\n"
+        "    import os\n"          # stdlib
+        "    import core\n"        # Módulo Próprio
+        "    import _internal\n"   # underscore
+        "    from . import sibling\n"  # relativo
+        "    import requests\n"    # único válido
+    )
+
+    assert extract_imports_from_code(code, own_modules={"core"}) == {"requests"}
 
 
 def test_absolute_import_of_own_module_is_not_a_root_import():
