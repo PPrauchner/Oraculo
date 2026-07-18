@@ -42,3 +42,29 @@ def test_empty_inputs():
     """Verifica o comportamento com listas vazias."""
     assert analyze_ghost_dependencies([], []) == []
     assert analyze_ghost_dependencies([], [{"Pacote": "numpy"}]) == [{"Pacote": "numpy"}]
+
+def test_ghost_import_alias():
+    """'import yaml' com PyYAML declarado não deve virar fantasma (Alias de Import)."""
+    declared = [{"Pacote": "PyYAML"}]
+    imports = [{"Pacote": "yaml"}]
+    assert analyze_ghost_dependencies(declared, imports) == []
+
+@pytest.mark.parametrize(
+    "distribution, import_name",
+    [
+        ("scikit-learn", "sklearn"),
+        ("opencv-python", "cv2"),
+        ("Pillow", "PIL"),
+    ],
+)
+def test_ghost_common_import_aliases(distribution, import_name):
+    """Mismatches comuns do ecossistema não geram fantasmas."""
+    declared = [{"Pacote": distribution}]
+    imports = [{"Pacote": import_name}]
+    assert analyze_ghost_dependencies(declared, imports) == []
+
+def test_ghost_multiple_import_names():
+    """Distribuição com vários Nomes de Import cobre todos eles."""
+    declared = [{"Pacote": "setuptools"}]
+    imports = [{"Pacote": "setuptools"}, {"Pacote": "pkg_resources"}]
+    assert analyze_ghost_dependencies(declared, imports) == []
