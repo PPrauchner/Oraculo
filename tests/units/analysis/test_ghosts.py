@@ -1,5 +1,6 @@
 import pytest
-from core.analysis.ghost_analizer import analyze_ghost_dependencies
+from core.analysis.ghost_analizer import analyze_ghost_dependencies, is_ghost
+from core.analysis.zombie_analizer import analyze_zombie_dependencies
 
 def test_no_ghost_dependencies():
     """Garante que não retorna fantasmas quando tudo está declarado."""
@@ -68,3 +69,27 @@ def test_ghost_multiple_import_names():
     declared = [{"Pacote": "setuptools"}]
     imports = [{"Pacote": "setuptools"}, {"Pacote": "pkg_resources"}]
     assert analyze_ghost_dependencies(declared, imports) == []
+def test_namespace_compartilhado_nao_e_alias():
+    """`google` é namespace compartilhado, não Alias de protobuf.
+
+    Mapeá-lo faria um projeto que importa `google.cloud.storage` "usar" um
+    protobuf declarado e ocioso — falso negativo na US-03, o inverso do que a
+    tabela de Aliases resolve.
+    """
+    declared = [{"Pacote": "protobuf", "Origem": "Produção"}]
+    imports = [{"Pacote": "google"}]
+
+    assert analyze_zombie_dependencies(declared, imports) == declared
+
+
+def test_is_ghost_reconhece_origem_ausente_e_origem_n_a():
+    """Fantasma se identifica pela falta de Origem, na análise e na exibição.
+
+    Os analisadores devolvem o Fantasma sem a chave; relatório e exportação
+    preenchem "N/A". As duas formas precisam responder igual, senão a mesma
+    dependência muda de categoria conforme a etapa do pipeline.
+    """
+    assert is_ghost({"Pacote": "requests"})
+    assert is_ghost({"Pacote": "requests", "Origem": "N/A"})
+    assert not is_ghost({"Pacote": "requests", "Origem": "Produção"})
+    assert not is_ghost({"Pacote": "ruff", "Origem": "Desenvolvimento"})

@@ -12,17 +12,20 @@ Saída:
 - Estrutura de dados organizada (ex: Dicionário)
 """
 
+from typing import Callable
+
+from core.analysis.ghost_analizer import is_ghost
 from utils.constants import (
     CATEGORY_GHOST,
     CATEGORY_HEALTHY,
     CATEGORY_ZOMBIE,
+    ORIGIN_UNAVAILABLE,
     OUTDATED_NO,
     OUTDATED_YES,
     VERSION_UNAVAILABLE,
 )
 
 _OUTDATED_STATUS = "Desatualizado"
-_ORIGIN_UNAVAILABLE = "N/A"
 
 _BYTES_PER_KB = 1024
 _BYTES_PER_MB = 1024 * 1024
@@ -64,7 +67,9 @@ def _format_age(age: object) -> str:
     return f"{days} dia" if days == 1 else f"{days} dias"
 
 
-def _display_metric(raw: object, is_fantasma: bool, formatter) -> str:
+def _display_metric(
+    raw: object, is_fantasma: bool, formatter: Callable[[object], str]
+) -> str:
     """Formata Tamanho/Idade e, para Fantasma, explicita que é da versão mais recente.
 
     Args:
@@ -98,7 +103,7 @@ def normalize(list_analyzed: list) -> list[dict]:
     for dep in list_analyzed:
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): seu
         # Tamanho/Idade referem-se à versão mais recente, e a tabela o explicita.
-        is_fantasma = "Origem" not in dep
+        is_fantasma = is_ghost(dep)
         rows.append(
             {
                 "Pacote": dep.get("Pacote", "N/A"),
@@ -182,7 +187,7 @@ def build_export_rows(
                 "Pacote": package,
                 "Categoria": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
-                "Origem": dep.get("Origem", _ORIGIN_UNAVAILABLE),
+                "Origem": dep.get("Origem", ORIGIN_UNAVAILABLE),
                 "Versão Usada": dep.get("Versão Usada", "N/A"),
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
                 "Desatualizada": outdated,

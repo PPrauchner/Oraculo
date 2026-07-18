@@ -154,6 +154,7 @@ def test_normalize_ghost_marks_reference_as_latest_version():
     assert "última versão" in result[0]["Tamanho"]
     assert "última versão" in result[0]["Idade"]
 
+
 # ============ build_export_rows (esquema de exportação US-06/US-07) ============
 
 
