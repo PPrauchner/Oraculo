@@ -25,6 +25,21 @@ Ferramenta web para análise de dependências de projetos Python. Detecta depend
 
 ---
 
+## Limitações conhecidas
+
+### Resolução de Alias de Import por tabela
+
+Quando o Nome de Import difere do Nome de Distribuição (`import yaml` ↔ `PyYAML`,
+`sklearn` ↔ `scikit-learn`, `cv2` ↔ `opencv-python`, `PIL` ↔ `Pillow`), a correspondência
+usa uma tabela fixa de aliases (`IMPORT_ALIASES` em `utils/constants.py`). A tabela cobre
+os mismatches mais comuns do ecossistema, mas **não é exaustiva**: um pacote com nomes
+divergentes que não esteja na tabela ainda gera **dois falsos positivos** — vira Fantasma
+(o import não casa com nenhuma declaração) **e** Zumbi (a declaração não casa com nenhum
+import) ao mesmo tempo. Mitigação consciente, não solução completa; ampliar a tabela
+resolve caso a caso.
+
+---
+
 ## Estrutura do Projeto
 
 ```
