@@ -12,25 +12,18 @@ Lock (transitivas) não entram no conjunto — apenas emprestam versão aos que 
 nele. Por isso a resolução percorre o conjunto, nunca o Lock.
 """
 
-from typing import Dict, List
-
 from core.analysis.name_matching import normalize_name
-from core.ingestion.decompressor import get_archive_files
-from core.ingestion.filter import is_path_in_ignored_folders
+from core.ingestion.archive_walker import iter_archive_texts
 from core.parsin.declaration_collector import is_lock_filename
-from core.parsin.import_parser import (
-    get_file_path_from_archive_member,
-    read_file_from_archive,
-)
 from core.parsin.readers import parse_lock
 
 
-def build_lock_version_map(archive, ignore_folders: List[str]) -> Dict[str, str]:
+def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]:
     """Mapeia Nome de Distribuição normalizado à versão exata registrada no Lock.
 
-    Percorre o archive, lê cada Lock fora das Exclusões e acumula suas versões. O
-    mapa inclui também as transitivas do Lock; filtrar o que pertence ao conjunto é
-    responsabilidade de `resolve_used_versions`.
+    Lê cada Lock fora das Exclusões e acumula suas versões. O mapa inclui também as
+    transitivas do Lock; filtrar o que pertence ao conjunto é responsabilidade de
+    `resolve_used_versions`.
 
     Args:
         archive: Objeto zipfile.ZipFile ou tarfile.TarFile do Projeto-Alvo.
@@ -40,23 +33,9 @@ def build_lock_version_map(archive, ignore_folders: List[str]) -> Dict[str, str]
         Mapa Nome de Distribuição normalizado -> versão exata. Vazio se não houver
         Lock fora das Exclusões.
     """
-    version_map: Dict[str, str] = {}
+    version_map: dict[str, str] = {}
 
-    for member in get_archive_files(archive):
-        file_path = get_file_path_from_archive_member(member)
-        if not file_path:
-            continue
-
-        if is_path_in_ignored_folders(file_path, ignore_folders):
-            continue
-
-        if not is_lock_filename(file_path):
-            continue
-
-        content = read_file_from_archive(archive, member)
-        if content is None:
-            continue
-
+    for _path, content in iter_archive_texts(archive, ignore_folders, is_lock_filename):
         for entry in parse_lock(content):
             version = entry.get("Versão Usada", "")
             if version:
@@ -66,8 +45,8 @@ def build_lock_version_map(archive, ignore_folders: List[str]) -> Dict[str, str]
 
 
 def resolve_used_versions(
-    declared: List[Dict[str, str]], lock_version_map: Dict[str, str]
-) -> List[Dict[str, str]]:
+    declared: list[dict[str, str]], lock_version_map: dict[str, str]
+) -> list[dict[str, str]]:
     """Resolve a Versão Usada de cada pacote do conjunto com a versão do Lock.
 
     Para cada pacote já no conjunto, se o Lock registra sua versão (casando por Nome
