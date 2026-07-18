@@ -12,16 +12,17 @@ Saída:
 - Conjunto de dependências zumbis
 """
 
+from core.analysis.name_matching import import_names_for, normalize_name
+
 
 def analyze_zombie_dependencies(
     declared: list[dict], imports: list[dict]
 ) -> list[dict]:
     """Identifica dependências zumbis comparando dependências declaradas com imports."""
-    imp_names = {d["Pacote"].lower().replace("-", "_") for d in imports}
+    imp_names = {normalize_name(d["Pacote"]) for d in imports}
     zombies = []
-    for imp in declared:
-        declared_name = imp["Pacote"].lower().replace("-", "_")
-        if declared_name not in imp_names:
-            zombies.append(imp)
+    for dep in declared:
+        if imp_names.isdisjoint(import_names_for(dep["Pacote"])):
+            zombies.append(dep)
 
     return zombies

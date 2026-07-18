@@ -47,3 +47,27 @@ LOCK_EXTENSION = ".lock"
 # ============ Lock =================#
 
 PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())
+
+# ============ Alias de Import =================#
+# Mapeia Nome de Distribuição (normalizado: minúsculas e "-" -> "_") para os Nomes
+# de Import que o pacote expõe. Sem isso, um mesmo pacote vira Fantasma e Zumbi ao
+# mesmo tempo (ex.: PyYAML ↔ yaml). Ver CONTEXT.md (Alias de Import) e a limitação
+# documentada no README: pacotes fora desta tabela ainda geram o par de falsos
+# positivos. Um pacote pode expor mais de um Nome de Import (ex.: setuptools).
+IMPORT_ALIASES: dict[str, list[str]] = {
+    "pyyaml": ["yaml"],  # PyYAML
+    "scikit_learn": ["sklearn"],  # scikit-learn
+    "opencv_python": ["cv2"],  # opencv-python
+    "opencv_python_headless": ["cv2"],  # opencv-python-headless
+    "pillow": ["PIL"],  # Pillow
+    "beautifulsoup4": ["bs4"],  # beautifulsoup4
+    "python_dateutil": ["dateutil"],  # python-dateutil
+    "python_dotenv": ["dotenv"],  # python-dotenv
+    "python_docx": ["docx"],  # python-docx
+    "python_pptx": ["pptx"],  # python-pptx
+    "protobuf": ["google"],  # protobuf
+    "pycryptodome": ["Crypto"],  # pycryptodome
+    "setuptools": ["setuptools", "pkg_resources"],  # múltiplos Nomes de Import
+    "attrs": ["attr", "attrs"],  # múltiplos Nomes de Import
+}
+# ============ Alias de Import =================#
