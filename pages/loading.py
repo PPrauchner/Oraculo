@@ -9,6 +9,7 @@ import time
 import streamlit as st
 from utils.sidebar import sidebar
 from core.parsin.declaration_collector import collect_declarations
+from core.parsin.lock_resolver import build_lock_version_map, resolve_used_versions
 from core.parsin.import_parser import parse_imports_with_filter
 from core.analysis.zombie_analizer import analyze_zombie_dependencies
 from core.analysis.ghost_analizer import analyze_ghost_dependencies
@@ -130,6 +131,13 @@ def _execute_analysis_pipeline() -> None:
                 "environment.yml). O Lock sozinho não define o conjunto auditado."
             )
             st.stop()
+
+        # O Lock resolve a Versão Usada de cada pacote do conjunto (ADR-0002); sem
+        # ele, só um pin define a versão e o resto fica N/D.
+        lock_versions = build_lock_version_map(archive, ignore_folders)
+        declared_dependencies = resolve_used_versions(
+            declared_dependencies, lock_versions
+        )
 
         st.session_state["declared_dependencies"] = declared_dependencies
 
