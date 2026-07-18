@@ -9,19 +9,21 @@ def test_normalize_with_valid_data():
             "Versão Atual": "1.5.0",
             "Versão PyPI": "2.0.0",
             "Status": "Desatualizado",
+            "Origem": "Produção",
             "Extra": "Deveria ser ignorado"
         }
     ]
-    
+
     expected = [
         {
             "Pacote": "pandas",
             "Versão Atual": "1.5.0",
             "Versão PyPI": "2.0.0",
             "Status": "Desatualizado",
+            "Origem": "Produção",
         }
     ]
-    
+
     result = normalize(input_data)
     assert result == expected
     assert "Extra" not in result[0]
@@ -49,8 +51,26 @@ def test_normalize_multiple_items():
         {"Pacote": "pkg1", "Status": "OK"},
         {"Pacote": "pkg2", "Status": "Erro"}
     ]
-    
+
     result = normalize(input_data)
     assert len(result) == 2
     assert result[0]["Pacote"] == "pkg1"
     assert result[1]["Pacote"] == "pkg2"
+
+def test_normalize_surfaces_origin():
+    """O relatório distingue Produção de Desenvolvimento expondo a Origem."""
+    input_data = [
+        {"Pacote": "requests", "Origem": "Produção"},
+        {"Pacote": "pytest", "Origem": "Desenvolvimento"},
+    ]
+
+    result = normalize(input_data)
+
+    assert result[0]["Origem"] == "Produção"
+    assert result[1]["Origem"] == "Desenvolvimento"
+
+def test_normalize_missing_origin_defaults_na():
+    """Sem Origem informada, o relatório mostra 'N/A' em vez de quebrar."""
+    result = normalize([{"Pacote": "numpy"}])
+
+    assert result[0]["Origem"] == "N/A"
