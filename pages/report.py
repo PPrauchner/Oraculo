@@ -8,9 +8,13 @@ visualizações e tabelas, com opcionalidade de exportação em CSV/JSON.
 import streamlit as st
 import plotly.express as px
 from utils.sidebar import sidebar
-from core.report.normalization import normalize
+from core.report.normalization import normalize, build_export_rows, filter_export_rows
 from core.report.export import export_to_csv, export_to_json
-from utils.constants import MAPA_CORES_STATUS
+from utils.constants import (
+    MAPA_CORES_STATUS,
+    CATEGORY_ZOMBIE,
+    CATEGORY_GHOST,
+)
 
 
 CATEGORY_NAMES = {
@@ -18,6 +22,13 @@ CATEGORY_NAMES = {
     "zombies": "Zumbis",
     "ghosts": "Fantasmas",
     "outdated": "Desatualizadas",
+}
+
+# Ponte entre o rótulo do diálogo de exportação e a Categoria da linha exportada.
+# "Desatualizadas" não aparece aqui: é coluna própria, não Categoria.
+EXPORT_CATEGORIES = {
+    CATEGORY_NAMES["zombies"]: CATEGORY_ZOMBIE,
+    CATEGORY_NAMES["ghosts"]: CATEGORY_GHOST,
 }
 
 CATEGORY_SESSION_KEYS = {
@@ -221,21 +232,29 @@ def _show_export_dialog(report_dict: dict[str, list]) -> None:
         st.error("Selecione pelo menos uma categoria.")
         return
 
-    unique_data = {}
+    # As linhas nascem do conjunto auditado inteiro — já deduplicado e enriquecido
+    # com o PyPI — e a seleção apenas filtra. Assim uma dependência que cai em duas
+    # categorias (ex.: Zumbi e Desatualizada) continua exportando uma única linha.
+    export_rows = build_export_rows(
+        report_dict[ALL_LABEL],
+        zombies=report_dict[CATEGORY_NAMES["zombies"]],
+        ghosts=report_dict[CATEGORY_NAMES["ghosts"]],
+        project_name=st.session_state.get("project_name", "N/A"),
+        analysis_date=st.session_state.get("analysis_date", "N/A"),
+    )
 
     if st.session_state.get(f"cb_{ALL_LABEL}"):
-        data_to_process = report_dict[ALL_LABEL]
+        final_list = export_rows
     else:
-        data_to_process = []
-        for label in selected_labels:
-            data_to_process.extend(report_dict[label])
-
-    for dep in data_to_process:
-
-        dep_id = tuple(sorted(dep.items()))
-        unique_data[dep_id] = dep
-
-    final_list = list(unique_data.values())
+        selected_categories = {
+            EXPORT_CATEGORIES[label]
+            for label in selected_labels
+            if label in EXPORT_CATEGORIES
+        }
+        include_outdated = CATEGORY_NAMES["outdated"] in selected_labels
+        final_list = filter_export_rows(
+            export_rows, selected_categories, include_outdated
+        )
 
     if file_format == "CSV":
         exported_data = export_to_csv(final_list)

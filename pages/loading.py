@@ -6,6 +6,7 @@ incluindo feedback visual ao usuário durante o processamento.
 """
 
 import time
+from datetime import datetime
 import streamlit as st
 from utils.sidebar import sidebar
 from core.parsin.declaration_collector import collect_declarations
@@ -181,6 +182,11 @@ def _execute_analysis_pipeline() -> None:
 
         all_dependencies_with_status = analyze_dependency_status(unique_deps)
         st.session_state["all_dependencies"] = all_dependencies_with_status
+
+        # Eixo temporal da US-07: a exportação carimba quando a análise rodou, não
+        # quando o arquivo foi baixado. Precisão de segundos separa duas execuções
+        # do mesmo Projeto-Alvo no mesmo dia.
+        st.session_state["analysis_date"] = datetime.now().isoformat(timespec="seconds")
         st.session_state["analysis_complete"] = True
 
         placeholder.markdown(
