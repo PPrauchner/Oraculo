@@ -9,6 +9,8 @@ def test_normalize_with_valid_data():
             "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
             "Status": "Desatualizado",
+            "Tamanho": 2 * 1024 * 1024,
+            "Idade": 30,
             "Origem": "Produção",
             "Extra": "Deveria ser ignorado"
         }
@@ -20,6 +22,8 @@ def test_normalize_with_valid_data():
             "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
             "Status": "Desatualizado",
+            "Tamanho": "2.0 MB",
+            "Idade": "30 dias",
             "Origem": "Produção",
         }
     ]
@@ -74,3 +78,55 @@ def test_normalize_missing_origin_defaults_na():
     result = normalize([{"Pacote": "numpy"}])
 
     assert result[0]["Origem"] == "N/A"
+
+
+def test_normalize_formats_tamanho_as_readable_units():
+    """Tamanho cru (bytes) vira unidade legível (KB/MB) na tabela."""
+    input_data = [
+        {"Pacote": "big", "Tamanho": 2 * 1024 * 1024, "Origem": "Produção"},
+        {"Pacote": "small", "Tamanho": 500 * 1024, "Origem": "Produção"},
+    ]
+
+    result = normalize(input_data)
+
+    assert result[0]["Tamanho"] == "2.0 MB"
+    assert result[1]["Tamanho"] == "500.0 KB"
+
+
+def test_normalize_formats_idade_in_days():
+    """Idade crua (dias inteiros) é exibida em dias."""
+    input_data = [{"Pacote": "pkg", "Idade": 30, "Origem": "Produção"}]
+
+    result = normalize(input_data)
+
+    assert result[0]["Idade"] == "30 dias"
+
+
+def test_normalize_tamanho_idade_indisponivel_pass_through():
+    """Tamanho/Idade indisponíveis (N/D) permanecem N/D, nunca 0."""
+    input_data = [
+        {"Pacote": "pkg", "Tamanho": "N/D", "Idade": "N/D", "Origem": "Produção"}
+    ]
+
+    result = normalize(input_data)
+
+    assert result[0]["Tamanho"] == "N/D"
+    assert result[0]["Idade"] == "N/D"
+
+
+def test_normalize_missing_tamanho_idade_defaults_indisponivel():
+    """Sem Tamanho/Idade informados, exibe indisponível em vez de quebrar."""
+    result = normalize([{"Pacote": "numpy", "Origem": "Produção"}])
+
+    assert result[0]["Tamanho"] == "N/D"
+    assert result[0]["Idade"] == "N/D"
+
+
+def test_normalize_ghost_marks_reference_as_latest_version():
+    """Fantasma (sem Origem) explicita que Tamanho/Idade são da versão mais recente."""
+    ghost = [{"Pacote": "requests", "Tamanho": 1024 * 1024, "Idade": 5}]
+
+    result = normalize(ghost)
+
+    assert "última versão" in result[0]["Tamanho"]
+    assert "última versão" in result[0]["Idade"]
