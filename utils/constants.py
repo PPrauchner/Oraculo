@@ -46,6 +46,13 @@ ORIGIN_DEVELOPMENT = "Desenvolvimento"
 LOCK_EXTENSION = ".lock"
 # ============ Lock =================#
 
+# ============ Versão Usada =================#
+# Valor reportado quando a Versão Usada é indisponível: sem Lock e sem pin, não se
+# conhece a versão que o Projeto-Alvo executa, então Idade/Tamanho ficam indefinidos
+# (ADR-0002). Nunca assumir a versão do PyPI nesse caso.
+VERSION_UNAVAILABLE = "N/D"
+# ============ Versão Usada =================#
+
 PYTHON_STDLIB_MODULES = getattr(sys, "stdlib_module_names", set())
 
 # ============ Alias de Import =================#

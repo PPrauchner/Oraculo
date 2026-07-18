@@ -16,6 +16,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.pypi.pypi_client import get_latest_version
 from packaging.version import parse as parse_version
+from utils.constants import VERSION_UNAVAILABLE
 
 
 def _extract_version_number(version_string: str) -> str:
@@ -43,14 +44,14 @@ def _checar_dependencia(dep: dict) -> dict:
     Chamada em paralelo pelo ThreadPoolExecutor.
 
     Args:
-        dep: Dicionário com pelo menos 'Pacote' e 'Versão Atual'.
+        dep: Dicionário com pelo menos 'Pacote' e 'Versão Usada'.
 
     Returns:
         O mesmo dicionário com 'Versão PyPI' e 'Status' preenchidos.
     """
     pypi_version    = get_latest_version(dep["Pacote"])
-    versao_atual_raw = dep["Versão Atual"].strip() if dep["Versão Atual"] else ""
-    versao_atual    = _extract_version_number(versao_atual_raw)
+    versao_usada_raw = dep["Versão Usada"].strip() if dep["Versão Usada"] else ""
+    versao_usada    = _extract_version_number(versao_usada_raw)
 
     if pypi_version is None:
         dep["Versão PyPI"] = "N/A"
@@ -58,12 +59,14 @@ def _checar_dependencia(dep: dict) -> dict:
     else:
         dep["Versão PyPI"] = pypi_version
 
-        if not versao_atual:
-            dep["Versão Atual"] = pypi_version
-            dep["Status"]       = "Atualizado"
+        if not versao_usada:
+            # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma
+            # "Atualizado" nem se copia a versão do PyPI (ADR-0002).
+            dep["Versão Usada"] = VERSION_UNAVAILABLE
+            dep["Status"]       = VERSION_UNAVAILABLE
         else:
             try:
-                if parse_version(versao_atual) < parse_version(pypi_version):
+                if parse_version(versao_usada) < parse_version(pypi_version):
                     dep["Status"] = "Desatualizado"
                 else:
                     dep["Status"] = "Atualizado"
@@ -82,7 +85,7 @@ def analyze_dependency_status(dependencies: list[dict]) -> list[dict]:
     em relação ao número de dependências.
 
     Args:
-        dependencies: Lista de dicts com 'Pacote' e 'Versão Atual'.
+        dependencies: Lista de dicts com 'Pacote' e 'Versão Usada'.
 
     Returns:
         A mesma lista com 'Versão PyPI' e 'Status' preenchidos em cada item.
