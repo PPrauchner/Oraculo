@@ -9,6 +9,7 @@ import streamlit as st
 import plotly.express as px
 from utils.sidebar import sidebar
 from core.report.normalization import normalize, build_export_rows, filter_export_rows
+from core.report.statistics import format_summary_lines, summarize_by_category
 from core.report.export import export_to_csv, export_to_json
 from utils.constants import (
     MAPA_CORES_STATUS,
@@ -109,16 +110,20 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
     """
     Renderiza cartões de métrica para cada categoria de dependência.
 
-    Exibe quantidade de itens em colunas paralelas, uma por categoria.
-    Extensível: novas categorias são automaticamente incluídas sem alteração
-    desta função.
+    Exibe, em colunas paralelas (uma por categoria), a quantidade de dependências,
+    o Tamanho somado e a Idade média (US-06) — anotando quantas ficaram de fora das
+    agregações por terem Tamanho/Idade indisponíveis. Extensível: novas categorias
+    são automaticamente incluídas sem alteração desta função.
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
     """
-    columns = st.columns(len(report_dict))
-    for col, (category_label, dependencies) in zip(columns, report_dict.items()):
-        col.metric(category_label, len(dependencies))
+    summaries = summarize_by_category(report_dict)
+    columns = st.columns(len(summaries))
+    for col, (category_label, summary) in zip(columns, summaries.items()):
+        col.metric(category_label, summary["Quantidade"])
+        for line in format_summary_lines(summary):
+            col.caption(line)
 
 
 def _render_health_index(report_dict: dict[str, list]) -> None:
