@@ -47,6 +47,18 @@ NON_PROJECT_FOLDERS = frozenset(
     }
 )
 
+# Arquivos que, na raiz, denunciam um projeto Python
+PROJECT_MARKERS = frozenset(
+    {
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "environment.yml",
+        "environment.yaml",
+        "pipfile",
+    }
+)
+
 
 def _normalize(raw_path: str) -> str:
     """Uniformiza um caminho cru vindo de qualquer espécie de fonte.
@@ -68,6 +80,50 @@ def _normalize(raw_path: str) -> str:
 def _is_project_path(path: str) -> bool:
     """Indica se um caminho pertence ao Projeto-Alvo, e não ao ambiente ao redor."""
     return not any(segment in NON_PROJECT_FOLDERS for segment in path.split("/"))
+
+
+def _decode(data: bytes) -> str:
+    """Decodifica o conteúdo de um arquivo, uniformizando o fim de linha.
+
+    O mesmo Projeto-Alvo lido de um diretório no Windows traria "\\r\\n" onde o
+    archive traz "\\n", e o "\\r" residual entraria no Nome de Distribuição de uma
+    Declaração lida linha a linha.
+
+    Args:
+        data: Bytes crus do arquivo.
+
+    Returns:
+        Texto com bytes inválidos descartados e fim de linha "\\n".
+    """
+    text = data.decode("utf-8", errors="ignore")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _looks_like_a_python_project(directory: Path) -> bool:
+    """Indica se a raiz do diretório tem marca de projeto Python.
+
+    Olha só o primeiro nível, de propósito: é a checagem barata que impede o
+    Baita Auditor de percorrer uma árvore enorme (a pasta do usuário, um disco
+    inteiro) antes de descobrir que ali não há Projeto-Alvo algum.
+
+    Args:
+        directory: Diretório apontado pelo usuário.
+
+    Returns:
+        True se houver, na raiz, um arquivo .py, uma Declaração ou um Lock.
+    """
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if not entry.is_file():
+                continue
+
+            name = entry.name.lower()
+            if name in PROJECT_MARKERS or name.endswith((".py", ".lock")):
+                return True
+            if name.startswith("requirements") and name.endswith(".txt"):
+                return True
+
+    return False
 
 
 def _project_root_prefix(paths: list[str]) -> str:
@@ -121,6 +177,28 @@ def _walk_directory(root: Path) -> list[str]:
             paths.append(Path(current, name).relative_to(root).as_posix())
 
     return paths
+
+
+def _read_directory_file(root: Path, path: str) -> str | None:
+    """Lê um arquivo de um Projeto-Alvo em diretório, sem repercorrer a árvore.
+
+    Args:
+        root: Raiz do Projeto-Alvo em disco.
+        path: Caminho relativo à raiz.
+
+    Returns:
+        Bytes decodificados do arquivo, ou None se o caminho não puder ser lido ou
+        escapar da raiz do Projeto-Alvo.
+    """
+    clean = _normalize(path)
+
+    if not clean or not _is_project_path(clean) or ".." in clean.split("/"):
+        return None
+
+    try:
+        return _decode((root / clean).read_bytes())
+    except Exception:
+        return None
 
 
 def _raw_paths(source) -> list[str]:
@@ -212,6 +290,11 @@ def read_text(source, path: str) -> str | None:
         Conteúdo do arquivo, com bytes inválidos descartados, ou None se o caminho
         não existir na fonte ou não puder ser lido.
     """
+    # Num diretório o caminho já é o caminho: resolver direto evita repercorrer a
+    # árvore inteira a cada arquivo lido, que é o que `_index` custaria aqui.
+    if isinstance(source, Path):
+        return _read_directory_file(source, path)
+
     raw = _index(source).get(path)
     if raw is None:
         return None
@@ -224,8 +307,6 @@ def read_text(source, path: str) -> str | None:
             if extracted is None:
                 return None
             data = extracted.read()
-        elif isinstance(source, Path):
-            data = (source / raw).read_bytes()
         elif isinstance(source, dict):
             return source[raw]
         else:
@@ -233,19 +314,16 @@ def read_text(source, path: str) -> str | None:
     except Exception:
         return None
 
-    # Fim de linha uniforme: o mesmo Projeto-Alvo lido de um diretório no Windows
-    # traria "\r\n" onde o archive traz "\n", e o "\r" residual entraria no Nome de
-    # Distribuição de uma Declaração lida linha a linha.
-    text = data.decode("utf-8", errors="ignore")
-    return text.replace("\r\n", "\n").replace("\r", "\n")
+    return _decode(data)
 
 
 def open_directory(path: str) -> tuple[Path | None, str]:
     """Abre um diretório local como fonte do Projeto-Alvo.
 
-    Valida o que o sistema de arquivos sabe responder — existência, tipo e
-    permissão de leitura. Se o diretório é ou não um projeto Python é pergunta
-    para `validate_project_structure`.
+    Valida existência, tipo, permissão de leitura e a marca de projeto Python na
+    raiz. A última é o que impede apontar para a pasta do usuário e esperar o
+    Baita Auditor percorrer o disco inteiro antes de reclamar; a auditoria dos
+    requisitos mínimos, essa sim completa, fica com `validate_project_structure`.
 
     Args:
         path: Caminho digitado pelo usuário.
@@ -268,10 +346,17 @@ def open_directory(path: str) -> tuple[Path | None, str]:
         return None, f"❌ O caminho informado não é um diretório: {directory}"
 
     try:
-        os.scandir(directory).close()
+        is_project = _looks_like_a_python_project(directory)
     except PermissionError:
         return None, f"❌ Sem permissão de leitura em: {directory}"
     except OSError as error:
         return None, f"❌ Não foi possível ler o diretório: {error}"
+
+    if not is_project:
+        return None, (
+            f"❌ O caminho não parece um projeto Python: {directory}\n"
+            "Esperado, na raiz, um arquivo .py ou uma Declaração "
+            "(pyproject.toml, requirements.txt, environment.yml)."
+        )
 
     return directory, ""

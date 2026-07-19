@@ -207,6 +207,71 @@ def test_open_directory_rejects_an_empty_path():
     assert error != ""
 
 
+def test_open_directory_rejects_a_directory_that_is_not_a_python_project(tmp_path):
+    """Apontar para uma pasta qualquer não pode custar uma varredura do disco."""
+    (tmp_path / "fotos").mkdir()
+    (tmp_path / "notas.txt").write_text("", encoding="utf-8")
+
+    source, error = open_directory(str(tmp_path))
+
+    assert source is None
+    assert "não parece um projeto Python" in error
+
+
+def test_open_directory_does_not_walk_the_tree_to_decide(tmp_path, monkeypatch):
+    """A checagem é só do primeiro nível: nada de os.walk antes de aceitar."""
+    (tmp_path / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+
+    def _fail(*_args, **_kwargs):
+        raise AssertionError("open_directory percorreu a árvore inteira")
+
+    monkeypatch.setattr("os.walk", _fail)
+
+    source, error = open_directory(str(tmp_path))
+
+    assert error == ""
+    assert source == tmp_path
+
+
+def test_open_directory_accepts_a_project_declared_only_by_requirements(tmp_path):
+    (tmp_path / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")
+
+    source, error = open_directory(str(tmp_path))
+
+    assert error == ""
+    assert source == tmp_path
+
+
+def test_read_text_of_a_directory_does_not_rewalk_the_tree(tmp_path, monkeypatch):
+    """Ler N arquivos não pode custar N varreduras do diretório."""
+    (tmp_path / "main.py").write_text("import requests\n", encoding="utf-8")
+
+    def _fail(*_args, **_kwargs):
+        raise AssertionError("read_text percorreu a árvore para ler um arquivo")
+
+    monkeypatch.setattr("os.walk", _fail)
+
+    assert read_text(tmp_path, "main.py") == "import requests\n"
+
+
+def test_read_text_of_a_directory_refuses_to_escape_the_project_root(tmp_path):
+    """Um caminho com `..` não pode ler fora do Projeto-Alvo."""
+    (tmp_path / "segredo.txt").write_text("senha", encoding="utf-8")
+    root = tmp_path / "alvo"
+    root.mkdir()
+
+    assert read_text(root, "../segredo.txt") is None
+
+
+def test_read_text_of_a_directory_refuses_environment_folders(tmp_path):
+    """O que `list_paths` não oferece, `read_text` não entrega."""
+    venv = tmp_path / ".venv"
+    venv.mkdir()
+    (venv / "pyvenv.cfg").write_text("home = /usr", encoding="utf-8")
+
+    assert read_text(tmp_path, ".venv/pyvenv.cfg") is None
+
+
 @pytest.mark.skipif(
     not hasattr(Path, "chmod"), reason="permissões não simuláveis nesta plataforma"
 )
