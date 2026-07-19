@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import core.ingestion.source as source_module
 from core.ingestion.source import list_paths, open_directory, read_text
 
 
@@ -288,3 +289,32 @@ def test_open_directory_rejects_an_unreadable_directory(tmp_path, monkeypatch):
 
     assert source is None
     assert "permissão" in error
+
+
+def test_archive_index_is_built_once_however_many_files_are_read(monkeypatch):
+    """Ler N arquivos custa uma montagem do índice, não N.
+
+    O índice varre o archive inteiro. Montá-lo por leitura torna a extração de
+    Imports Raiz quadrática no número de arquivos — o mesmo custo que o lado do
+    diretório evita resolvendo o caminho direto.
+    """
+    files = {f"alvo/mod_{index}.py": "import requests\n" for index in range(20)}
+    files["alvo/pyproject.toml"] = "[project]\nname = 'alvo'\n"
+    archive = _make_zip(files)
+
+    builds = 0
+    build_index = source_module._build_index
+
+    def _counting_build_index(source):
+        nonlocal builds
+        builds += 1
+        return build_index(source)
+
+    monkeypatch.setattr(source_module, "_build_index", _counting_build_index)
+
+    paths = list_paths(archive)
+    for path in paths:
+        read_text(archive, path)
+
+    assert len(paths) == 21
+    assert builds == 1

@@ -22,6 +22,11 @@ import os
 import tarfile
 import zipfile
 from pathlib import Path
+from weakref import WeakKeyDictionary
+
+# As espécies de fonte que o despacho reconhece (ADR-0006). `dict` mapeia caminho a
+# conteúdo e serve de dublê nos testes, sem construir um archive de verdade.
+ProjectSource = zipfile.ZipFile | tarfile.TarFile | Path | dict[str, str]
 
 # Pastas que nunca fazem parte do Projeto-Alvo: ambiente virtual, cache de
 # ferramenta e metadados de VCS. Um diretório em disco as carrega e um archive
@@ -201,7 +206,7 @@ def _read_directory_file(root: Path, path: str) -> str | None:
         return None
 
 
-def _raw_paths(source) -> list[str]:
+def _raw_paths(source: ProjectSource) -> list[str]:
     """Lista os caminhos crus dos arquivos de uma fonte, sem normalizar.
 
     Entradas de diretório não são arquivos e ficam de fora.
@@ -227,7 +232,7 @@ def _raw_paths(source) -> list[str]:
     return []
 
 
-def _index(source) -> dict[str, str]:
+def _build_index(source: ProjectSource) -> dict[str, str]:
     """Mapeia cada caminho relativo à raiz do Projeto-Alvo ao caminho cru da fonte.
 
     É o que permite `read_text` receber um `str` do chamador e ainda assim achar o
@@ -261,7 +266,37 @@ def _index(source) -> dict[str, str]:
     }
 
 
-def list_paths(source) -> list[str]:
+# Índice já montado de cada archive. Um archive é aberto sobre bytes em memória e não
+# muda enquanto existe, então o índice vale por toda a sua vida; a entrada some quando
+# o archive é coletado (um novo upload não acumula com o anterior).
+_ARCHIVE_INDEX: WeakKeyDictionary = WeakKeyDictionary()
+
+
+def _index(source: ProjectSource) -> dict[str, str]:
+    """Índice da fonte, montado uma vez por archive.
+
+    `read_text` é chamada uma vez por arquivo que passa pelo filtro. Sem memorizar,
+    ler N arquivos de um archive custaria N varreduras do índice inteiro — o mesmo
+    O(n²) que `_read_directory_file` já evita do lado do diretório.
+
+    Args:
+        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
+
+    Returns:
+        Mapa caminho relativo à raiz -> caminho cru.
+    """
+    if not isinstance(source, (zipfile.ZipFile, tarfile.TarFile)):
+        return _build_index(source)
+
+    cached = _ARCHIVE_INDEX.get(source)
+    if cached is None:
+        cached = _build_index(source)
+        _ARCHIVE_INDEX[source] = cached
+
+    return cached
+
+
+def list_paths(source: ProjectSource) -> list[str]:
     """Lista os arquivos do Projeto-Alvo, relativos à sua raiz.
 
     A ordem é alfabética, e não a da fonte: um mesmo Projeto-Alvo precisa produzir
@@ -278,7 +313,7 @@ def list_paths(source) -> list[str]:
     return sorted(_index(source))
 
 
-def read_text(source, path: str) -> str | None:
+def read_text(source: ProjectSource, path: str) -> str | None:
     """Lê como texto um arquivo do Projeto-Alvo, pelo caminho.
 
     Args:
