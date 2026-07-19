@@ -12,6 +12,7 @@ Responsabilidades:
 from pathlib import Path
 
 from core.analysis.ghost_analizer import analyze_ghost_dependencies
+from core.analysis.zombie_analizer import analyze_zombie_dependencies
 from core.parsin.declaration_collector import collect_declarations
 from core.parsin.import_parser import parse_imports_with_filter
 from core.parsin.readers import parse_pyproject
@@ -44,3 +45,19 @@ def test_nenhum_import_raiz_e_fantasma():
     ghosts = sorted(ghost["Pacote"] for ghost in analyze_ghost_dependencies(declared, imports))
 
     assert ghosts == []
+
+
+def test_nenhuma_dependencia_de_producao_e_zumbi():
+    """Toda Dependência de Produção do repositório é importada por algum módulo.
+
+    O ORÁCULO reprovava na própria auditoria com `pandas` declarado e nunca
+    importado (issue #32): quem o exigia era o `streamlit`, como transitiva.
+    A guarda não gera falso positivo porque Dependência de Desenvolvimento é
+    isenta de Zumbi (ADR-0003) — `pytest` não é cobrado por viver na Exclusão.
+    """
+    declared = collect_declarations(REPO_ROOT, IGNORED_FOLDERS)
+    imports = parse_imports_with_filter(REPO_ROOT, IGNORED_FOLDERS)
+
+    zombies = sorted(zombie["Pacote"] for zombie in analyze_zombie_dependencies(declared, imports))
+
+    assert zombies == []
