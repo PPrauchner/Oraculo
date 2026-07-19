@@ -273,7 +273,7 @@ def _show_export_dialog(report_dict: dict[str, list]) -> None:
     st.download_button(
         label=f"Baixar Relatório ({len(final_list)} itens) .{file_ext} 📥",
         data=exported_data,
-        file_name=f"report_dp_auditor.{file_ext}",
+        file_name=f"report_oraculo.{file_ext}",
         mime=mime_type,
         use_container_width=True,
     )
