@@ -59,8 +59,9 @@ def is_path_in_ignored_folders(file_path: str, ignore_folders: list[str]) -> boo
         return False
 
     parent_segments = set(file_path.replace("\\", "/").strip("/").split("/")[:-1])
+    excluded_names = {_folder_name(folder) for folder in ignore_folders}
 
-    return any(_folder_name(folder) in parent_segments for folder in ignore_folders)
+    return not excluded_names.isdisjoint(parent_segments)
 
 
 def should_skip_file(file_path: str, ignore_folders: list[str]) -> bool:

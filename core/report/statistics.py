@@ -100,7 +100,10 @@ def format_summary_lines(summary: dict) -> list[str]:
     """
     total = summary["Quantidade"]
     average_age = summary["Idade Média"]
-    readable_age = format_age(average_age if average_age is None else round(average_age))
+    if average_age is None:
+        readable_age = format_age(None)
+    else:
+        readable_age = format_age(round(average_age))
 
     return [
         _with_exclusion_note(

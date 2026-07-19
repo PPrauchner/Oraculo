@@ -295,6 +295,10 @@ def _build_index(source: ProjectSource) -> dict[str, str]:
 # Índice já montado de cada archive. Um archive é aberto sobre bytes em memória e não
 # muda enquanto existe, então o índice vale por toda a sua vida; a entrada some quando
 # o archive é coletado (um novo upload não acumula com o anterior).
+#
+# O diretório fica de fora de propósito, e não por esquecimento: ele é mutável em disco
+# e pode mudar entre dois reruns do Streamlit, então um índice memorizado serviria dados
+# velhos. Repercorrer é o preço da resposta correta.
 _ARCHIVE_INDEX: WeakKeyDictionary = WeakKeyDictionary()
 
 
