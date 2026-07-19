@@ -1,5 +1,5 @@
 """
-O Baita Auditor auditado por ele mesmo: ele é um Projeto-Alvo válido.
+O ORÁCULO auditado por ele mesmo: ele é um Projeto-Alvo válido.
 
 Aqui — e só aqui — ler o `pyproject.toml` vivo do repositório é o ponto, não um
 descuido. Um teste de unidade de reader não pode depender do que o repositório
@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 IGNORED_FOLDERS = ["tests"]
 
 
-def test_baita_auditor_nao_declara_altair():
+def test_oraculo_nao_declara_altair():
     """`altair` não é declarado: ninguém o importa e o `<5` não prendia nada (ADR-0005)."""
     content = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 

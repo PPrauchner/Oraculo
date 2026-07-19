@@ -59,11 +59,11 @@ dependencies = ["requests>=2.33.0", "pandas>=3.0.1"]
     ]
 
 
-def test_pyproject_do_proprio_baita_auditor_e_lido():
-    """Um Projeto-Alvo com a forma do Baita Auditor é lido com a Origem correta.
+def test_pyproject_do_proprio_oraculo_e_lido():
+    """Um Projeto-Alvo com a forma do ORÁCULO é lido com a Origem correta.
 
     Snapshot fixo, não o pyproject.toml vivo do repositório: a Origem que o reader
-    devolve não pode depender de o Baita Auditor trocar de dependência (issue #21).
+    devolve não pode depender de o ORÁCULO trocar de dependência (issue #21).
     """
     content = """
 [project]
