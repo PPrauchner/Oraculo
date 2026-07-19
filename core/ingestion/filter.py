@@ -1,71 +1,70 @@
 """
-Módulo responsável pela filtragem de arquivos e diretórios.
+Aplica as Exclusões e confere os requisitos mínimos do Projeto-Alvo.
 
-Aplica regras definidas pelo usuário para ignorar arquivos ou diretórios
-irrelevantes para a análise (ex: tests/, docs/).
+Responsabilidades:
+- Oferecer as pastas do Projeto-Alvo que podem virar Exclusão.
+- Decidir se um caminho está dentro de uma Exclusão.
+- Validar que o Projeto-Alvo tem código Python e ao menos uma Declaração.
 
-Entrada:
-- Lista de arquivos do projeto
-- Regras de exclusão
-
-Saída:
-- Lista filtrada de arquivos relevantes para análise
+Trabalha sobre caminhos vindos de `core.ingestion.source`, e por isso vale igual
+para archive e para diretório (ADR-0001). Uma Exclusão é o **nome de uma pasta**, e
+casa em qualquer profundidade: marcar `tests` exclui `tests/` e `src/tests/`.
 """
 
-import zipfile
-import tarfile
-from typing import List, Tuple
+from core.ingestion.source import ProjectSource, is_supported, list_paths
 
 
-def get_unique_folders(extracted_files: list) -> list:
-    if not extracted_files:
-        return []
-
-    folders = set()
-    for file in extracted_files:
-        path = getattr(file, "filename", None) or getattr(file, "name", None)
-        if path:
-            parts = path.split("/")
-            for i in range(len(parts) - 1):
-                folders.add(parts[i])
-
-    return sorted(list(folders))
+def _folder_name(folder: str) -> str:
+    """Reduz uma Exclusão ao nome da pasta, tolerando `./tests/` e `.\\tests`."""
+    return folder.replace("\\", "/").strip("/").removeprefix("./").strip()
 
 
-def is_path_in_ignored_folders(file_path: str, ignore_folders: List[str]) -> bool:
-    """
-    Verifica se um caminho de arquivo está dentro de uma pasta ignorada.
+def get_unique_folders(source: ProjectSource) -> list[str]:
+    """Lista as pastas do Projeto-Alvo que podem virar Exclusão.
+
+    Toda pasta devolvida aqui é excluível por `is_path_in_ignored_folders`: as duas
+    funções falam da mesma coisa — nome de pasta em qualquer profundidade. Foi a
+    divergência entre elas que fazia a UI oferecer Exclusões sem efeito (issue #26).
 
     Args:
-        file_path: Caminho do arquivo (ex: "tests/requirements.txt")
-        ignore_folders: Lista de pastas a ignorar (ex: ["tests", "docs"])
+        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
 
     Returns:
-        True se o arquivo está em uma pasta ignorada, False caso contrário
+        Nomes de pasta, sem repetição, em ordem alfabética.
     """
-    if not ignore_folders:
+    folders = set()
+
+    for path in list_paths(source):
+        # O último segmento é o arquivo, não uma pasta
+        folders.update(path.split("/")[:-1])
+
+    return sorted(folders)
+
+
+def is_path_in_ignored_folders(file_path: str, ignore_folders: list[str]) -> bool:
+    """Indica se um caminho está dentro de alguma Exclusão.
+
+    Casa por segmento, em qualquer profundidade: marcar `tests` exclui tanto
+    `tests/test_x.py` quanto `src/tests/test_x.py`. Um arquivo cujo nome coincide
+    com a Exclusão não é excluído — Exclusão é pasta.
+
+    Args:
+        file_path: Caminho do arquivo, relativo à raiz do Projeto-Alvo.
+        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
+
+    Returns:
+        True se o arquivo está em uma Exclusão, False caso contrário.
+    """
+    if not ignore_folders or not file_path:
         return False
 
-    if not file_path:
-        return False
+    parent_segments = set(file_path.replace("\\", "/").strip("/").split("/")[:-1])
+    excluded_names = {_folder_name(folder) for folder in ignore_folders}
 
-    # Normalizar o caminho
-    normalized_path = file_path.lstrip("./").replace("\\", "/")
-
-    # Verificar se qualquer folder no caminho está na lista de ignorados
-    for folder in ignore_folders:
-        normalized_folder = folder.lstrip("./").replace("\\", "/")
-
-        if (
-            normalized_path.startswith(normalized_folder + "/")
-            or normalized_path == normalized_folder
-        ):
-            return True
-
-    return False
+    return not excluded_names.isdisjoint(parent_segments)
 
 
-def should_skip_file(file_path: str, ignore_folders: List[str]) -> bool:
+def should_skip_file(file_path: str, ignore_folders: list[str]) -> bool:
     """
     Verifica se um arquivo deve ser ignorado.
 
@@ -79,28 +78,33 @@ def should_skip_file(file_path: str, ignore_folders: List[str]) -> bool:
     return is_path_in_ignored_folders(file_path, ignore_folders)
 
 
-def validate_archive_structure(
-    archive, ignore_folders: List[str] = None
-) -> Tuple[bool, str]:
-    """
-    Valida se o arquivo ZIP/TAR contém os requisitos mínimos para análise.
+def validate_project_structure(
+    source: ProjectSource, ignore_folders: list[str] | None = None
+) -> tuple[bool, str]:
+    """Valida se o Projeto-Alvo tem os requisitos mínimos para a auditoria.
 
-    Verifica se existem:
-    1. Pelo menos um arquivo .py (fora de pastas ignoradas)
-    2. Pelo menos um arquivo de dependências (requirements.txt, pyproject.toml,
-       environment.yml, ou *.lock)
+    Exige, fora das Exclusões, pelo menos um arquivo `.py` e pelo menos uma
+    Declaração (ou Lock). Vale igual para archive e para diretório, então as
+    mensagens não citam formato de arquivo.
 
     Args:
-        archive: Objeto zipfile.ZipFile ou tarfile.TarFile do projeto
-        ignore_folders: Lista de pastas a ignorar (ex: ["tests", "docs"])
+        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
+        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
 
     Returns:
-        Tupla (é_válido: bool, mensagem_erro: str)
-        - (True, "") se válido
-        - (False, "mensagem descritiva") se inválido
+        Par (é_válido, mensagem_de_erro). Com sucesso, (True, "").
     """
-    if archive is None:
-        return False, "Arquivo não foi processado corretamente."
+    if source is None:
+        return False, "❌ O Projeto-Alvo não foi processado corretamente."
+
+    # Fonte que o despacho não abre produz lista de caminhos vazia, indistinguível
+    # de um Projeto-Alvo sem código. Sem esta saída, o usuário ouviria que faltam
+    # arquivos .py num Projeto-Alvo que sequer chegou a ser lido.
+    if not is_supported(source):
+        return False, (
+            "❌ Fonte do Projeto-Alvo não suportada.\n"
+            "Informe um diretório local ou um archive (zip, tar.gz ou tar)."
+        )
 
     if ignore_folders is None:
         ignore_folders = []
@@ -116,23 +120,7 @@ def validate_archive_structure(
     has_dependency_file = False
 
     try:
-        if isinstance(archive, zipfile.ZipFile):
-            file_list = archive.filelist
-        elif isinstance(archive, tarfile.TarFile):
-            file_list = archive.getmembers()
-        else:
-            return False, "Tipo de arquivo não suportado."
-
-        for member in file_list:
-            file_path = getattr(member, "filename", None) or getattr(
-                member, "name", None
-            )
-            if not file_path:
-                continue
-
-            if file_path.endswith("/"):
-                continue
-
+        for file_path in list_paths(source):
             if is_path_in_ignored_folders(file_path, ignore_folders):
                 continue
 
@@ -148,22 +136,22 @@ def validate_archive_structure(
                 return True, ""
 
     except Exception as e:
-        return False, f"Erro ao validar arquivo: {str(e)}"
+        return False, f"❌ Erro ao ler o Projeto-Alvo: {str(e)}"
 
     if not has_python_files and not has_dependency_file:
         return (
             False,
-            "❌ O ZIP deve conter:\n"
+            "❌ O Projeto-Alvo deve conter:\n"
             "  1. Pelo menos um arquivo .py\n"
             "  2. Arquivo de dependências (requirements.txt, pyproject.toml, environment.yml ou .lock)",
         )
     elif not has_python_files:
         return (
             False,
-            "❌ Nenhum arquivo .py encontrado no ZIP.\n"
-            "Certifique-se de incluir código-fonte do seu projeto.",
+            "❌ Nenhum arquivo .py encontrado no Projeto-Alvo.\n"
+            "Certifique-se de que o código-fonte está incluído e fora das Exclusões.",
         )
-    else:  
+    else:
         return (
             False,
             "❌ Nenhum arquivo de dependências encontrado.\n"

@@ -15,7 +15,7 @@ from core.parsin.import_parser import parse_imports_with_filter
 from core.analysis.zombie_analizer import analyze_zombie_dependencies
 from core.analysis.ghost_analizer import analyze_ghost_dependencies
 from core.analysis.outdated_analizer import analyze_dependency_status
-from core.ingestion.filter import validate_archive_structure
+from core.ingestion.filter import validate_project_structure
 
 sidebar()
 
@@ -37,7 +37,7 @@ def _validate_archive_requirements(archive) -> bool:
         (Exibe mensagem de erro antes de retornar False)
     """
     ignore_folders = st.session_state.get("ignore_folders", [])
-    is_valid, error_msg = validate_archive_structure(archive, ignore_folders)
+    is_valid, error_msg = validate_project_structure(archive, ignore_folders)
 
     if not is_valid:
         st.error(error_msg)
@@ -109,7 +109,8 @@ def _execute_analysis_pipeline() -> None:
 
     if archive is None:
         st.error(
-            "❌ Nenhum arquivo foi processado. Volte para Home e faça upload de um arquivo compactado válido."
+            "❌ Nenhum Projeto-Alvo foi processado. Volte para Home e informe um "
+            "archive válido ou o diretório do código."
         )
         st.stop()
 
@@ -268,8 +269,8 @@ def _render_loading_ui() -> None:
     st.switch_page("pages/report.py")
 
 
-if not st.session_state.get("archive"):
-    st.error("❌ Arquivo não encontrado!")
+if st.session_state.get("archive") is None:
+    st.error("❌ Projeto-Alvo não encontrado!")
     st.stop()
 
 _render_loading_ui()

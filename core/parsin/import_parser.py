@@ -5,8 +5,8 @@ Analisa arquivos Python utilizando AST (Abstract Syntax Tree)
 para identificar dependências realmente utilizadas no código.
 
 Entrada:
-- Archive (ZIP/TAR) do projeto
-- Pastas a ignorar
+- Fonte do Projeto-Alvo (archive ou diretório), via core.ingestion.source
+- Pastas em Exclusão
 
 Saída:
 - Lista de dicionários com imports encontrados:
@@ -19,68 +19,16 @@ Saída:
 """
 
 import ast
-import zipfile
-import tarfile
-from typing import Dict, List, Set, Optional
-from core.ingestion.decompressor import get_archive_files
+
 from core.ingestion.filter import is_path_in_ignored_folders
+from core.ingestion.source import ProjectSource, list_paths, read_text
 from utils.constants import PYTHON_STDLIB_MODULES
 
 # Pasta que apenas embrulha os Módulos Próprios num layout `src/`
 SRC_LAYOUT_FOLDER = "src"
 
 
-def _normalize_paths(file_paths: List[str]) -> List[str]:
-    """
-    Uniformiza os caminhos vindos da ingestão (archive ou diretório).
-
-    Args:
-        file_paths: Caminhos crus, possivelmente com separador do Windows,
-            prefixo "./" ou barra final (entradas de pasta do archive).
-
-    Returns:
-        Lista de caminhos com separador "/" e sem entradas vazias.
-    """
-    normalized = []
-
-    for path in file_paths:
-        clean = path.replace("\\", "/").rstrip("/")
-        if clean.startswith("./"):
-            clean = clean[2:]
-        if clean:
-            normalized.append(clean)
-
-    return normalized
-
-
-def _strip_project_root(file_paths: List[str]) -> List[str]:
-    """
-    Remove a pasta que apenas embrulha o Projeto-Alvo, se houver.
-
-    Um archive normalmente contém tudo dentro de uma pasta raiz
-    (`grupo-03/core/...`); nesse caso o topo do projeto é dentro dela. A pasta só
-    é embrulho se não for, ela mesma, um pacote.
-
-    Args:
-        file_paths: Caminhos já normalizados.
-
-    Returns:
-        Caminhos relativos à raiz do Projeto-Alvo.
-    """
-    top_segments = {path.split("/")[0] for path in file_paths}
-    if len(top_segments) != 1:
-        return file_paths
-
-    root = top_segments.pop()
-
-    # Raiz que é um pacote (ou um arquivo solto) não é embrulho
-    if root.endswith(".py") or f"{root}/__init__.py" in file_paths:
-        return file_paths
-
-    return [path[len(root) + 1 :] for path in file_paths if path != root]
-
-
-def infer_own_modules(file_paths: List[str]) -> Set[str]:
+def infer_own_modules(file_paths: list[str]) -> set[str]:
     """
     Infere os Módulos Próprios a partir do layout do Projeto-Alvo.
 
@@ -114,7 +62,7 @@ def infer_own_modules(file_paths: List[str]) -> Set[str]:
     return own_modules
 
 
-def is_valid_import(module_name: str, own_modules: Set[str] | None = None) -> bool:
+def is_valid_import(module_name: str, own_modules: set[str] | None = None) -> bool:
     """
     Verifica se um import é válido para análise de dependências.
 
@@ -146,7 +94,7 @@ def is_valid_import(module_name: str, own_modules: Set[str] | None = None) -> bo
 
 
 def _collect_imports_from_tree(
-    tree: ast.AST, imports: Set[str], own_modules: Set[str] | None
+    tree: ast.AST, imports: set[str], own_modules: set[str] | None
 ) -> None:
     """
     Coleta os Imports Raiz válidos de uma AST no conjunto acumulador.
@@ -172,7 +120,7 @@ def _collect_imports_from_tree(
                     imports.add(root_module)
 
 
-def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) -> Set[str]:
+def extract_imports_from_code(code: str, own_modules: set[str] | None = None) -> set[str]:
     """
     Extrai nomes de módulos importados de um código Python.
 
@@ -209,80 +157,34 @@ def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) ->
     return imports
 
 
-def get_file_path_from_archive_member(member) -> str:
+def parse_imports(
+    source: ProjectSource, ignore_folders: list[str]
+) -> list[dict[str, str]]:
     """
-    Extrai o caminho do arquivo de um membro ZipInfo ou TarInfo.
+    Extrai os Imports Raiz de todos os arquivos Python do Projeto-Alvo.
+
+    Itera pelos arquivos Python, respeita as Exclusões, extrai imports e retorna
+    lista padronizada.
 
     Args:
-        member: ZipInfo ou TarInfo object
-
-    Returns:
-        String do caminho do arquivo
-    """
-    if isinstance(member, zipfile.ZipInfo):
-        return member.filename
-    elif isinstance(member, tarfile.TarInfo):
-        return member.name
-    return ""
-
-
-def read_file_from_archive(archive, member) -> Optional[str]:
-    """
-    Lê o conteúdo de um arquivo do archive.
-
-    Args:
-        archive: ZipFile ou TarFile object
-        member: ZipInfo ou TarInfo object
-
-    Returns:
-        Conteúdo do arquivo como string, ou None se falhar
-    """
-    try:
-        if isinstance(archive, zipfile.ZipFile):
-            content = archive.read(member.filename)
-        elif isinstance(archive, tarfile.TarFile):
-            f = archive.extractfile(member)
-            if f is None:
-                return None
-            content = f.read()
-        else:
-            return None
-
-        return content.decode("utf-8", errors="ignore")
-    except Exception:
-        return None
-
-
-def parse_imports(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
-    """
-    Extrai imports de todos os arquivos Python do archive.
-
-    Itera pelos arquivos Python, respeita pastas ignoradas,
-    extrai imports e retorna lista padronizada.
-
-    Args:
-        archive: ZipFile ou TarFile do projeto
-        ignore_folders: Lista de pastas a ignorar (ex: ["tests", "docs"])
+        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
+        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
 
     Returns:
         Lista de dicionários com imports encontrados
     """
-    if not archive:
+    if source is None:
         return []
 
     all_imports = set()
-    file_list = get_archive_files(archive)
 
-    # Módulos Próprios saem do layout do próprio archive, sem I/O extra
-    archive_paths = _normalize_paths(
-        [get_file_path_from_archive_member(member) for member in file_list]
-    )
-    own_modules = infer_own_modules(_strip_project_root(archive_paths))
+    # Os caminhos já vêm relativos à raiz do Projeto-Alvo, então os Módulos
+    # Próprios saem do layout, sem I/O extra.
+    file_paths = list_paths(source)
+    own_modules = infer_own_modules(file_paths)
 
-    for member in file_list:
-        file_path = get_file_path_from_archive_member(member)
-
-        # Verificar se arquivo deve ser ignorado
+    for file_path in file_paths:
+        # Verificar se arquivo está em uma Exclusão
         if is_path_in_ignored_folders(file_path, ignore_folders):
             continue
 
@@ -291,7 +193,7 @@ def parse_imports(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
             continue
 
         # Ler conteúdo
-        content = read_file_from_archive(archive, member)
+        content = read_text(source, file_path)
         if content is None:
             continue
 
@@ -315,16 +217,16 @@ def parse_imports(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
 
 
 def parse_imports_with_filter(
-    archive, ignore_folders: List[str]
-) -> List[Dict[str, str]]:
+    source: ProjectSource, ignore_folders: list[str]
+) -> list[dict[str, str]]:
     """
     Wrapper para parse_imports com validação de entrada.
 
     Args:
-        archive: ZipFile ou TarFile do projeto
-        ignore_folders: Lista de pastas a ignorar
+        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
+        ignore_folders: Pastas em Exclusão
 
     Returns:
         Lista de imports padronizada
     """
-    return parse_imports(archive, ignore_folders or [])
+    return parse_imports(source, ignore_folders or [])
