@@ -1,4 +1,7 @@
-# Baita Auditor
+# ORÁCULO
+
+**O**rganizador e **R**astreador **A**utomático de **C**ódigo, **U**so de **L**ibraries e
+**O**corrências.
 
 Ferramenta de auditoria de dependências de projetos Python. Cruza o que um projeto
 **declara** depender com o que seu código **realmente importa**, e confronta ambos com
@@ -9,7 +12,7 @@ o PyPI para avaliar a saúde das dependências.
 ### O que é analisado
 
 **Projeto-Alvo**:
-O projeto Python cujas dependências estão sendo auditadas. Nunca é o Baita Auditor em si.
+O projeto Python cujas dependências estão sendo auditadas. Nunca é o ORÁCULO em si.
 _Avoid_: projeto, input, upload
 
 **Declaração**:
