@@ -15,22 +15,13 @@ Saída:
 """
 
 import re
+import tomllib
 from typing import Dict, List, Optional
+
+import yaml
+
 from utils.constants import ORIGIN_DEVELOPMENT, ORIGIN_PRODUCTION
 from utils.functions import READERS, registrar
-
-try:
-    import tomllib
-except ImportError:
-    try:
-        import toml as tomllib
-    except ImportError:
-        tomllib = None
-
-try:
-    import yaml
-except ImportError:
-    yaml = None
 
 
 def parse_dependency_string(line: str) -> Optional[Dict[str, str]]:
@@ -265,9 +256,6 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
     Returns:
         Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
-    if yaml is None:
-        return []
-
     dependencies = []
 
     try:
@@ -314,9 +302,6 @@ def parse_pyproject(content: str) -> List[Dict[str, str]]:
     Returns:
         Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
-    if tomllib is None:
-        return []
-
     try:
         data = tomllib.loads(content)
     except Exception:
@@ -367,9 +352,6 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
     Returns:
         Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
-    if tomllib is None:
-        return []
-
     dependencies = []
 
     try:
