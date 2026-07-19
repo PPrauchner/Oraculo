@@ -62,16 +62,37 @@ dependencies = ["requests>=2.33.0", "pandas>=3.0.1"]
 
 
 def test_pyproject_do_proprio_baita_auditor_e_lido():
-    """O Baita Auditor é um Projeto-Alvo válido: seu pyproject.toml é lido."""
-    repo_root = Path(__file__).resolve().parents[3]
-    content = (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+    """Um Projeto-Alvo com a forma do Baita Auditor é lido com a Origem correta.
+
+    Snapshot fixo, não o pyproject.toml vivo do repositório: a Origem que o reader
+    devolve não pode depender de o Baita Auditor trocar de dependência (issue #21).
+    """
+    content = """
+[project]
+name = "problema-01"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=3.0.1",
+    "streamlit>=1.37.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+"""
 
     result = parse_pyproject(content)
 
     origens = {dep["Pacote"]: dep["Origem"] for dep in result}
-    assert origens["streamlit"] == "Produção"
-    assert origens["pandas"] == "Produção"
-    assert origens["pytest"] == "Desenvolvimento"
+    assert origens == {
+        "pandas": "Produção",
+        "streamlit": "Produção",
+        "pytest": "Desenvolvimento",
+    }
 
 
 def test_baita_auditor_nao_declara_altair():
