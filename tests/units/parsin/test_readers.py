@@ -119,8 +119,6 @@ def test_requirements_dev_tem_reader_proprio_no_registry():
 
 def test_environment_yml_tem_origem():
     """environment.yml declara o ambiente de execução: Origem de Produção."""
-    pytest.importorskip("yaml", reason="parse_environment_yml depende de PyYAML")
-
     content = """
 name: alvo
 dependencies:
