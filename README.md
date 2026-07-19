@@ -234,7 +234,7 @@ python -m venv .venv
 source .venv/bin/activate       # Linux/Mac
 .venv\Scripts\activate          # Windows
 
-pip install streamlit plotly pandas requests packaging
+pip install streamlit plotly requests packaging
 streamlit run main.py
 ```
 
@@ -246,7 +246,6 @@ streamlit run main.py
 |---|---|
 | `streamlit` | Interface web e navegação entre páginas |
 | `plotly` | Gráficos do relatório |
-| `pandas` | Manipulação de tabelas |
 | `requests` | Requisições à API do PyPI |
 | `packaging` | Comparação semântica de versões no `outdated_analizer` |
 
