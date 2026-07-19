@@ -201,9 +201,35 @@ def _read_directory_file(root: Path, path: str) -> str | None:
         return None
 
     try:
-        return _decode((root / clean).read_bytes())
+        target = root / clean
+
+        # `_normalize` tira a barra inicial, mas não a letra de unidade: em
+        # `root / "C:/segredo.txt"` o pathlib descarta `root` e o caminho passa a
+        # valer sozinho. Conferir a contenção depois de resolver é o que sustenta a
+        # garantia documentada — nenhuma leitura fora da raiz do Projeto-Alvo.
+        if not target.resolve().is_relative_to(root.resolve()):
+            return None
+
+        return _decode(target.read_bytes())
     except Exception:
         return None
+
+
+def is_supported(source: object) -> bool:
+    """Indica se a fonte é de uma espécie que o despacho sabe abrir.
+
+    Quem valida o Projeto-Alvo precisa distinguir "esta fonte não tem arquivo .py"
+    de "não sei abrir esta fonte": as duas produzem lista vazia de caminhos, mas só
+    a primeira é um diagnóstico sobre o Projeto-Alvo. O `isinstance` segue confinado
+    aqui (ADR-0006).
+
+    Args:
+        source: Candidata a fonte do Projeto-Alvo.
+
+    Returns:
+        True se for ZipFile, TarFile, Path ou dict.
+    """
+    return isinstance(source, (zipfile.ZipFile, tarfile.TarFile, Path, dict))
 
 
 def _raw_paths(source: ProjectSource) -> list[str]:

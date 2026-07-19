@@ -142,6 +142,19 @@ def test_an_empty_project_is_invalid():
     assert "ZIP" not in error
 
 
+def test_an_unsupported_source_kind_is_diagnosed_as_such():
+    """Espécie de fonte não suportada não é "Projeto-Alvo sem arquivo .py".
+
+    Sem essa mensagem, `_raw_paths` devolve [] e o usuário recebe um diagnóstico
+    falso sobre o conteúdo de um Projeto-Alvo que sequer chegou a ser aberto.
+    """
+    is_valid, error = validate_project_structure(object())
+
+    assert is_valid is False
+    assert ".py" not in error
+    assert "não suportada" in error
+
+
 def test_a_missing_source_is_invalid():
     is_valid, error = validate_project_structure(None)
 

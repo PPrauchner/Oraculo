@@ -13,7 +13,7 @@ casa em qualquer profundidade: marcar `tests` exclui `tests/` e `src/tests/`.
 
 from typing import List, Tuple
 
-from core.ingestion.source import list_paths
+from core.ingestion.source import is_supported, list_paths
 
 
 def _folder_name(folder: str) -> str:
@@ -97,6 +97,15 @@ def validate_project_structure(
     """
     if source is None:
         return False, "❌ O Projeto-Alvo não foi processado corretamente."
+
+    # Fonte que o despacho não abre produz lista de caminhos vazia, indistinguível
+    # de um Projeto-Alvo sem código. Sem esta saída, o usuário ouviria que faltam
+    # arquivos .py num Projeto-Alvo que sequer chegou a ser lido.
+    if not is_supported(source):
+        return False, (
+            "❌ Fonte do Projeto-Alvo não suportada.\n"
+            "Informe um diretório local ou um archive (zip, tar.gz ou tar)."
+        )
 
     if ignore_folders is None:
         ignore_folders = []

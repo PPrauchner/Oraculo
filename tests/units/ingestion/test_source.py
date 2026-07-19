@@ -264,6 +264,30 @@ def test_read_text_of_a_directory_refuses_to_escape_the_project_root(tmp_path):
     assert read_text(root, "../segredo.txt") is None
 
 
+def test_read_text_of_a_directory_refuses_an_absolute_path(tmp_path):
+    """Caminho absoluto não pode ler fora do Projeto-Alvo.
+
+    `root / "C:/segredo.txt"` descarta `root` inteiro: a letra de unidade sobrevive
+    à normalização e o caminho passa a valer sozinho.
+    """
+    outside = tmp_path / "segredo.txt"
+    outside.write_text("senha", encoding="utf-8")
+    root = tmp_path / "alvo"
+    root.mkdir()
+
+    assert read_text(root, str(outside)) is None
+
+
+def test_read_text_of_a_directory_refuses_an_absolute_posix_path(tmp_path):
+    """A mesma garantia vale para o caminho absoluto escrito com "/"."""
+    outside = tmp_path / "segredo.txt"
+    outside.write_text("senha", encoding="utf-8")
+    root = tmp_path / "alvo"
+    root.mkdir()
+
+    assert read_text(root, "/" + outside.as_posix().lstrip("/")) is None
+
+
 def test_read_text_of_a_directory_refuses_environment_folders(tmp_path):
     """O que `list_paths` não oferece, `read_text` não entrega."""
     venv = tmp_path / ".venv"
