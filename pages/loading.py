@@ -15,7 +15,7 @@ from core.parsin.import_parser import parse_imports_with_filter
 from core.analysis.zombie_analizer import analyze_zombie_dependencies
 from core.analysis.ghost_analizer import analyze_ghost_dependencies
 from core.analysis.outdated_analizer import analyze_dependency_status
-from core.ingestion.filter import validate_archive_structure
+from core.ingestion.filter import validate_project_structure
 
 sidebar()
 
@@ -37,7 +37,7 @@ def _validate_archive_requirements(archive) -> bool:
         (Exibe mensagem de erro antes de retornar False)
     """
     ignore_folders = st.session_state.get("ignore_folders", [])
-    is_valid, error_msg = validate_archive_structure(archive, ignore_folders)
+    is_valid, error_msg = validate_project_structure(archive, ignore_folders)
 
     if not is_valid:
         st.error(error_msg)

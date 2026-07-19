@@ -20,8 +20,8 @@ from pathlib import Path
 import streamlit as st
 from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
-from core.ingestion.decompressor import process_uploaded_file, get_archive_files
-from core.ingestion.filter import get_unique_folders, validate_archive_structure
+from core.ingestion.decompressor import process_uploaded_file
+from core.ingestion.filter import get_unique_folders, validate_project_structure
 
 sidebar()
 
@@ -58,19 +58,15 @@ def entering_data():
         archive = process_uploaded_file(file)
 
         if archive:
-            file_list = get_archive_files(archive)
-            folders = get_unique_folders(file_list)
-
             st.session_state["archive"] = archive
-            st.session_state["file_list"] = file_list
-            st.session_state["folder_list"] = folders
+            st.session_state["folder_list"] = get_unique_folders(archive)
             # Identidade do Projeto-Alvo na exportação: o nome do arquivo sem a
             # extensão (".tar.gz" deixa um ".tar" residual no stem).
             st.session_state["project_name"] = Path(file.name).stem.removesuffix(".tar")
 
             # Validar requisitos mínimos
             ignore_folders = st.session_state.get("ignore_folders", [])
-            is_valid, error_msg = validate_archive_structure(archive, ignore_folders)
+            is_valid, error_msg = validate_project_structure(archive, ignore_folders)
 
             st.session_state["archive_is_valid"] = is_valid
 
@@ -81,7 +77,6 @@ def entering_data():
             st.session_state["archive_is_valid"] = False
     else:
         st.session_state["archive"] = None
-        st.session_state["file_list"] = []
         st.session_state["folder_list"] = []
         st.session_state["archive_is_valid"] = False
 
