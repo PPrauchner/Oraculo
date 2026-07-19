@@ -74,6 +74,16 @@ def test_pyproject_do_proprio_baita_auditor_e_lido():
     assert origens["pytest"] == "Desenvolvimento"
 
 
+def test_baita_auditor_nao_declara_altair():
+    """`altair` não é declarado: ninguém o importa e o `<5` não prendia nada (ADR-0005)."""
+    repo_root = Path(__file__).resolve().parents[3]
+    content = (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+
+    result = parse_pyproject(content)
+
+    assert "altair" not in {dep["Pacote"] for dep in result}
+
+
 def test_pyproject_esta_registrado_como_reader():
     """O registry precisa reconhecer pyproject.toml para o pipeline achá-lo."""
     assert READERS["pyproject.toml"] is parse_pyproject
