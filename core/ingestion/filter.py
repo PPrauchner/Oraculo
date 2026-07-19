@@ -11,9 +11,7 @@ para archive e para diretório (ADR-0001). Uma Exclusão é o **nome de uma past
 casa em qualquer profundidade: marcar `tests` exclui `tests/` e `src/tests/`.
 """
 
-from typing import List, Tuple
-
-from core.ingestion.source import is_supported, list_paths
+from core.ingestion.source import ProjectSource, is_supported, list_paths
 
 
 def _folder_name(folder: str) -> str:
@@ -21,7 +19,7 @@ def _folder_name(folder: str) -> str:
     return folder.replace("\\", "/").strip("/").removeprefix("./").strip()
 
 
-def get_unique_folders(source) -> List[str]:
+def get_unique_folders(source: ProjectSource) -> list[str]:
     """Lista as pastas do Projeto-Alvo que podem virar Exclusão.
 
     Toda pasta devolvida aqui é excluível por `is_path_in_ignored_folders`: as duas
@@ -43,7 +41,7 @@ def get_unique_folders(source) -> List[str]:
     return sorted(folders)
 
 
-def is_path_in_ignored_folders(file_path: str, ignore_folders: List[str]) -> bool:
+def is_path_in_ignored_folders(file_path: str, ignore_folders: list[str]) -> bool:
     """Indica se um caminho está dentro de alguma Exclusão.
 
     Casa por segmento, em qualquer profundidade: marcar `tests` exclui tanto
@@ -65,7 +63,7 @@ def is_path_in_ignored_folders(file_path: str, ignore_folders: List[str]) -> boo
     return any(_folder_name(folder) in parent_segments for folder in ignore_folders)
 
 
-def should_skip_file(file_path: str, ignore_folders: List[str]) -> bool:
+def should_skip_file(file_path: str, ignore_folders: list[str]) -> bool:
     """
     Verifica se um arquivo deve ser ignorado.
 
@@ -80,8 +78,8 @@ def should_skip_file(file_path: str, ignore_folders: List[str]) -> bool:
 
 
 def validate_project_structure(
-    source, ignore_folders: List[str] = None
-) -> Tuple[bool, str]:
+    source: ProjectSource, ignore_folders: list[str] | None = None
+) -> tuple[bool, str]:
     """Valida se o Projeto-Alvo tem os requisitos mínimos para a auditoria.
 
     Exige, fora das Exclusões, pelo menos um arquivo `.py` e pelo menos uma

@@ -19,16 +19,16 @@ Saída:
 """
 
 import ast
-from typing import Dict, List, Set
+
 from core.ingestion.filter import is_path_in_ignored_folders
-from core.ingestion.source import list_paths, read_text
+from core.ingestion.source import ProjectSource, list_paths, read_text
 from utils.constants import PYTHON_STDLIB_MODULES
 
 # Pasta que apenas embrulha os Módulos Próprios num layout `src/`
 SRC_LAYOUT_FOLDER = "src"
 
 
-def infer_own_modules(file_paths: List[str]) -> Set[str]:
+def infer_own_modules(file_paths: list[str]) -> set[str]:
     """
     Infere os Módulos Próprios a partir do layout do Projeto-Alvo.
 
@@ -62,7 +62,7 @@ def infer_own_modules(file_paths: List[str]) -> Set[str]:
     return own_modules
 
 
-def is_valid_import(module_name: str, own_modules: Set[str] | None = None) -> bool:
+def is_valid_import(module_name: str, own_modules: set[str] | None = None) -> bool:
     """
     Verifica se um import é válido para análise de dependências.
 
@@ -94,7 +94,7 @@ def is_valid_import(module_name: str, own_modules: Set[str] | None = None) -> bo
 
 
 def _collect_imports_from_tree(
-    tree: ast.AST, imports: Set[str], own_modules: Set[str] | None
+    tree: ast.AST, imports: set[str], own_modules: set[str] | None
 ) -> None:
     """
     Coleta os Imports Raiz válidos de uma AST no conjunto acumulador.
@@ -120,7 +120,7 @@ def _collect_imports_from_tree(
                     imports.add(root_module)
 
 
-def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) -> Set[str]:
+def extract_imports_from_code(code: str, own_modules: set[str] | None = None) -> set[str]:
     """
     Extrai nomes de módulos importados de um código Python.
 
@@ -157,7 +157,9 @@ def extract_imports_from_code(code: str, own_modules: Set[str] | None = None) ->
     return imports
 
 
-def parse_imports(source, ignore_folders: List[str]) -> List[Dict[str, str]]:
+def parse_imports(
+    source: ProjectSource, ignore_folders: list[str]
+) -> list[dict[str, str]]:
     """
     Extrai os Imports Raiz de todos os arquivos Python do Projeto-Alvo.
 
@@ -215,8 +217,8 @@ def parse_imports(source, ignore_folders: List[str]) -> List[Dict[str, str]]:
 
 
 def parse_imports_with_filter(
-    source, ignore_folders: List[str]
-) -> List[Dict[str, str]]:
+    source: ProjectSource, ignore_folders: list[str]
+) -> list[dict[str, str]]:
     """
     Wrapper para parse_imports com validação de entrada.
 

@@ -22,7 +22,7 @@ from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
 from core.ingestion.decompressor import process_uploaded_file
 from core.ingestion.filter import get_unique_folders, validate_project_structure
-from core.ingestion.source import open_directory
+from core.ingestion.source import ProjectSource, open_directory
 
 sidebar()
 
@@ -54,7 +54,7 @@ def _clear_source():
     st.session_state["archive_is_valid"] = False
 
 
-def _load_source(source, project_name: str) -> None:
+def _load_source(source: ProjectSource, project_name: str) -> None:
     """Registra a fonte do Projeto-Alvo e confere os requisitos mínimos.
 
     Args:

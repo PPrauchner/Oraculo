@@ -14,11 +14,11 @@ a espécie da fonte.
 from typing import Callable, Iterator
 
 from core.ingestion.filter import is_path_in_ignored_folders
-from core.ingestion.source import list_paths, read_text
+from core.ingestion.source import ProjectSource, list_paths, read_text
 
 
 def iter_archive_texts(
-    source, ignore_folders: list[str], keep: Callable[[str], bool]
+    source: ProjectSource, ignore_folders: list[str], keep: Callable[[str], bool]
 ) -> Iterator[tuple[str, str]]:
     """Percorre o Projeto-Alvo e devolve (caminho, conteúdo) dos arquivos pedidos.
 
