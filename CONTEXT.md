@@ -131,3 +131,32 @@ _Avoid_: tempo de vida, antiguidade, defasagem
 Proporção de Dependências Declaradas que não são Zumbis, Fantasmas nem Desatualizadas.
 Mais exigente que a Categoria Saudável, que ignora Desatualizada.
 _Avoid_: score, nota, percentual
+
+### Ausência de valor
+
+Duas ausências diferentes, que o relatório não pode confundir: uma é limite do que se sabe,
+a outra é propriedade do que se auditou.
+
+**Indeterminado**:
+O ORÁCULO não tem como saber o valor. É o caso da Versão Usada sem Lock e sem pin — e, por
+consequência, do Tamanho e da Idade que dependem dela. Um Lock resolveria.
+_Avoid_: vazio, nulo, zero, desconhecido pelo PyPI
+
+**Não Aplicável**:
+O valor não existe para aquela dependência, por definição. É o caso da Origem de um Fantasma:
+ele não vem de Declaração nenhuma, então não há seção de onde ter vindo. Nenhum arquivo a mais
+preencheria isso.
+_Avoid_: indisponível, faltando, sem dados
+
+## Vocabulário do dado exportado
+
+O CSV é contrato estável em inglês e não acompanha a língua da tela (ADR-0008). Estes são os
+únicos valores que ele emite — a tradução para exibição é responsabilidade de `pages/`:
+
+| Coluna | Valores |
+|---|---|
+| `Category` | `Zombie` · `Ghost` · `Healthy` |
+| `Origin` | `Production` · `Development` · `N/A` |
+| `Status` | `Outdated` · `Up to date` · `Unknown` · `Invalid version` |
+| `Outdated` | `Yes` · `No` |
+| ausência | `Unknown` (Indeterminado) · `N/A` (Não Aplicável) |
