@@ -32,7 +32,7 @@ _BYTES_PER_MB = 1024 * 1024
 _LATEST_VERSION_NOTE = "última versão"
 
 
-def _format_size(size: object) -> str:
+def format_size(size: object) -> str:
     """Formata o Tamanho cru (bytes) em unidade legível (KB/MB).
 
     Args:
@@ -50,7 +50,7 @@ def _format_size(size: object) -> str:
     return f"{size / _BYTES_PER_KB:.1f} KB"
 
 
-def _format_age(age: object) -> str:
+def format_age(age: object) -> str:
     """Formata a Idade crua (dias inteiros) em texto legível.
 
     Args:
@@ -76,7 +76,7 @@ def _display_metric(
         raw: Valor cru da métrica.
         is_fantasma: Se a dependência é Fantasma (sem Declaração/Versão Usada), caso
             em que a referência é a versão mais recente do PyPI.
-        formatter: `_format_size` ou `_format_age`.
+        formatter: `format_size` ou `format_age`.
 
     Returns:
         Texto legível, anotado com "(última versão)" quando Fantasma e disponível.
@@ -111,10 +111,10 @@ def normalize(list_analyzed: list) -> list[dict]:
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
                 "Status": dep.get("Status", "Desconhecido"),
                 "Tamanho": _display_metric(
-                    dep.get("Tamanho", VERSION_UNAVAILABLE), is_fantasma, _format_size
+                    dep.get("Tamanho", VERSION_UNAVAILABLE), is_fantasma, format_size
                 ),
                 "Idade": _display_metric(
-                    dep.get("Idade", VERSION_UNAVAILABLE), is_fantasma, _format_age
+                    dep.get("Idade", VERSION_UNAVAILABLE), is_fantasma, format_age
                 ),
                 "Origem": dep.get("Origem", "N/A"),
             }
