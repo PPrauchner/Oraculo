@@ -11,9 +11,9 @@ Saída:
 - Componente visual reutilizável
 """
 
-from utils.constants import BLUE
 from utils.constants import SVG_LUPA
 from utils.i18n import LANGUAGE_PARAM, available_languages, current_language, t, translate
+from utils.theme import theme_color
 import streamlit as st
 
 
@@ -58,8 +58,10 @@ def sidebar() -> None:
     """
     with st.sidebar:
 
+        # A lupa herda esta cor via `currentColor`, então título e ícone saem da
+        # mesma fonte — a cor primária da paleta.
         st.markdown(
-            f'<h1 style="display: flex; align-items: center; color: {BLUE}">{SVG_LUPA} ORÁCULO</h1>',
+            f'<h1 style="display: flex; align-items: center; color: {theme_color("primaryColor")}">{SVG_LUPA} ORÁCULO</h1>',
             unsafe_allow_html=True,
         )
 
