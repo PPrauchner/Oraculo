@@ -118,9 +118,14 @@ def _entering_by_directory():
 
 
 def entering_data():
-    col1, col2 = st.columns([1.5, 1])
+    # A coluna da fonte carrega o campo de caminho e a dropzone, que precisam de
+    # largura; a das Configurações carrega uma linha — ou o multiselect, ou a frase
+    # que explica por que ele ainda não está lá.
+    col1, col2 = st.columns([2, 1])
 
-    with col1:
+    # `border=True` é a moldura da API: a cor sai do `borderColor` do tema e segue os
+    # modos claro e escuro sozinha, sem folha de estilo própria (issue #39).
+    with col1.container(border=True):
         st.subheader(t("home.source.header"))
         # Uma fonte por vez: com os dois campos visíveis, "qual vale quando os
         # dois estão preenchidos" vira uma pergunta sem resposta óbvia.
@@ -137,7 +142,7 @@ def entering_data():
         else:
             _entering_by_directory()
 
-    with col2:
+    with col2.container(border=True):
         st.subheader(t("home.settings.header"))
         opcoes = st.session_state.get("folder_list", [])
 
