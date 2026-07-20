@@ -37,6 +37,17 @@ def language_selector() -> None:
 
     if chosen != current:
         st.query_params[LANGUAGE_PARAM] = chosen
+
+        # A barra lateral roda antes do corpo da página, então o `st.rerun()` abaixo
+        # aborta o script antes de a página registrar seus widgets — e o Streamlit
+        # descarta o estado de todo widget que não foi registrado na execução. Sem
+        # reafirmar as chaves, trocar de idioma apagaria o Projeto-Alvo carregado e
+        # as Exclusões marcadas: um seletor de aparência não pode custar o trabalho
+        # já feito. Reatribuir marca a chave como posta pelo usuário, que é o que a
+        # faz sobreviver.
+        for key in list(st.session_state.keys()):
+            st.session_state[key] = st.session_state[key]
+
         # Sem o rerun a tela sai metade em cada língua: o que já foi renderizado
         # acima leu o parâmetro antigo. Não há laço — depois do rerun a escolha e a
         # URL concordam, e a condição fica falsa.
