@@ -136,6 +136,21 @@ dependencies:
     ]
 
 
+def test_environment_yml_com_dependencies_vazio_nao_quebra() -> None:
+    """`dependencies:` sem itens devolve lista vazia, não TypeError.
+
+    O YAML resolve a chave presente e vazia para None, e não para lista: o
+    `.get("dependencies", [])` não protege, porque a chave existe. Um Projeto-Alvo
+    com essa Declaração abortaria a análise inteira.
+    """
+    content = """
+name: alvo
+dependencies:
+"""
+
+    assert parse_environment_yml(content) == []
+
+
 def test_lock_tem_origem():
     """O Lock resolve versões; seus pacotes recebem Origem de Produção."""
     content = """
