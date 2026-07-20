@@ -42,8 +42,12 @@ def _mode_label(mode: str) -> str:
 
 
 def principal_interface():
-    st.title(t("home.title"))
-    st.write(t("home.intro"))
+    # Hierarquia pela API, sem uma linha de CSS: `header` abre a tela um nível abaixo
+    # do `title`, que em tela larga achatava tudo o que vinha depois, e `caption`
+    # rebaixa a linha de apoio a peso e cor secundários — o cinza sai do tema e
+    # acompanha os modos claro e escuro sozinho (issue #50).
+    st.header(t("home.title"))
+    st.caption(t("home.intro"))
 
 
 def _clear_source():
