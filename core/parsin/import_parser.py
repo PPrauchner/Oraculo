@@ -23,6 +23,7 @@ import ast
 from core.ingestion.filter import is_path_in_ignored_folders
 from core.ingestion.source import ProjectSource, list_paths, read_text
 from utils.constants import PYTHON_STDLIB_MODULES
+from utils.types import Dependency
 
 # Pasta que apenas embrulha os Módulos Próprios num layout `src/`
 SRC_LAYOUT_FOLDER = "src"
@@ -159,7 +160,7 @@ def extract_imports_from_code(code: str, own_modules: set[str] | None = None) ->
 
 def parse_imports(
     source: ProjectSource, ignore_folders: list[str]
-) -> list[dict[str, str]]:
+) -> list[Dependency]:
     """
     Extrai os Imports Raiz de todos os arquivos Python do Projeto-Alvo.
 
@@ -202,7 +203,7 @@ def parse_imports(
         all_imports.update(imports)
 
     # Converter para lista de dicionários padronizada
-    result = []
+    result: list[Dependency] = []
     for import_name in sorted(all_imports):
         result.append(
             {
@@ -218,7 +219,7 @@ def parse_imports(
 
 def parse_imports_with_filter(
     source: ProjectSource, ignore_folders: list[str]
-) -> list[dict[str, str]]:
+) -> list[Dependency]:
     """
     Wrapper para parse_imports com validação de entrada.
 

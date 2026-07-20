@@ -18,10 +18,11 @@ Saída:
 
 from typing import Dict, List, Optional
 from utils.constants import ORIGIN_PRODUCTION
+from utils.types import DeclarationEntry, Dependency
 from utils.functions import READERS
 from core.ingestion.filter import is_path_in_ignored_folders
 
-def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
+def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
     """
     Normaliza um dicionário de dependência individual.
 
@@ -57,7 +58,7 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
     }
 
 
-def parse_dependencies(dependencies: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def parse_dependencies(dependencies: List[DeclarationEntry]) -> List[Dependency]:
     """
     Processa uma lista de dependências e retorna lista padronizada.
 
@@ -86,8 +87,8 @@ def parse_dependencies(dependencies: List[Dict[str, str]]) -> List[Dict[str, str
 
 
 def parse_dependencies_with_filter(
-    dependencies: List[Dict[str, str]], file_path: str, ignore_folders: List[str]
-) -> List[Dict[str, str]]:
+    dependencies: List[DeclarationEntry], file_path: str, ignore_folders: List[str]
+) -> List[Dependency]:
     """
     Processa dependências com filtro por pasta ignorada.
 

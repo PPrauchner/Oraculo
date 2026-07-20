@@ -15,7 +15,10 @@ Responsabilidades:
 - Guardar a ordem dos campos da exportação, que é a ordem das colunas do CSV.
 """
 
-from utils.types import Dependency, ExportRow, ReportRow
+from utils.types import DeclarationEntry, Dependency, ExportRow, ReportRow
+
+# O que um reader extrai de uma Declaração, antes de virar Dependência.
+DECLARATION_FIELDS = {"Pacote", "Versão Usada", "Origem"}
 
 # A dependência auditada, como sai de `parsin` e é enriquecida por `analysis`.
 DEPENDENCY_FIELDS = {
@@ -45,6 +48,21 @@ EXPORT_FIELDS_IN_ORDER = [
     "Tamanho",
     "Idade",
 ]
+
+
+def test_a_entrada_de_declaracao_declara_o_que_os_readers_extraem():
+    """O reader lê o que a Declaração diz, e a Declaração não diz tudo.
+
+    `Versão PyPI` e `Status` só existem depois de consultar o PyPI, então o
+    registro do reader é menor que a Dependência — separá-los é o que impede
+    anotar o reader com um formato que ele nunca preenche por inteiro.
+    """
+    assert set(DeclarationEntry.__annotations__) == DECLARATION_FIELDS
+
+
+def test_a_entrada_de_declaracao_vira_dependencia_sem_perder_campo():
+    """`normalize_dependency` acrescenta campos à entrada; nunca descarta nenhum."""
+    assert DECLARATION_FIELDS <= DEPENDENCY_FIELDS
 
 
 def test_a_dependencia_declara_os_campos_que_o_pipeline_produz():

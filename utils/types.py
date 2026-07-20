@@ -27,6 +27,19 @@ from typing import NotRequired, TypedDict
 # indisponibilidade quando a Versão Usada não foi resolvida (ADR-0002/ADR-0004).
 RawMetric = int | str
 
+DeclarationEntry = TypedDict(
+    "DeclarationEntry",
+    {
+        "Pacote": str,
+        # Vazia quando a Declaração não fixa versão — pin exato é o único que
+        # define Versão Usada (ADR-0002), e o Lock resolve o resto depois.
+        "Versão Usada": str,
+        # Preenchida pelos readers que distinguem grupo de desenvolvimento; é ela
+        # que isenta a Dependência de Desenvolvimento de virar Zumbi (ADR-0003).
+        "Origem": NotRequired[str],
+    },
+)
+
 Dependency = TypedDict(
     "Dependency",
     {

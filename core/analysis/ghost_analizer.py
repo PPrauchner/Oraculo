@@ -34,7 +34,9 @@ def is_ghost(dep: Dependency) -> bool:
     return dep.get("Origem", ORIGIN_UNAVAILABLE) == ORIGIN_UNAVAILABLE
 
 
-def analyze_ghost_dependencies(declared: list[dict], imports: list[dict]) -> list[dict]:
+def analyze_ghost_dependencies(
+    declared: list[Dependency], imports: list[Dependency]
+) -> list[Dependency]:
     """Identifica dependências fantasmas comparando imports com dependências declaradas."""
     declared_names: set[str] = set()
     for dep in declared:

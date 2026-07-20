@@ -14,11 +14,12 @@ Saída:
 
 from core.analysis.name_matching import import_names_for, normalize_name
 from utils.constants import ORIGIN_DEVELOPMENT
+from utils.types import Dependency
 
 
 def analyze_zombie_dependencies(
-    declared: list[dict], imports: list[dict]
-) -> list[dict]:
+    declared: list[Dependency], imports: list[Dependency]
+) -> list[Dependency]:
     """Identifica dependências zumbis comparando dependências declaradas com imports.
 
     Dependência de Desenvolvimento nunca é Zumbi (ADR-0003): sua Origem é um

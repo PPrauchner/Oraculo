@@ -18,6 +18,8 @@ from core.parsin.declaration_collector import is_lock_filename
 from core.parsin.readers import parse_lock
 
 
+from utils.types import Dependency
+
 def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]:
     """Mapeia Nome de Distribuição normalizado à versão exata registrada no Lock.
 
@@ -45,8 +47,8 @@ def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]
 
 
 def resolve_used_versions(
-    declared: list[dict[str, str]], lock_version_map: dict[str, str]
-) -> list[dict[str, str]]:
+    declared: list[Dependency], lock_version_map: dict[str, str]
+) -> list[Dependency]:
     """Resolve a Versão Usada de cada pacote do conjunto com a versão do Lock.
 
     Para cada pacote já no conjunto, se o Lock registra sua versão (casando por Nome
