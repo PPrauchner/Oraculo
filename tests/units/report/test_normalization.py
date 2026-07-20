@@ -17,7 +17,7 @@ EXPORT_SCHEMA = [
     "package",
     "Categoria",
     "Origem",
-    "Versão Usada",
+    "used_version",
     "Versão PyPI",
     "Desatualizada",
     "Tamanho",
@@ -29,7 +29,7 @@ def test_normalize_with_valid_data():
     input_data = [
         {
             "package": "pandas",
-            "Versão Usada": "1.5.0",
+            "used_version": "1.5.0",
             "Versão PyPI": "2.0.0",
             "status": "Desatualizado",
             "Tamanho": 2 * 1024 * 1024,
@@ -42,7 +42,7 @@ def test_normalize_with_valid_data():
     expected = [
         {
             "package": "pandas",
-            "Versão Usada": "1.5.0",
+            "used_version": "1.5.0",
             "Versão PyPI": "2.0.0",
             "status": "Desatualizado",
             "Tamanho": "2.0 MB",
@@ -61,7 +61,7 @@ def test_normalize_with_missing_keys():
     
     result = normalize(input_data)
     
-    assert result[0]["Versão Usada"] == "N/A"
+    assert result[0]["used_version"] == "N/A"
     assert result[0]["status"] == "Desconhecido"
 
 def test_normalize_empty_list():
@@ -164,7 +164,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
         {
             "package": "pandas",
             "Origem": ORIGIN_PRODUCTION,
-            "Versão Usada": "1.5.0",
+            "used_version": "1.5.0",
             "Versão PyPI": "2.0.0",
             "status": "Desatualizado",
             "Tamanho": 2 * 1024 * 1024,
@@ -190,7 +190,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
     dependency = {
         "package": "altair",
         "Origem": ORIGIN_PRODUCTION,
-        "Versão Usada": "4.0.0",
+        "used_version": "4.0.0",
         "Versão PyPI": "5.2.0",
         "status": "Desatualizado",
         "Tamanho": 512 * 1024,

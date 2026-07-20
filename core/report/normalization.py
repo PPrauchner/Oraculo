@@ -108,7 +108,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
         rows.append(
             {
                 "package": dep.get("package", "N/A"),
-                "Versão Usada": dep.get("Versão Usada", "N/A"),
+                "used_version": dep.get("used_version", "N/A"),
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
                 "status": dep.get("status", "Desconhecido"),
                 "Tamanho": _display_metric(
@@ -124,7 +124,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
     if not rows:
         empty: ReportRow = {
             "package": "N/A",
-            "Versão Usada": "N/A",
+            "used_version": "N/A",
             "Versão PyPI": "N/A",
             "status": "N/A",
             "Tamanho": "N/A",
@@ -188,7 +188,7 @@ def build_export_rows(
                 "Categoria": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
                 "Origem": dep.get("Origem", ORIGIN_UNAVAILABLE),
-                "Versão Usada": dep.get("Versão Usada", "N/A"),
+                "used_version": dep.get("used_version", "N/A"),
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
                 "Desatualizada": outdated,
                 "Tamanho": dep.get("Tamanho", VERSION_UNAVAILABLE),

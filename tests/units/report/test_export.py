@@ -35,7 +35,7 @@ def _dependencies() -> list[dict]:
         {
             "package": "altair",
             "Origem": ORIGIN_PRODUCTION,
-            "Versão Usada": "4.0.0",
+            "used_version": "4.0.0",
             "Versão PyPI": "5.2.0",
             "status": "Desatualizado",
             "Tamanho": 524288,
@@ -44,7 +44,7 @@ def _dependencies() -> list[dict]:
         {
             "package": "streamlit",
             "Origem": ORIGIN_PRODUCTION,
-            "Versão Usada": "1.40.0",
+            "used_version": "1.40.0",
             "Versão PyPI": "1.40.0",
             "status": "Atualizado",
             "Tamanho": 8388608,

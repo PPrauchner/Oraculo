@@ -18,7 +18,7 @@ procedural) proíbe modelar o domínio em objetos com estado e comportamento, e
 
 As chaves ainda estão em português porque a migração da ADR-0008 é o passo seguinte:
 o formato precisa existir *antes* dela, senão não há o que verificar. A sintaxe é a
-funcional porque "Versão Usada" não é identificador Python.
+funcional porque "used_version" não é identificador Python.
 """
 
 from typing import NotRequired, TypedDict
@@ -33,7 +33,7 @@ DeclarationEntry = TypedDict(
         "package": str,
         # Vazia quando a Declaração não fixa versão — pin exato é o único que
         # define Versão Usada (ADR-0002), e o Lock resolve o resto depois.
-        "Versão Usada": str,
+        "used_version": str,
         # Preenchida pelos readers que distinguem grupo de desenvolvimento; é ela
         # que isenta a Dependência de Desenvolvimento de virar Zumbi (ADR-0003).
         "Origem": NotRequired[str],
@@ -44,7 +44,7 @@ Dependency = TypedDict(
     "Dependency",
     {
         "package": str,
-        "Versão Usada": str,
+        "used_version": str,
         "Versão PyPI": str,
         "status": str,
         # Preenchidos por `analysis` a partir do PyPI, ausentes até lá.
@@ -59,7 +59,7 @@ ReportRow = TypedDict(
     "ReportRow",
     {
         "package": str,
-        "Versão Usada": str,
+        "used_version": str,
         "Versão PyPI": str,
         "status": str,
         # Já formatados para leitura ("1.2 MB", "30 dias"), diferente da exportação.
@@ -78,7 +78,7 @@ ExportRow = TypedDict(
         "package": str,
         "Categoria": str,
         "Origem": str,
-        "Versão Usada": str,
+        "used_version": str,
         "Versão PyPI": str,
         # Desatualizada é coluna própria, e não valor de Categoria: uma dependência
         # pode ser Zumbi *e* Desatualizada, e um campo só perderia uma das leituras.

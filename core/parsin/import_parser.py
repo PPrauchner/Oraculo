@@ -12,7 +12,7 @@ Saída:
 - Lista de dicionários com imports encontrados:
   {
     "package": "nome_do_modulo",
-    "Versão Usada": "N/A",
+    "used_version": "N/A",
     "Versão Pypi": "N/A",
     "status": "Desconhecido"
   }
@@ -208,7 +208,7 @@ def parse_imports(
         result.append(
             {
                 "package": import_name,
-                "Versão Usada": "N/A",
+                "used_version": "N/A",
                 "Versão PyPI": "N/A",
                 "status": "Desconhecido",
             }

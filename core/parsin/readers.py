@@ -70,7 +70,7 @@ def parse_dependency_string(line: str) -> Optional[DeclarationEntry]:
     pin_match = re.match(r"={2,3}\s*(\d[^\s,;]*)", version_raw)
     version = pin_match.group(1) if pin_match else ""
 
-    return {"package": name, "Versão Usada": version}
+    return {"package": name, "used_version": version}
 
 
 def _clean_conda_dep(dep_string: str) -> Optional[DeclarationEntry]:
@@ -367,7 +367,7 @@ def parse_lock(content: str) -> List[DeclarationEntry]:
             dependencies.append(
                 {
                     "package": name.lower(),
-                    "Versão Usada": version if version else "",
+                    "used_version": version if version else "",
                     "Origem": ORIGIN_PRODUCTION,
                 }
             )

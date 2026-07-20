@@ -40,7 +40,7 @@ def _used_version(dep: Dependency) -> str:
     Returns:
         A versão exata, ou "" quando não há Versão Usada conhecida.
     """
-    raw = (dep.get("Versão Usada") or "").strip()
+    raw = (dep.get("used_version") or "").strip()
 
     try:
         parse_version(raw)
@@ -100,7 +100,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         if not versao_usada:
             # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
             # indisponibilidade, independente de o pacote existir no PyPI.
-            dep["Versão Usada"] = VERSION_UNAVAILABLE
+            dep["used_version"] = VERSION_UNAVAILABLE
         _set_size_and_age(dep, data={}, version=None)
         return dep
 
@@ -109,7 +109,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
     if not versao_usada:
         # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma
         # "Atualizado" nem se copia a versão do PyPI (ADR-0002).
-        dep["Versão Usada"] = VERSION_UNAVAILABLE
+        dep["used_version"] = VERSION_UNAVAILABLE
         dep["status"]       = VERSION_UNAVAILABLE
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): usa a
         # versão mais recente como referência de Tamanho/Idade. Uma Dependência

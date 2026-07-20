@@ -15,7 +15,7 @@ def test_pin_exato_define_versao_usada():
     """Um pin exato (==X.Y.Z) determina a Versão Usada."""
     assert parse_dependency_string("requests==2.31.0") == {
         "package": "requests",
-        "Versão Usada": "2.31.0",
+        "used_version": "2.31.0",
     }
 
 
@@ -33,14 +33,14 @@ def test_especificador_nao_pinado_nao_define_versao_usada(line):
     """Sem pin exato, o especificador não determina Versão Usada (ADR-0002)."""
     result = parse_dependency_string(line)
 
-    assert result["Versão Usada"] == ""
+    assert result["used_version"] == ""
 
 
 def test_versao_excluida_nao_vira_versao_usada():
     """`!=1.25.0,>=1.21.1` não devolve a versão excluída (1.25.0) como usada."""
     result = parse_dependency_string("urllib3!=1.25.0,>=1.21.1")
 
-    assert result == {"package": "urllib3", "Versão Usada": ""}
+    assert result == {"package": "urllib3", "used_version": ""}
 
 
 def test_pep621_dependencies_tem_origem_de_producao():
@@ -54,8 +54,8 @@ dependencies = ["requests>=2.33.0", "pandas>=3.0.1"]
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "", "Origem": "Production"},
-        {"package": "pandas", "Versão Usada": "", "Origem": "Production"},
+        {"package": "requests", "used_version": "", "Origem": "Production"},
+        {"package": "pandas", "used_version": "", "Origem": "Production"},
     ]
 
 
@@ -162,7 +162,7 @@ version = "2.33.0"
     result = parse_lock(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "2.33.0", "Origem": "Production"},
+        {"package": "requests", "used_version": "2.33.0", "Origem": "Production"},
     ]
 
 
@@ -241,8 +241,8 @@ pandas = ">=3.0.1"
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "", "Origem": "Production"},
-        {"package": "pandas", "Versão Usada": "", "Origem": "Production"},
+        {"package": "requests", "used_version": "", "Origem": "Production"},
+        {"package": "pandas", "used_version": "", "Origem": "Production"},
     ]
 
 
@@ -263,7 +263,7 @@ requests = "2.33.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "2.33.0", "Origem": "Production"},
+        {"package": "requests", "used_version": "2.33.0", "Origem": "Production"},
     ]
 
 
@@ -280,7 +280,7 @@ requests = { version = "2.33.0", extras = ["security"] }
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "2.33.0", "Origem": "Production"},
+        {"package": "requests", "used_version": "2.33.0", "Origem": "Production"},
     ]
 
 
@@ -297,7 +297,7 @@ requests = "*"
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "", "Origem": "Production"},
+        {"package": "requests", "used_version": "", "Origem": "Production"},
     ]
 
 
@@ -315,8 +315,8 @@ ruff = "^0.6.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "pytest", "Versão Usada": "", "Origem": "Development"},
-        {"package": "ruff", "Versão Usada": "", "Origem": "Development"},
+        {"package": "pytest", "used_version": "", "Origem": "Development"},
+        {"package": "ruff", "used_version": "", "Origem": "Development"},
     ]
 
 
@@ -350,7 +350,7 @@ requests = "^2.33.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "", "Origem": "Production"},
+        {"package": "requests", "used_version": "", "Origem": "Production"},
     ]
 
 
@@ -409,7 +409,7 @@ dev = "pytest"
     result = parse_pyproject(content)
 
     assert result == [
-        {"package": "requests", "Versão Usada": "", "Origem": "Production"},
+        {"package": "requests", "used_version": "", "Origem": "Production"},
     ]
 
 

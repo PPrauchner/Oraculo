@@ -26,7 +26,7 @@ REPORT_PAGE = str(Path(__file__).resolve().parents[2] / "pages" / "report.py")
 # o seletor (ADR-0008) — é justamente o que separa dado de rótulo.
 OUTDATED_DEPENDENCY = {
     "package": "requests",
-    "Versão Usada": "2.31.0",
+    "used_version": "2.31.0",
     "Versão PyPI": "2.32.0",
     "status": "Desatualizado",
     "Tamanho": 100_000,
@@ -36,7 +36,7 @@ OUTDATED_DEPENDENCY = {
 
 ZOMBIE_DEPENDENCY = {
     "package": "rich",
-    "Versão Usada": "13.0.0",
+    "used_version": "13.0.0",
     "Versão PyPI": "13.0.0",
     "status": "Atualizado",
     "Tamanho": 50_000,

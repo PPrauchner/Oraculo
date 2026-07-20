@@ -52,7 +52,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
         {
             "package": "altair",
             "Origem": ORIGIN_PRODUCTION,
-            "Versão Usada": "4.0.0",
+            "used_version": "4.0.0",
             "Versão PyPI": "5.2.0",
             "status": "Desatualizado",
             "Tamanho": 524288,
@@ -61,7 +61,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
         {
             "package": "pytest",
             "Origem": ORIGIN_DEVELOPMENT,
-            "Versão Usada": "8.0.0",
+            "used_version": "8.0.0",
             "Versão PyPI": "8.0.0",
             "status": "Atualizado",
             "Tamanho": 8388608,

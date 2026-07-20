@@ -163,7 +163,7 @@ def test_the_used_version_comes_from_the_lock_in_both_modes(
 ):
     for source in (project_directory, project_zip):
         versions = {
-            dep["package"]: dep["Versão Usada"] for dep in _audit(source, [])["declared"]
+            dep["package"]: dep["used_version"] for dep in _audit(source, [])["declared"]
         }
 
         assert versions["requests"] == "2.33.0"
