@@ -20,6 +20,7 @@ from pathlib import Path
 import streamlit as st
 from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
+from utils.messages import format_error
 from core.ingestion.decompressor import process_uploaded_file
 from core.ingestion.filter import get_unique_folders, validate_project_structure
 from core.ingestion.source import ProjectSource, open_directory
@@ -66,11 +67,11 @@ def _load_source(source: ProjectSource, project_name: str) -> None:
     st.session_state["project_name"] = project_name
 
     ignore_folders = st.session_state.get("ignore_folders", [])
-    is_valid, error_msg = validate_project_structure(source, ignore_folders)
+    is_valid, error = validate_project_structure(source, ignore_folders)
     st.session_state["archive_is_valid"] = is_valid
 
-    if not is_valid:
-        st.error(error_msg)
+    if error is not None:
+        st.error(format_error(error))
 
 
 def _entering_by_upload():
@@ -109,9 +110,9 @@ def _entering_by_directory():
         _clear_source()
         return
 
-    directory, error_msg = open_directory(typed_path)
-    if directory is None:
-        st.error(error_msg)
+    directory, error = open_directory(typed_path)
+    if error is not None:
+        st.error(format_error(error))
         _clear_source()
         return
 

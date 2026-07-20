@@ -8,6 +8,7 @@ incluindo feedback visual ao usuário durante o processamento.
 from datetime import datetime
 import streamlit as st
 from utils.sidebar import sidebar
+from utils.messages import format_error
 from core.parsin.declaration_collector import collect_declarations
 from core.parsin.lock_resolver import build_lock_version_map, resolve_used_versions
 from core.parsin.import_parser import parse_imports_with_filter
@@ -36,10 +37,10 @@ def _validate_archive_requirements(archive) -> bool:
         (Exibe mensagem de erro antes de retornar False)
     """
     ignore_folders = st.session_state.get("ignore_folders", [])
-    is_valid, error_msg = validate_project_structure(archive, ignore_folders)
+    is_valid, error = validate_project_structure(archive, ignore_folders)
 
-    if not is_valid:
-        st.error(error_msg)
+    if error is not None:
+        st.error(format_error(error))
         return False
 
     return True
