@@ -9,6 +9,7 @@ from datetime import datetime
 import streamlit as st
 from utils.sidebar import sidebar
 from utils.messages import format_error
+from utils.theme import theme_color
 from core.parsin.declaration_collector import collect_declarations
 from core.parsin.lock_resolver import build_lock_version_map, resolve_used_versions
 from core.parsin.import_parser import parse_imports_with_filter
@@ -57,14 +58,19 @@ def _render_progress_steps(step_labels: list[str], current_step: int) -> str:
     Returns:
         String contendo HTML com styling inline para exibição no Streamlit.
     """
+    done_color = theme_color("greenColor")
+    current_color = theme_color("blueColor")
+
     html = '<div class="main-loader"><div class="loader-ring"></div><div style="font-size:2.0rem; font-weight:bold; margin-bottom:15px;">Analysis in Progress...</div><div class="step-list">'
     for j, label in enumerate(step_labels):
         if j < current_step:
-            color, opacity, cursor = "#4CAF50", "1", " ✅"
+            color, opacity, cursor = done_color, "1", " ✅"
         elif j == current_step:
-            color, opacity, cursor = "#5dade2", "1", " ▌"
+            color, opacity, cursor = current_color, "1", " ▌"
         else:
-            color, opacity, cursor = "#ffffff", "0.3", ""
+            # A etapa pendente herda a cor de texto do tema — fixar branco a
+            # apagava no modo claro.
+            color, opacity, cursor = "inherit", "0.45", ""
 
         weight = "bold" if j == current_step else "normal"
         html += f'<div style="color:{color}; opacity:{opacity}; font-weight:{weight}">{label}{cursor}</div>'
@@ -207,53 +213,42 @@ def _render_loading_ui() -> None:
     redireciona para a página de relatório.
     """
 
+    # Só o que o tema não consegue declarar: o layout do bloco e a animação do anel.
+    # Nada de cor de fundo, cor de texto ou fonte — isso o tema já resolve, e era
+    # justamente o que fazia a tela nascer escura no modo claro (issue #39). As
+    # cores do anel saem da paleta única.
     st.markdown(
-        """<style>
-    /* Centraliza sem quebrar sidebar */
-    [data-testid="stMain"] {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-    }
-
-    /* Loader */
-    .main-loader {
+        f"""<style>
+    .main-loader {{
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: radial-gradient(circle at center, #1a3a3a 0%, #0e1117 50%);
-        color: white;
-        font-family: 'Inter', sans-serif;
-        padding: 80px;
-        border-radius: 10px;
-        min-height: 150vh;
-    }
+        padding: 32px 16px;
+    }}
 
-    .loader-ring {
-        width: 250px;
-        height: 250px;
-        border: 5px solid rgba(255,255,255,0.1);
-        border-top: 5px solid #3498db;
-        border-right: 5px solid #2ecc71;
-        border-radius: 70%;
+    .loader-ring {{
+        width: 120px;
+        height: 120px;
+        border: 5px solid {theme_color("grayColor")};
+        border-top: 5px solid {theme_color("blueColor")};
+        border-right: 5px solid {theme_color("greenColor")};
+        border-radius: 50%;
         animation: spin 1.5s linear infinite;
-    }
+        margin-bottom: 24px;
+    }}
 
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+    @keyframes spin {{
+        0% {{ transform: rotate(0deg); }}
+        100% {{ transform: rotate(360deg); }}
+    }}
 
-    .step-list {
-     font-family: 'Roboto', sans-serif;
+    .step-list {{
         line-height: 1.6;
         text-align: left;
-        width: 450px;
+        max-width: 450px;
         margin-top: 10px;
-        font-size: 1.0rem;
-    }
+    }}
 
     </style>
     """,
