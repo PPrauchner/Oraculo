@@ -13,7 +13,7 @@ Saída:
   {
     "package": "nome_do_modulo",
     "used_version": "N/A",
-    "Versão Pypi": "N/A",
+    "pypi_version": "N/A",
     "status": "Unknown"
   }
 """
