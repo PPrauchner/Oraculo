@@ -2,15 +2,41 @@
 Testes da tradução de código de erro para a frase que o usuário lê.
 
 `core/` devolve `(código, parâmetros)` e não sabe em que língua o erro fala
-(ADR-0010); é aqui que o código vira texto.
+(ADR-0010); é aqui que o código vira texto — pelo mesmo `locales/*.json` que traduz
+o resto da tela (ADR-0009), e não por um dicionário paralelo.
 """
 
 import ast
 from pathlib import Path
 
-from utils.messages import ERROR_MESSAGES, format_error
+import pytest
+
+import utils.i18n
+from utils.i18n import DEFAULT_LANGUAGE, available_languages, load_locale, translate
+from utils.messages import ERROR_KEY_PREFIX, error_key, format_error
 
 INGESTION_DIR = Path(__file__).resolve().parents[3] / "core" / "ingestion"
+
+
+def _screen_language(monkeypatch: pytest.MonkeyPatch, language: str) -> None:
+    """Finge a língua da requisição atual, que é o que `?lang=` decide."""
+    monkeypatch.setattr(utils.i18n.st, "query_params", {"lang": language})
+
+
+@pytest.mark.parametrize("language", available_languages())
+def test_format_error_speaks_the_language_of_the_screen(
+    monkeypatch: pytest.MonkeyPatch, language: str
+):
+    """Um caminho de tradução, não dois: o erro sai na língua do resto da tela.
+
+    Antes o texto de erro vinha de um `dict` monolíngue em módulo Python, alheio ao
+    seletor — a tela trocava de língua e o erro continuava em português.
+    """
+    _screen_language(monkeypatch, language)
+
+    assert format_error(("source_missing", {})) == translate(
+        error_key("source_missing"), language
+    )
 
 
 def test_format_error_interpolates_the_parameters_of_the_code():
@@ -21,19 +47,33 @@ def test_format_error_interpolates_the_parameters_of_the_code():
 
 
 def test_format_error_renders_a_code_without_parameters():
-    assert format_error(("source_missing", {})) == ERROR_MESSAGES["source_missing"]
+    assert format_error(("source_missing", {})) == translate(
+        error_key("source_missing"), DEFAULT_LANGUAGE
+    )
 
 
 def test_format_error_falls_back_to_the_code_when_it_has_no_message():
-    """Código sem texto aparece cru, e não como frase vazia ou KeyError."""
+    """Código sem texto aparece cru — sem o prefixo de chave, que não diz nada a ninguém.
+
+    Um erro de tradução não pode esconder o erro que o usuário precisa ver, nem
+    trocá-lo por um identificador de locale.
+    """
     assert format_error(("codigo_inexistente", {})) == "codigo_inexistente"
 
 
 def test_format_error_survives_a_missing_parameter():
     """Parâmetro faltando não pode derrubar a tela: a frase sai como está."""
-    assert format_error(("directory_not_found", {})) == ERROR_MESSAGES[
-        "directory_not_found"
-    ]
+    assert format_error(("directory_not_found", {})) == translate(
+        error_key("directory_not_found"), DEFAULT_LANGUAGE
+    )
+
+
+def test_error_key_is_namespaced_inside_the_locale():
+    """O código de erro entra no locale sob um prefixo próprio.
+
+    Sem ele, um código de `core/` poderia colidir com uma chave de rótulo de tela.
+    """
+    assert error_key("empty_path") == f"{ERROR_KEY_PREFIX}empty_path"
 
 
 def _codes_returned_by(module: Path) -> set[str]:
@@ -55,15 +95,17 @@ def _codes_returned_by(module: Path) -> set[str]:
     }
 
 
-def test_every_code_that_ingestion_can_return_has_a_message():
+@pytest.mark.parametrize("language", available_languages())
+def test_every_code_that_ingestion_can_return_has_a_message(language: str):
     """Código sem tradução chegaria ao usuário como identificador cru.
 
-    É o mesmo tipo de garantia que ADR-0009 pede entre `locales/`: falha de build
-    em vez de descoberta na tela.
+    É a mesma garantia que ADR-0009 pede entre `locales/`: falha de build em vez de
+    descoberta na tela. Vale para toda língua — um código traduzido só no inglês
+    deixaria o usuário em português lendo inglês no pior momento possível.
     """
     emitted = set()
     for module in INGESTION_DIR.glob("*.py"):
         emitted |= _codes_returned_by(module)
 
     assert emitted, "nenhum código encontrado — o extrator do teste parou de casar"
-    assert emitted <= set(ERROR_MESSAGES)
+    assert {error_key(code) for code in emitted} <= set(load_locale(language))
