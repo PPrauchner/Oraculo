@@ -266,7 +266,7 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
     if not isinstance(data, dict):
         return []
 
-    for entry in data.get("dependencies", []):
+    for entry in data.get("dependencies") or []:
 
         if isinstance(entry, str):
             if entry.strip().lower().startswith("python"):
