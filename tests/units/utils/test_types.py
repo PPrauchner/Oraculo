@@ -27,7 +27,7 @@ DEPENDENCY_FIELDS = {
     "pypi_version",
     "status",
     "size",
-    "Idade",
+    "age",
     "origin",
 }
 
@@ -46,7 +46,7 @@ EXPORT_FIELDS_IN_ORDER = [
     "pypi_version",
     "Desatualizada",
     "size",
-    "Idade",
+    "age",
 ]
 
 

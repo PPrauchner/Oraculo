@@ -21,7 +21,7 @@ EXPORT_SCHEMA = [
     "pypi_version",
     "Desatualizada",
     "size",
-    "Idade",
+    "age",
 ]
 
 def test_normalize_with_valid_data():
@@ -33,7 +33,7 @@ def test_normalize_with_valid_data():
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
             "size": 2 * 1024 * 1024,
-            "Idade": 30,
+            "age": 30,
             "origin": "Production",
             "Extra": "Deveria ser ignorado"
         }
@@ -46,7 +46,7 @@ def test_normalize_with_valid_data():
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
             "size": "2.0 MB",
-            "Idade": "30 dias",
+            "age": "30 dias",
             "origin": "Production",
         }
     ]
@@ -118,23 +118,23 @@ def test_normalize_formats_tamanho_as_readable_units():
 
 def test_normalize_formats_idade_in_days():
     """Idade crua (dias inteiros) é exibida em dias."""
-    input_data = [{"package": "pkg", "Idade": 30, "origin": "Production"}]
+    input_data = [{"package": "pkg", "age": 30, "origin": "Production"}]
 
     result = normalize(input_data)
 
-    assert result[0]["Idade"] == "30 dias"
+    assert result[0]["age"] == "30 dias"
 
 
 def test_normalize_tamanho_idade_indisponivel_pass_through():
     """Tamanho/Idade indisponíveis (N/D) permanecem N/D, nunca 0."""
     input_data = [
-        {"package": "pkg", "size": "N/D", "Idade": "N/D", "origin": "Production"}
+        {"package": "pkg", "size": "N/D", "age": "N/D", "origin": "Production"}
     ]
 
     result = normalize(input_data)
 
     assert result[0]["size"] == "N/D"
-    assert result[0]["Idade"] == "N/D"
+    assert result[0]["age"] == "N/D"
 
 
 def test_normalize_missing_tamanho_idade_defaults_indisponivel():
@@ -142,17 +142,17 @@ def test_normalize_missing_tamanho_idade_defaults_indisponivel():
     result = normalize([{"package": "numpy", "origin": "Production"}])
 
     assert result[0]["size"] == "N/D"
-    assert result[0]["Idade"] == "N/D"
+    assert result[0]["age"] == "N/D"
 
 
 def test_normalize_ghost_marks_reference_as_latest_version():
     """Fantasma (sem Origem) explicita que Tamanho/Idade são da versão mais recente."""
-    ghost = [{"package": "requests", "size": 1024 * 1024, "Idade": 5}]
+    ghost = [{"package": "requests", "size": 1024 * 1024, "age": 5}]
 
     result = normalize(ghost)
 
     assert "última versão" in result[0]["size"]
-    assert "última versão" in result[0]["Idade"]
+    assert "última versão" in result[0]["age"]
 
 
 # ============ build_export_rows (esquema de exportação US-06/US-07) ============
@@ -168,7 +168,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
             "size": 2 * 1024 * 1024,
-            "Idade": 30,
+            "age": 30,
         }
     ]
 
@@ -194,7 +194,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
         "pypi_version": "5.2.0",
         "status": "Desatualizado",
         "size": 512 * 1024,
-        "Idade": 400,
+        "age": 400,
     }
 
     rows = build_export_rows(
@@ -256,7 +256,7 @@ def test_export_rows_origin_separates_production_from_development():
 
 def test_export_rows_keep_size_and_age_raw_or_unavailable():
     """Tamanho e Idade saem crus para diffing; sem Versão Usada, N/D — nunca 0."""
-    with_metrics = {"package": "streamlit", "size": 2048, "Idade": 15}
+    with_metrics = {"package": "streamlit", "size": 2048, "age": 15}
     without_metrics = {"package": "ruff"}
 
     rows = build_export_rows(
@@ -268,9 +268,9 @@ def test_export_rows_keep_size_and_age_raw_or_unavailable():
     )
 
     assert rows[0]["size"] == 2048
-    assert rows[0]["Idade"] == 15
+    assert rows[0]["age"] == 15
     assert rows[1]["size"] == VERSION_UNAVAILABLE
-    assert rows[1]["Idade"] == VERSION_UNAVAILABLE
+    assert rows[1]["age"] == VERSION_UNAVAILABLE
 
 
 def test_export_rows_do_not_duplicate_a_dependency():

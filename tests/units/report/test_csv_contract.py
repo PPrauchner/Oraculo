@@ -56,7 +56,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "pypi_version": "5.2.0",
             "status": "Desatualizado",
             "size": 524288,
-            "Idade": 400,
+            "age": 400,
         },
         {
             "package": "pytest",
@@ -65,7 +65,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "pypi_version": "8.0.0",
             "status": "Atualizado",
             "size": 8388608,
-            "Idade": 10,
+            "age": 10,
         },
     ]
     rows = build_export_rows(

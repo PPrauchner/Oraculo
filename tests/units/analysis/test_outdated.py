@@ -94,7 +94,7 @@ def test_tamanho_e_idade_sao_da_versao_usada_nao_da_mais_recente():
         result = analyze_dependency_status(deps)
 
     assert result[0]["size"] == 100  # wheel da 1.5.0, não os 999 da 3.0.1
-    assert isinstance(result[0]["Idade"], int)
+    assert isinstance(result[0]["age"], int)
 
 
 def test_versao_usada_n_d_declarada_tem_tamanho_e_idade_indisponiveis():
@@ -105,7 +105,7 @@ def test_versao_usada_n_d_declarada_tem_tamanho_e_idade_indisponiveis():
         result = analyze_dependency_status(deps)
 
     assert result[0]["size"] == VERSION_UNAVAILABLE
-    assert result[0]["Idade"] == VERSION_UNAVAILABLE
+    assert result[0]["age"] == VERSION_UNAVAILABLE
 
 
 def test_fantasma_usa_tamanho_e_idade_da_versao_mais_recente():
@@ -116,7 +116,7 @@ def test_fantasma_usa_tamanho_e_idade_da_versao_mais_recente():
         result = analyze_dependency_status(ghost)
 
     assert result[0]["size"] == 999  # wheel da 3.0.1 (mais recente)
-    assert isinstance(result[0]["Idade"], int)
+    assert isinstance(result[0]["age"], int)
 
 
 def test_pacote_ausente_do_pypi_nao_quebra_os_demais():
@@ -136,7 +136,7 @@ def test_pacote_ausente_do_pypi_nao_quebra_os_demais():
 
     by_name = {dep["package"]: dep for dep in result}
     assert by_name["pacote-interno"]["size"] == VERSION_UNAVAILABLE
-    assert by_name["pacote-interno"]["Idade"] == VERSION_UNAVAILABLE
+    assert by_name["pacote-interno"]["age"] == VERSION_UNAVAILABLE
     assert by_name["pacote-interno"]["status"] == "Desconhecido"
     assert by_name["pandas"]["size"] == 100  # os demais seguem analisados
 

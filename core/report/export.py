@@ -37,7 +37,7 @@ CSV_HEADER = {
     "pypi_version": "PyPI Version",
     "Desatualizada": "Outdated",
     "size": "Size",
-    "Idade": "Age",
+    "age": "Age",
 }
 
 

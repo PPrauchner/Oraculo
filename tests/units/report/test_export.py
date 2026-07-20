@@ -39,7 +39,7 @@ def _dependencies() -> list[dict]:
             "pypi_version": "5.2.0",
             "status": "Desatualizado",
             "size": 524288,
-            "Idade": 400,
+            "age": 400,
         },
         {
             "package": "streamlit",
@@ -48,7 +48,7 @@ def _dependencies() -> list[dict]:
             "pypi_version": "1.40.0",
             "status": "Atualizado",
             "size": 8388608,
-            "Idade": 10,
+            "age": 10,
         },
     ]
 

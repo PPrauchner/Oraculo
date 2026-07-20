@@ -65,13 +65,13 @@ def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
     """
     if version is None:
         dep["size"] = VERSION_UNAVAILABLE
-        dep["Idade"] = VERSION_UNAVAILABLE
+        dep["age"] = VERSION_UNAVAILABLE
         return
 
     size = get_release_size(data, version)
     age = get_release_age_days(data, version)
     dep["size"] = size if size is not None else VERSION_UNAVAILABLE
-    dep["Idade"] = age if age is not None else VERSION_UNAVAILABLE
+    dep["age"] = age if age is not None else VERSION_UNAVAILABLE
 
 
 def _checar_dependencia(dep: Dependency) -> Dependency:

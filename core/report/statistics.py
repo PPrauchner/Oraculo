@@ -19,7 +19,7 @@ def _available(dependencies: list[dict], metric: str) -> list[float]:
 
     Args:
         dependencies: Dependências da categoria.
-        metric: "size" ou "Idade".
+        metric: "size" ou "age".
 
     Returns:
         Somente os valores efetivamente medidos.
@@ -40,7 +40,7 @@ def summarize_category(dependencies: list[dict]) -> dict:
         e "Sem Tamanho"/"Sem Idade" com quantas ficaram de fora de cada agregação.
     """
     sizes = _available(dependencies, "size")
-    ages = _available(dependencies, "Idade")
+    ages = _available(dependencies, "age")
 
     return {
         "Quantidade": len(dependencies),

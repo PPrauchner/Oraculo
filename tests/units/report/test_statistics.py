@@ -9,8 +9,8 @@ from utils.constants import ORIGIN_PRODUCTION, VERSION_UNAVAILABLE
 def test_category_sums_size_and_averages_age():
     """A categoria soma o Tamanho de suas dependências e faz a média da Idade."""
     dependencies = [
-        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "Idade": 10},
-        {"package": "plotly", "origin": ORIGIN_PRODUCTION, "size": 3072, "Idade": 20},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
+        {"package": "plotly", "origin": ORIGIN_PRODUCTION, "size": 3072, "age": 20},
     ]
 
     summary = summarize_category(dependencies)
@@ -23,12 +23,12 @@ def test_category_sums_size_and_averages_age():
 def test_unavailable_metrics_stay_out_of_the_aggregations():
     """Sem Versão Usada, Tamanho/Idade são N/D: não entram na soma nem na média."""
     dependencies = [
-        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "Idade": 10},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
         {
             "package": "ruff",
             "origin": ORIGIN_PRODUCTION,
             "size": VERSION_UNAVAILABLE,
-            "Idade": VERSION_UNAVAILABLE,
+            "age": VERSION_UNAVAILABLE,
         },
     ]
 
@@ -41,12 +41,12 @@ def test_unavailable_metrics_stay_out_of_the_aggregations():
 def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
     """Quantidade conta todas; a exclusão do N/D fica contabilizada, não escondida."""
     dependencies = [
-        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "Idade": 10},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
         {
             "package": "ruff",
             "origin": ORIGIN_PRODUCTION,
             "size": VERSION_UNAVAILABLE,
-            "Idade": VERSION_UNAVAILABLE,
+            "age": VERSION_UNAVAILABLE,
         },
     ]
 
@@ -75,7 +75,7 @@ def test_category_without_any_measured_metric_reports_unavailable():
             "package": "ruff",
             "origin": ORIGIN_PRODUCTION,
             "size": VERSION_UNAVAILABLE,
-            "Idade": VERSION_UNAVAILABLE,
+            "age": VERSION_UNAVAILABLE,
         }
     ]
 
@@ -92,12 +92,12 @@ def test_category_without_any_measured_metric_reports_unavailable():
 
 def test_statistics_are_stratified_per_category():
     """Cada categoria do relatório ganha suas próprias estatísticas."""
-    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "size": 512, "Idade": 400}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "size": 512, "age": 400}
     healthy = {
         "package": "streamlit",
         "origin": ORIGIN_PRODUCTION,
         "size": 1024,
-        "Idade": 10,
+        "age": 10,
     }
     report = {
         "Todas as Dependências": [zombie, healthy],
@@ -129,7 +129,7 @@ def test_statistics_agree_with_the_category_tables():
 
 def test_a_new_category_is_summarized_without_touching_the_aggregation():
     """Categoria nova entra na estratificação sozinha — nada de lista fixa."""
-    report = {"Categoria Inédita": [{"package": "novo", "size": 2048, "Idade": 7}]}
+    report = {"Categoria Inédita": [{"package": "novo", "size": 2048, "age": 7}]}
 
     summaries = summarize_by_category(report)
 
@@ -144,8 +144,8 @@ def test_summary_lines_show_size_in_readable_units_and_age_in_days():
     """Tamanho somado sai em KB/MB; Idade média, em dias."""
     summary = summarize_category(
         [
-            {"package": "a", "size": 1024 * 1024, "Idade": 10},
-            {"package": "b", "size": 1024 * 1024, "Idade": 20},
+            {"package": "a", "size": 1024 * 1024, "age": 10},
+            {"package": "b", "size": 1024 * 1024, "age": 20},
         ]
     )
 
@@ -158,8 +158,8 @@ def test_summary_lines_disclose_how_many_dependencies_were_left_out():
     """A média não engana: a linha diz sobre quantas dependências ela foi calculada."""
     summary = summarize_category(
         [
-            {"package": "a", "size": 1024, "Idade": 10},
-            {"package": "b", "size": VERSION_UNAVAILABLE, "Idade": VERSION_UNAVAILABLE},
+            {"package": "a", "size": 1024, "age": 10},
+            {"package": "b", "size": VERSION_UNAVAILABLE, "age": VERSION_UNAVAILABLE},
         ]
     )
 
