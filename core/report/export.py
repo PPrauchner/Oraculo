@@ -28,7 +28,7 @@ from utils.types import ExportRow
 # A ordem é a ordem das colunas, e ela é contrato — a US-07 depende de que dois
 # exports do mesmo Projeto-Alvo se concatenem numa série temporal.
 CSV_HEADER = {
-    "Data da Análise": "Analysis Date",
+    "analysis_date": "Analysis Date",
     "Projeto": "Project",
     "package": "Package",
     "Categoria": "Category",

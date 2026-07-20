@@ -182,7 +182,7 @@ def build_export_rows(
 
         rows.append(
             {
-                "Data da Análise": analysis_date,
+                "analysis_date": analysis_date,
                 "Projeto": project_name,
                 "package": package,
                 "Categoria": category,

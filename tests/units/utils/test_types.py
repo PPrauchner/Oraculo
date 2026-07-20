@@ -37,7 +37,7 @@ REPORT_FIELDS = DEPENDENCY_FIELDS
 # A ordem é o contrato: o cabeçalho do CSV sai daqui (ADR-0008), e trocar a ordem
 # desalinha exports do mesmo Projeto-Alvo feitos em datas diferentes.
 EXPORT_FIELDS_IN_ORDER = [
-    "Data da Análise",
+    "analysis_date",
     "Projeto",
     "package",
     "Categoria",

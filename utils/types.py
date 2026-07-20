@@ -73,7 +73,7 @@ ExportRow = TypedDict(
     "ExportRow",
     {
         # A ordem de declaração é a ordem das colunas do CSV (ADR-0008).
-        "Data da Análise": str,
+        "analysis_date": str,
         "Projeto": str,
         "package": str,
         "Categoria": str,
