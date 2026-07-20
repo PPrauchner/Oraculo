@@ -64,13 +64,13 @@ def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
             Dependência Declarada): Tamanho e Idade ficam indisponíveis, nunca 0.
     """
     if version is None:
-        dep["Tamanho"] = VERSION_UNAVAILABLE
+        dep["size"] = VERSION_UNAVAILABLE
         dep["Idade"] = VERSION_UNAVAILABLE
         return
 
     size = get_release_size(data, version)
     age = get_release_age_days(data, version)
-    dep["Tamanho"] = size if size is not None else VERSION_UNAVAILABLE
+    dep["size"] = size if size is not None else VERSION_UNAVAILABLE
     dep["Idade"] = age if age is not None else VERSION_UNAVAILABLE
 
 

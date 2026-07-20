@@ -38,7 +38,7 @@ def _dependencies() -> list[dict]:
             "used_version": "4.0.0",
             "pypi_version": "5.2.0",
             "status": "Desatualizado",
-            "Tamanho": 524288,
+            "size": 524288,
             "Idade": 400,
         },
         {
@@ -47,7 +47,7 @@ def _dependencies() -> list[dict]:
             "used_version": "1.40.0",
             "pypi_version": "1.40.0",
             "status": "Atualizado",
-            "Tamanho": 8388608,
+            "size": 8388608,
             "Idade": 10,
         },
     ]

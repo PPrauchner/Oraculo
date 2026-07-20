@@ -29,7 +29,7 @@ OUTDATED_DEPENDENCY = {
     "used_version": "2.31.0",
     "pypi_version": "2.32.0",
     "status": "Desatualizado",
-    "Tamanho": 100_000,
+    "size": 100_000,
     "Idade": 400,
     "origin": "Production",
 }
@@ -39,7 +39,7 @@ ZOMBIE_DEPENDENCY = {
     "used_version": "13.0.0",
     "pypi_version": "13.0.0",
     "status": "Atualizado",
-    "Tamanho": 50_000,
+    "size": 50_000,
     "Idade": 100,
     "origin": "Production",
 }

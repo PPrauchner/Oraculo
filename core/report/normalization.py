@@ -111,8 +111,8 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
                 "status": dep.get("status", "Desconhecido"),
-                "Tamanho": _display_metric(
-                    dep.get("Tamanho", VERSION_UNAVAILABLE), is_fantasma, format_size
+                "size": _display_metric(
+                    dep.get("size", VERSION_UNAVAILABLE), is_fantasma, format_size
                 ),
                 "Idade": _display_metric(
                     dep.get("Idade", VERSION_UNAVAILABLE), is_fantasma, format_age
@@ -127,7 +127,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
             "used_version": "N/A",
             "pypi_version": "N/A",
             "status": "N/A",
-            "Tamanho": "N/A",
+            "size": "N/A",
             "Idade": "N/A",
             "origin": "N/A",
         }
@@ -191,7 +191,7 @@ def build_export_rows(
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
                 "Desatualizada": outdated,
-                "Tamanho": dep.get("Tamanho", VERSION_UNAVAILABLE),
+                "size": dep.get("size", VERSION_UNAVAILABLE),
                 "Idade": dep.get("Idade", VERSION_UNAVAILABLE),
             }
         )

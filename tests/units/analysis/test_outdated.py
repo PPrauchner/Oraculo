@@ -93,7 +93,7 @@ def test_tamanho_e_idade_sao_da_versao_usada_nao_da_mais_recente():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["Tamanho"] == 100  # wheel da 1.5.0, não os 999 da 3.0.1
+    assert result[0]["size"] == 100  # wheel da 1.5.0, não os 999 da 3.0.1
     assert isinstance(result[0]["Idade"], int)
 
 
@@ -104,7 +104,7 @@ def test_versao_usada_n_d_declarada_tem_tamanho_e_idade_indisponiveis():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["Tamanho"] == VERSION_UNAVAILABLE
+    assert result[0]["size"] == VERSION_UNAVAILABLE
     assert result[0]["Idade"] == VERSION_UNAVAILABLE
 
 
@@ -115,7 +115,7 @@ def test_fantasma_usa_tamanho_e_idade_da_versao_mais_recente():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(ghost)
 
-    assert result[0]["Tamanho"] == 999  # wheel da 3.0.1 (mais recente)
+    assert result[0]["size"] == 999  # wheel da 3.0.1 (mais recente)
     assert isinstance(result[0]["Idade"], int)
 
 
@@ -135,10 +135,10 @@ def test_pacote_ausente_do_pypi_nao_quebra_os_demais():
         result = analyze_dependency_status(deps)
 
     by_name = {dep["package"]: dep for dep in result}
-    assert by_name["pacote-interno"]["Tamanho"] == VERSION_UNAVAILABLE
+    assert by_name["pacote-interno"]["size"] == VERSION_UNAVAILABLE
     assert by_name["pacote-interno"]["Idade"] == VERSION_UNAVAILABLE
     assert by_name["pacote-interno"]["status"] == "Desconhecido"
-    assert by_name["pandas"]["Tamanho"] == 100  # os demais seguem analisados
+    assert by_name["pandas"]["size"] == 100  # os demais seguem analisados
 
 
 def test_versao_com_sufixo_pep_440_le_a_propria_release():
@@ -155,7 +155,7 @@ def test_versao_com_sufixo_pep_440_le_a_propria_release():
     with _with_pypi_data(data):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["Tamanho"] == 111  # a pré-release, não os 999 da final
+    assert result[0]["size"] == 111  # a pré-release, não os 999 da final
     assert result[0]["status"] == "Desatualizado"  # 2.0.0b1 < 2.0.0
 
 
@@ -173,7 +173,7 @@ def test_versao_post_release_le_a_propria_release():
     with _with_pypi_data(data):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["Tamanho"] == 222
+    assert result[0]["size"] == 222
     assert result[0]["status"] == "Atualizado"
 
 
@@ -185,7 +185,7 @@ def test_versao_usada_que_nao_e_pep_440_conta_como_indisponivel():
         result = analyze_dependency_status(deps)
 
     assert result[0]["used_version"] == VERSION_UNAVAILABLE
-    assert result[0]["Tamanho"] == VERSION_UNAVAILABLE
+    assert result[0]["size"] == VERSION_UNAVAILABLE
 
 
 def test_fantasma_ausente_do_pypi_reporta_versao_usada_indisponivel():
@@ -233,7 +233,7 @@ def test_resposta_do_pypi_sem_versao_nao_quebra_a_analise():
 
     by_name = {dep["package"]: dep for dep in result}
     assert by_name["quebrado"]["status"] == "Desconhecido"
-    assert by_name["pandas"]["Tamanho"] == 100  # os demais seguem analisados
+    assert by_name["pandas"]["size"] == 100  # os demais seguem analisados
 
 
 def test_um_unico_request_por_pacote():

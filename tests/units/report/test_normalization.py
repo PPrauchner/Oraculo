@@ -20,7 +20,7 @@ EXPORT_SCHEMA = [
     "used_version",
     "pypi_version",
     "Desatualizada",
-    "Tamanho",
+    "size",
     "Idade",
 ]
 
@@ -32,7 +32,7 @@ def test_normalize_with_valid_data():
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
-            "Tamanho": 2 * 1024 * 1024,
+            "size": 2 * 1024 * 1024,
             "Idade": 30,
             "origin": "Production",
             "Extra": "Deveria ser ignorado"
@@ -45,7 +45,7 @@ def test_normalize_with_valid_data():
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
-            "Tamanho": "2.0 MB",
+            "size": "2.0 MB",
             "Idade": "30 dias",
             "origin": "Production",
         }
@@ -106,14 +106,14 @@ def test_normalize_missing_origin_defaults_na():
 def test_normalize_formats_tamanho_as_readable_units():
     """Tamanho cru (bytes) vira unidade legível (KB/MB) na tabela."""
     input_data = [
-        {"package": "big", "Tamanho": 2 * 1024 * 1024, "origin": "Production"},
-        {"package": "small", "Tamanho": 500 * 1024, "origin": "Production"},
+        {"package": "big", "size": 2 * 1024 * 1024, "origin": "Production"},
+        {"package": "small", "size": 500 * 1024, "origin": "Production"},
     ]
 
     result = normalize(input_data)
 
-    assert result[0]["Tamanho"] == "2.0 MB"
-    assert result[1]["Tamanho"] == "500.0 KB"
+    assert result[0]["size"] == "2.0 MB"
+    assert result[1]["size"] == "500.0 KB"
 
 
 def test_normalize_formats_idade_in_days():
@@ -128,12 +128,12 @@ def test_normalize_formats_idade_in_days():
 def test_normalize_tamanho_idade_indisponivel_pass_through():
     """Tamanho/Idade indisponíveis (N/D) permanecem N/D, nunca 0."""
     input_data = [
-        {"package": "pkg", "Tamanho": "N/D", "Idade": "N/D", "origin": "Production"}
+        {"package": "pkg", "size": "N/D", "Idade": "N/D", "origin": "Production"}
     ]
 
     result = normalize(input_data)
 
-    assert result[0]["Tamanho"] == "N/D"
+    assert result[0]["size"] == "N/D"
     assert result[0]["Idade"] == "N/D"
 
 
@@ -141,17 +141,17 @@ def test_normalize_missing_tamanho_idade_defaults_indisponivel():
     """Sem Tamanho/Idade informados, exibe indisponível em vez de quebrar."""
     result = normalize([{"package": "numpy", "origin": "Production"}])
 
-    assert result[0]["Tamanho"] == "N/D"
+    assert result[0]["size"] == "N/D"
     assert result[0]["Idade"] == "N/D"
 
 
 def test_normalize_ghost_marks_reference_as_latest_version():
     """Fantasma (sem Origem) explicita que Tamanho/Idade são da versão mais recente."""
-    ghost = [{"package": "requests", "Tamanho": 1024 * 1024, "Idade": 5}]
+    ghost = [{"package": "requests", "size": 1024 * 1024, "Idade": 5}]
 
     result = normalize(ghost)
 
-    assert "última versão" in result[0]["Tamanho"]
+    assert "última versão" in result[0]["size"]
     assert "última versão" in result[0]["Idade"]
 
 
@@ -167,7 +167,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
-            "Tamanho": 2 * 1024 * 1024,
+            "size": 2 * 1024 * 1024,
             "Idade": 30,
         }
     ]
@@ -193,7 +193,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
         "used_version": "4.0.0",
         "pypi_version": "5.2.0",
         "status": "Desatualizado",
-        "Tamanho": 512 * 1024,
+        "size": 512 * 1024,
         "Idade": 400,
     }
 
@@ -256,7 +256,7 @@ def test_export_rows_origin_separates_production_from_development():
 
 def test_export_rows_keep_size_and_age_raw_or_unavailable():
     """Tamanho e Idade saem crus para diffing; sem Versão Usada, N/D — nunca 0."""
-    with_metrics = {"package": "streamlit", "Tamanho": 2048, "Idade": 15}
+    with_metrics = {"package": "streamlit", "size": 2048, "Idade": 15}
     without_metrics = {"package": "ruff"}
 
     rows = build_export_rows(
@@ -267,9 +267,9 @@ def test_export_rows_keep_size_and_age_raw_or_unavailable():
         analysis_date="2026-07-18",
     )
 
-    assert rows[0]["Tamanho"] == 2048
+    assert rows[0]["size"] == 2048
     assert rows[0]["Idade"] == 15
-    assert rows[1]["Tamanho"] == VERSION_UNAVAILABLE
+    assert rows[1]["size"] == VERSION_UNAVAILABLE
     assert rows[1]["Idade"] == VERSION_UNAVAILABLE
 
 

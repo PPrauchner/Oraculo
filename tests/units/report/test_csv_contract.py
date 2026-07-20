@@ -55,7 +55,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "used_version": "4.0.0",
             "pypi_version": "5.2.0",
             "status": "Desatualizado",
-            "Tamanho": 524288,
+            "size": 524288,
             "Idade": 400,
         },
         {
@@ -64,7 +64,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "used_version": "8.0.0",
             "pypi_version": "8.0.0",
             "status": "Atualizado",
-            "Tamanho": 8388608,
+            "size": 8388608,
             "Idade": 10,
         },
     ]

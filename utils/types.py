@@ -48,7 +48,7 @@ Dependency = TypedDict(
         "pypi_version": str,
         "status": str,
         # Preenchidos por `analysis` a partir do PyPI, ausentes até lá.
-        "Tamanho": NotRequired[RawMetric],
+        "size": NotRequired[RawMetric],
         "Idade": NotRequired[RawMetric],
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
         "origin": NotRequired[str],
@@ -63,7 +63,7 @@ ReportRow = TypedDict(
         "pypi_version": str,
         "status": str,
         # Já formatados para leitura ("1.2 MB", "30 dias"), diferente da exportação.
-        "Tamanho": str,
+        "size": str,
         "Idade": str,
         "origin": str,
     },
@@ -85,7 +85,7 @@ ExportRow = TypedDict(
         "Desatualizada": str,
         # Crus, nunca formatados: o CSV é para diffing e concatenação ao longo do
         # tempo, não para leitura humana direta — essa é a `normalize`.
-        "Tamanho": RawMetric,
+        "size": RawMetric,
         "Idade": RawMetric,
     },
 )
