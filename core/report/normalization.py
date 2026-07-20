@@ -24,6 +24,7 @@ from utils.constants import (
     OUTDATED_YES,
     VERSION_UNAVAILABLE,
 )
+from utils.types import Dependency, ExportRow, ReportRow
 
 _OUTDATED_STATUS = "Desatualizado"
 
@@ -87,18 +88,18 @@ def _display_metric(
     return display
 
 
-def normalize(list_analyzed: list) -> list[dict]:
+def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
     """
     Constrói um Dicionário consolidando os resultados das análises.
 
     Args:
-        list_analyzed (list): Lista de dependências com seus resultados de análise.
+        list_analyzed: Dependências com seus resultados de análise.
 
     Returns:
-        list[dict]: Lista de dicionários representando o relatório final.
+        As linhas do relatório final, com Tamanho e Idade já formatados.
     """
 
-    rows = []
+    rows: list[ReportRow] = []
 
     for dep in list_analyzed:
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): seu
@@ -121,27 +122,26 @@ def normalize(list_analyzed: list) -> list[dict]:
         )
 
     if not rows:
-        return [
-            {
-                "Pacote": "N/A",
-                "Versão Usada": "N/A",
-                "Versão PyPI": "N/A",
-                "Status": "N/A",
-                "Tamanho": "N/A",
-                "Idade": "N/A",
-                "Origem": "N/A",
-            }
-        ]
+        empty: ReportRow = {
+            "Pacote": "N/A",
+            "Versão Usada": "N/A",
+            "Versão PyPI": "N/A",
+            "Status": "N/A",
+            "Tamanho": "N/A",
+            "Idade": "N/A",
+            "Origem": "N/A",
+        }
+        return [empty]
     return rows
 
 
 def build_export_rows(
-    dependencies: list[dict],
-    zombies: list[dict],
-    ghosts: list[dict],
+    dependencies: list[Dependency],
+    zombies: list[Dependency],
+    ghosts: list[Dependency],
     project_name: str,
     analysis_date: str,
-) -> list[dict]:
+) -> list[ExportRow]:
     """Monta as linhas da exportação (US-06/US-07), uma por dependência.
 
     O esquema acrescenta um eixo temporal (Data da Análise) e de identidade
@@ -167,7 +167,7 @@ def build_export_rows(
     zombie_names = {dep["Pacote"] for dep in zombies}
     ghost_names = {dep["Pacote"] for dep in ghosts}
 
-    rows = []
+    rows: list[ExportRow] = []
     for dep in dependencies:
         package = dep.get("Pacote", "N/A")
 
@@ -200,10 +200,10 @@ def build_export_rows(
 
 
 def filter_export_rows(
-    rows: list[dict],
+    rows: list[ExportRow],
     categories: set[str],
     include_outdated: bool,
-) -> list[dict]:
+) -> list[ExportRow]:
     """Seleciona as linhas de exportação pedidas, sem repetir nenhuma dependência.
 
     Desatualizada não é Categoria, então entra como critério à parte. Uma linha que

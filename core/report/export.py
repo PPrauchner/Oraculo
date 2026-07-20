@@ -15,13 +15,15 @@ import csv
 import io
 import json
 
+from utils.types import ExportRow
 
-def export_to_csv(report_data: list[dict]) -> bytes:
+
+def export_to_csv(report_data: list[ExportRow]) -> bytes:
     """
     Converte uma lista de dicionários em um arquivo CSV.
 
     Args:
-        report_data (list[dict]): Lista de dicionários representando os dados do relatório.
+        report_data: Linhas da exportação, na ordem das colunas do esquema.
 
     Returns:
         bytes: Conteúdo do arquivo CSV em formato de bytes.
@@ -38,12 +40,12 @@ def export_to_csv(report_data: list[dict]) -> bytes:
     return output.getvalue().encode("utf-8")
 
 
-def export_to_json(report_data: list[dict]) -> bytes:
+def export_to_json(report_data: list[ExportRow]) -> bytes:
     """
     Converte uma lista de dicionários em um arquivo JSON.
 
     Args:
-        report_data (list[dict]): Lista de dicionários representando os dados do relatório.
+        report_data: Linhas da exportação, na ordem das colunas do esquema.
 
     Returns:
         bytes: Conteúdo do arquivo JSON em formato de bytes.

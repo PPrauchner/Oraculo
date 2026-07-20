@@ -22,9 +22,10 @@ from core.pypi.pypi_client import (
 )
 from packaging.version import InvalidVersion, parse as parse_version
 from utils.constants import VERSION_UNAVAILABLE
+from utils.types import Dependency
 
 
-def _used_version(dep: dict) -> str:
+def _used_version(dep: Dependency) -> str:
     """Devolve a Versão Usada exatamente como o PyPI a publica, ou "" se indisponível.
 
     A Versão Usada já chega resolvida (Lock ou pin exato), então não há
@@ -49,7 +50,7 @@ def _used_version(dep: dict) -> str:
     return raw
 
 
-def _set_size_and_age(dep: dict, data: dict, version: str | None) -> None:
+def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
     """Preenche 'Tamanho' e 'Idade' da versão de referência a partir dos metadados.
 
     Guarda os valores crus (bytes e dias inteiros) ou o sentinela de
@@ -73,7 +74,7 @@ def _set_size_and_age(dep: dict, data: dict, version: str | None) -> None:
     dep["Idade"] = age if age is not None else VERSION_UNAVAILABLE
 
 
-def _checar_dependencia(dep: dict) -> dict:
+def _checar_dependencia(dep: Dependency) -> Dependency:
     """
     Consulta o PyPI para uma única dependência (um request) e preenche
     'Versão PyPI', 'Status', 'Tamanho' e 'Idade' diretamente no dicionário.
@@ -127,7 +128,7 @@ def _checar_dependencia(dep: dict) -> dict:
     return dep
 
 
-def analyze_dependency_status(dependencies: list[dict]) -> list[dict]:
+def analyze_dependency_status(dependencies: list[Dependency]) -> list[Dependency]:
     """
     Analisa o status de cada dependência comparando com o PyPI.
 

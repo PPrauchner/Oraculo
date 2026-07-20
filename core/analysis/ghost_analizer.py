@@ -14,9 +14,10 @@ Saída:
 
 from core.analysis.name_matching import import_names_for, normalize_name
 from utils.constants import ORIGIN_UNAVAILABLE
+from utils.types import Dependency
 
 
-def is_ghost(dep: dict) -> bool:
+def is_ghost(dep: Dependency) -> bool:
     """Indica se uma dependência é Fantasma, pela ausência de Origem.
 
     Fantasma não vem de Declaração, logo não tem Origem (CONTEXT.md) — é esse o
