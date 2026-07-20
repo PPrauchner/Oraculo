@@ -20,8 +20,12 @@ Responsabilidades:
 import csv
 import io
 
+import pytest
+
+import utils.i18n
 from core.report.export import CSV_HEADER, export_to_csv
 from core.report.normalization import build_export_rows
+from utils.i18n import available_languages
 from utils.constants import (
     CATEGORY_ZOMBIE,
     ORIGIN_DEVELOPMENT,
@@ -132,6 +136,31 @@ def test_a_marca_de_desatualizada_nao_fala_portugues():
 
     assert zombie["Outdated"] == OUTDATED_YES
     assert OUTDATED_YES == "Yes"
+
+
+def test_o_arquivo_sai_byte_identico_em_qualquer_lingua_da_tela():
+    """A garantia central da ADR-0008, e a razão de a US-07 existir.
+
+    Auditar o mesmo Projeto-Alvo com a tela em português em março e em inglês em
+    junho tem de produzir arquivos que se concatenam. Se o seletor alcançasse o
+    export, a série temporal quebraria em silêncio — sem erro e sem aviso, que é o
+    pior modo de falhar para um dado histórico.
+
+    O teste roda o mesmo export sob cada língua disponível: uma língua nova entra
+    na comparação sozinha, sem ninguém editar este arquivo.
+    """
+    monkeypatch = pytest.MonkeyPatch()
+    exported = {}
+
+    try:
+        for language in available_languages():
+            monkeypatch.setattr(utils.i18n.st, "query_params", {"lang": language})
+            exported[language] = _export()
+    finally:
+        monkeypatch.undo()
+
+    assert len(exported) > 1, "só há uma língua — a comparação não prova nada"
+    assert len(set(exported.values())) == 1
 
 
 def test_o_indeterminado_e_o_nao_aplicavel_nao_se_confundem_no_arquivo():

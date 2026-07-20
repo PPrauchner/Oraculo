@@ -9,6 +9,7 @@ no import; estava na string (ADR-0010).
 Responsabilidades:
 - Guardar que `core/` não importa Streamlit.
 - Guardar que `core/` não decide ícone — nenhum emoji nas suas strings.
+- Guardar que `core/` não alcança o tradutor — a língua é decisão de tela.
 """
 
 import ast
@@ -36,6 +37,28 @@ EMOJI = re.compile(
 )
 
 CORE_MODULES = sorted(CORE_DIR.rglob("*.py"))
+
+# O tradutor da interface. `core/` importa `utils` o tempo todo — constantes e
+# `TypedDict` moram lá —, e é este módulo, e só ele, que a fronteira proíbe.
+TRANSLATOR = "utils.i18n"
+
+
+def _imported_paths(source: str) -> set[str]:
+    """Caminhos completos de módulo importados por um arquivo.
+
+    O de topo não serve aqui: `utils` é importado por `core/` o tempo todo (as
+    constantes e os `TypedDict` moram lá), e é só `utils.i18n` que a fronteira
+    proíbe.
+    """
+    paths = set()
+
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            paths.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+            paths.add(node.module)
+
+    return paths
 
 
 def _imported_modules(source: str) -> set[str]:
@@ -68,3 +91,20 @@ def test_core_does_not_choose_an_icon(module: Path):
     found = EMOJI.findall(module.read_text(encoding="utf-8"))
 
     assert found == []
+
+
+@pytest.mark.parametrize("module", CORE_MODULES, ids=lambda path: path.name)
+def test_core_cannot_reach_the_translator(module: Path):
+    """`core/` não importa `utils.i18n` — nem para traduzir, nem por engano.
+
+    É a guarda estrutural do CSV como contrato (ADR-0008). Comparar dois exports
+    byte a byte não basta: `CSV_HEADER` é montado uma vez na importação, então um
+    `t()` ali dentro congelaria a primeira língua e os dois exports sairiam iguais
+    — idênticos entre si e errados para todo mundo que não abrisse o app em inglês.
+    Verificado: a comparação byte a byte deixa essa sabotagem passar, esta não.
+
+    A regra é mais larga que o CSV de propósito. Nada em `core/` decide língua: o
+    que ele devolve é código estável e dado, e quem traduz é `utils/display.py` ou
+    `utils/messages.py` (ADR-0010).
+    """
+    assert TRANSLATOR not in _imported_paths(module.read_text(encoding="utf-8"))
