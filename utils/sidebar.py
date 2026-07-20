@@ -80,6 +80,14 @@ def sidebar() -> None:
 
         language_selector()
 
+        # Legenda, e não controle: o tema é do mecanismo nativo do Streamlit, que já
+        # guarda a escolha por sessão no navegador do visitante. `theme.base` é
+        # `scriptable = False`, então não há alternador próprio a oferecer aqui — o que
+        # falta é dizer onde fica o que já existe. O caminho do menu (`Settings →
+        # Theme`) fica em inglês nos dois locales de propósito: é o rótulo literal que
+        # o Streamlit desenha na tela, e traduzi-lo apontaria para algo inexistente.
+        st.caption(t("sidebar.theme_hint"))
+
         st.divider()
 
     st.sidebar.info(t("sidebar.tip"))

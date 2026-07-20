@@ -56,6 +56,7 @@
 
   "sidebar.subtitle": "Auditoria de Dependências Python",
   "sidebar.language": "Idioma",
+  "sidebar.theme_hint": "Tema claro ou escuro: menu ⋮ → Settings → Theme.",
   "sidebar.tip": "Dica: Ignore pastas de ambiente virtual para acelerar a análise.",
 
   "error.empty_path": "Informe o caminho do diretório do Projeto-Alvo.",
