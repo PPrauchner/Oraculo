@@ -5,7 +5,6 @@ Gerencia a execução do pipeline completo de análise de dependências,
 incluindo feedback visual ao usuário durante o processamento.
 """
 
-import time
 from datetime import datetime
 import streamlit as st
 from utils.sidebar import sidebar
@@ -121,10 +120,13 @@ def _execute_analysis_pipeline() -> None:
     ignore_folders = st.session_state.get("ignore_folders", [])
 
     try:
+        # Cada etapa é anunciada antes do próprio trabalho e cede a vez à seguinte
+        # quando ele termina de fato — sem tempo mínimo de exibição. Projeto pequeno
+        # pisca porque a auditoria é rápida mesmo; esconder isso seria mentir. Não
+        # reintroduzir atraso para "consertar o flicker" (issue #34).
         placeholder.markdown(
             _render_progress_steps(step_labels, 0), unsafe_allow_html=True
         )
-        time.sleep(1.0)
 
         declared_dependencies = collect_declarations(archive, ignore_folders)
         if not declared_dependencies:
@@ -146,7 +148,6 @@ def _execute_analysis_pipeline() -> None:
         placeholder.markdown(
             _render_progress_steps(step_labels, 1), unsafe_allow_html=True
         )
-        time.sleep(1.0)
 
         imports = parse_imports_with_filter(archive, ignore_folders)
         st.session_state["imports"] = imports
@@ -154,7 +155,6 @@ def _execute_analysis_pipeline() -> None:
         placeholder.markdown(
             _render_progress_steps(step_labels, 2), unsafe_allow_html=True
         )
-        time.sleep(1.0)
 
         zombies = analyze_zombie_dependencies(declared_dependencies, imports)
         st.session_state["zombies"] = zombies
@@ -162,7 +162,6 @@ def _execute_analysis_pipeline() -> None:
         placeholder.markdown(
             _render_progress_steps(step_labels, 3), unsafe_allow_html=True
         )
-        time.sleep(1.0)
 
         ghosts = analyze_ghost_dependencies(declared_dependencies, imports)
         st.session_state["ghosts"] = ghosts
@@ -170,7 +169,6 @@ def _execute_analysis_pipeline() -> None:
         placeholder.markdown(
             _render_progress_steps(step_labels, 4), unsafe_allow_html=True
         )
-        time.sleep(1.0)
 
         all_deps = declared_dependencies + ghosts
         seen = set()
@@ -193,7 +191,6 @@ def _execute_analysis_pipeline() -> None:
         placeholder.markdown(
             _render_progress_steps(step_labels, 5), unsafe_allow_html=True
         )
-        time.sleep(0.5)
 
     except Exception as e:
         st.error(f"❌ Erro durante a análise: {str(e)}")
@@ -265,7 +262,6 @@ def _render_loading_ui() -> None:
     _execute_analysis_pipeline()
 
     st.markdown("</div>", unsafe_allow_html=True)
-    time.sleep(0.5)
     st.switch_page("pages/report.py")
 
 
