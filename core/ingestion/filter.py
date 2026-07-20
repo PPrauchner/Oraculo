@@ -11,7 +11,12 @@ para archive e para diretório (ADR-0001). Uma Exclusão é o **nome de uma past
 casa em qualquer profundidade: marcar `tests` exclui `tests/` e `src/tests/`.
 """
 
-from core.ingestion.source import ProjectSource, is_supported, list_paths
+from core.ingestion.source import (
+    IngestionError,
+    ProjectSource,
+    is_supported,
+    list_paths,
+)
 
 
 def _folder_name(folder: str) -> str:
@@ -80,31 +85,29 @@ def should_skip_file(file_path: str, ignore_folders: list[str]) -> bool:
 
 def validate_project_structure(
     source: ProjectSource, ignore_folders: list[str] | None = None
-) -> tuple[bool, str]:
+) -> tuple[bool, IngestionError | None]:
     """Valida se o Projeto-Alvo tem os requisitos mínimos para a auditoria.
 
     Exige, fora das Exclusões, pelo menos um arquivo `.py` e pelo menos uma
-    Declaração (ou Lock). Vale igual para archive e para diretório, então as
-    mensagens não citam formato de arquivo.
+    Declaração (ou Lock). Vale igual para archive e para diretório, então os
+    códigos de erro não citam formato de arquivo.
 
     Args:
         source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
         ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
 
     Returns:
-        Par (é_válido, mensagem_de_erro). Com sucesso, (True, "").
+        Par (é_válido, erro). Com sucesso, (True, None); em falha, o
+        `IngestionError` que descreve o que falta (ADR-0010).
     """
     if source is None:
-        return False, "❌ O Projeto-Alvo não foi processado corretamente."
+        return False, ("source_missing", {})
 
     # Fonte que o despacho não abre produz lista de caminhos vazia, indistinguível
     # de um Projeto-Alvo sem código. Sem esta saída, o usuário ouviria que faltam
     # arquivos .py num Projeto-Alvo que sequer chegou a ser lido.
     if not is_supported(source):
-        return False, (
-            "❌ Fonte do Projeto-Alvo não suportada.\n"
-            "Informe um diretório local ou um archive (zip, tar.gz ou tar)."
-        )
+        return False, ("unsupported_source", {})
 
     if ignore_folders is None:
         ignore_folders = []
@@ -133,27 +136,14 @@ def validate_project_structure(
                 has_dependency_file = True
 
             if has_python_files and has_dependency_file:
-                return True, ""
+                return True, None
 
     except Exception as e:
-        return False, f"❌ Erro ao ler o Projeto-Alvo: {str(e)}"
+        return False, ("project_read_failed", {"reason": str(e)})
 
     if not has_python_files and not has_dependency_file:
-        return (
-            False,
-            "❌ O Projeto-Alvo deve conter:\n"
-            "  1. Pelo menos um arquivo .py\n"
-            "  2. Arquivo de dependências (requirements.txt, pyproject.toml, environment.yml ou .lock)",
-        )
+        return False, ("missing_python_and_declaration", {})
     elif not has_python_files:
-        return (
-            False,
-            "❌ Nenhum arquivo .py encontrado no Projeto-Alvo.\n"
-            "Certifique-se de que o código-fonte está incluído e fora das Exclusões.",
-        )
+        return False, ("missing_python_files", {})
     else:
-        return (
-            False,
-            "❌ Nenhum arquivo de dependências encontrado.\n"
-            "Incluir um dos seguintes: requirements.txt, pyproject.toml, environment.yml ou .lock",
-        )
+        return False, ("missing_declaration", {})
