@@ -46,7 +46,7 @@ Dependency = TypedDict(
         "package": str,
         "Versão Usada": str,
         "Versão PyPI": str,
-        "Status": str,
+        "status": str,
         # Preenchidos por `analysis` a partir do PyPI, ausentes até lá.
         "Tamanho": NotRequired[RawMetric],
         "Idade": NotRequired[RawMetric],
@@ -61,7 +61,7 @@ ReportRow = TypedDict(
         "package": str,
         "Versão Usada": str,
         "Versão PyPI": str,
-        "Status": str,
+        "status": str,
         # Já formatados para leitura ("1.2 MB", "30 dias"), diferente da exportação.
         "Tamanho": str,
         "Idade": str,

@@ -25,7 +25,7 @@ DEPENDENCY_FIELDS = {
     "package",
     "Versão Usada",
     "Versão PyPI",
-    "Status",
+    "status",
     "Tamanho",
     "Idade",
     "Origem",
@@ -91,6 +91,6 @@ def test_nenhum_campo_da_dependencia_some_da_exportacao():
     porque uma dependência pode ser Zumbi *e* Desatualizada, e um campo só perderia
     uma das duas leituras.
     """
-    carried_over = DEPENDENCY_FIELDS - {"Status"}
+    carried_over = DEPENDENCY_FIELDS - {"status"}
 
     assert carried_over <= set(ExportRow.__annotations__)

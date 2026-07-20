@@ -96,7 +96,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         # Pacote ausente do PyPI (privado/interno), falha de rede ou resposta sem
         # versão: indisponível, sem quebrar a análise dos demais pacotes.
         dep["Versão PyPI"] = "N/A"
-        dep["Status"]      = "Desconhecido"
+        dep["status"]      = "Desconhecido"
         if not versao_usada:
             # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
             # indisponibilidade, independente de o pacote existir no PyPI.
@@ -110,7 +110,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma
         # "Atualizado" nem se copia a versão do PyPI (ADR-0002).
         dep["Versão Usada"] = VERSION_UNAVAILABLE
-        dep["Status"]       = VERSION_UNAVAILABLE
+        dep["status"]       = VERSION_UNAVAILABLE
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): usa a
         # versão mais recente como referência de Tamanho/Idade. Uma Dependência
         # Declarada sem Versão Usada não tem referência — fica indisponível.
@@ -119,11 +119,11 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         _set_size_and_age(dep, data, versao_usada)
         try:
             if parse_version(versao_usada) < parse_version(pypi_version):
-                dep["Status"] = "Desatualizado"
+                dep["status"] = "Desatualizado"
             else:
-                dep["Status"] = "Atualizado"
+                dep["status"] = "Atualizado"
         except Exception:
-            dep["Status"] = "Versão Inválida"
+            dep["status"] = "Versão Inválida"
 
     return dep
 

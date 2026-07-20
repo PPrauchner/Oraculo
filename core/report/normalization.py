@@ -110,7 +110,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
                 "package": dep.get("package", "N/A"),
                 "Versão Usada": dep.get("Versão Usada", "N/A"),
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
-                "Status": dep.get("Status", "Desconhecido"),
+                "status": dep.get("status", "Desconhecido"),
                 "Tamanho": _display_metric(
                     dep.get("Tamanho", VERSION_UNAVAILABLE), is_fantasma, format_size
                 ),
@@ -126,7 +126,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
             "package": "N/A",
             "Versão Usada": "N/A",
             "Versão PyPI": "N/A",
-            "Status": "N/A",
+            "status": "N/A",
             "Tamanho": "N/A",
             "Idade": "N/A",
             "Origem": "N/A",
@@ -178,7 +178,7 @@ def build_export_rows(
         else:
             category = CATEGORY_HEALTHY
 
-        outdated = OUTDATED_YES if dep.get("Status") == _OUTDATED_STATUS else OUTDATED_NO
+        outdated = OUTDATED_YES if dep.get("status") == _OUTDATED_STATUS else OUTDATED_NO
 
         rows.append(
             {

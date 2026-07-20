@@ -31,7 +31,7 @@ def test_normalize_with_valid_data():
             "package": "pandas",
             "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
-            "Status": "Desatualizado",
+            "status": "Desatualizado",
             "Tamanho": 2 * 1024 * 1024,
             "Idade": 30,
             "Origem": "Production",
@@ -44,7 +44,7 @@ def test_normalize_with_valid_data():
             "package": "pandas",
             "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
-            "Status": "Desatualizado",
+            "status": "Desatualizado",
             "Tamanho": "2.0 MB",
             "Idade": "30 dias",
             "Origem": "Production",
@@ -62,7 +62,7 @@ def test_normalize_with_missing_keys():
     result = normalize(input_data)
     
     assert result[0]["Versão Usada"] == "N/A"
-    assert result[0]["Status"] == "Desconhecido"
+    assert result[0]["status"] == "Desconhecido"
 
 def test_normalize_empty_list():
     """Verifica o retorno padrão quando a lista de entrada está vazia."""
@@ -70,13 +70,13 @@ def test_normalize_empty_list():
     
     assert len(result) == 1
     assert result[0]["package"] == "N/A"
-    assert result[0]["Status"] == "N/A"
+    assert result[0]["status"] == "N/A"
 
 def test_normalize_multiple_items():
     """Garante que a função processa múltiplos itens na lista."""
     input_data = [
-        {"package": "pkg1", "Status": "OK"},
-        {"package": "pkg2", "Status": "Erro"}
+        {"package": "pkg1", "status": "OK"},
+        {"package": "pkg2", "status": "Erro"}
     ]
 
     result = normalize(input_data)
@@ -166,7 +166,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
             "Origem": ORIGIN_PRODUCTION,
             "Versão Usada": "1.5.0",
             "Versão PyPI": "2.0.0",
-            "Status": "Desatualizado",
+            "status": "Desatualizado",
             "Tamanho": 2 * 1024 * 1024,
             "Idade": 30,
         }
@@ -192,7 +192,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
         "Origem": ORIGIN_PRODUCTION,
         "Versão Usada": "4.0.0",
         "Versão PyPI": "5.2.0",
-        "Status": "Desatualizado",
+        "status": "Desatualizado",
         "Tamanho": 512 * 1024,
         "Idade": 400,
     }
@@ -212,9 +212,9 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
 
 def test_export_rows_categorize_zombie_ghost_and_healthy():
     """Categoria estratifica as três classes da auditoria."""
-    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "Status": "Atualizado"}
-    ghost = {"package": "requests", "Status": "Atualizado"}
-    healthy = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION, "Status": "Atualizado"}
+    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "status": "Atualizado"}
+    ghost = {"package": "requests", "status": "Atualizado"}
+    healthy = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION, "status": "Atualizado"}
 
     rows = build_export_rows(
         [zombie, ghost, healthy],
@@ -278,7 +278,7 @@ def test_export_rows_do_not_duplicate_a_dependency():
     zombie_and_outdated = {
         "package": "altair",
         "Origem": ORIGIN_PRODUCTION,
-        "Status": "Desatualizado",
+        "status": "Desatualizado",
     }
 
     rows = build_export_rows(
@@ -314,9 +314,9 @@ def test_export_rows_distinguish_two_analyses_of_the_same_project():
 
 def _sample_export_rows() -> list[dict]:
     """Linhas de exportação cobrindo Zumbi+Desatualizada, Fantasma e Saudável."""
-    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "Status": "Desatualizado"}
-    ghost = {"package": "requests", "Status": "Atualizado"}
-    healthy = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION, "Status": "Atualizado"}
+    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "status": "Desatualizado"}
+    ghost = {"package": "requests", "status": "Atualizado"}
+    healthy = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION, "status": "Atualizado"}
 
     return build_export_rows(
         [zombie, ghost, healthy],

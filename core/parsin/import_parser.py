@@ -14,7 +14,7 @@ Saída:
     "package": "nome_do_modulo",
     "Versão Usada": "N/A",
     "Versão Pypi": "N/A",
-    "Status": "Desconhecido"
+    "status": "Desconhecido"
   }
 """
 
@@ -210,7 +210,7 @@ def parse_imports(
                 "package": import_name,
                 "Versão Usada": "N/A",
                 "Versão PyPI": "N/A",
-                "Status": "Desconhecido",
+                "status": "Desconhecido",
             }
         )
 

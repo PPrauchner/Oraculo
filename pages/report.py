@@ -79,7 +79,7 @@ def _build_report_dictionary() -> dict[str, list]:
     zombies = st.session_state.get("zombies", [])
     ghosts = st.session_state.get("ghosts", [])
 
-    outdated = [dep for dep in all_deps if dep.get("Status") == "Desatualizado"]
+    outdated = [dep for dep in all_deps if dep.get("status") == "Desatualizado"]
 
     return {
         REPORT_ALL: all_deps,
