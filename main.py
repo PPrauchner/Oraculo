@@ -5,9 +5,15 @@ This is the main entry point for the application.
 import streamlit as st
 
 from utils.i18n import t
+from utils.layout import apply_layout
 
 # 1. Configurações iniciais da página (opcional, mas recomendado)
 st.set_page_config(page_title="ORÁCULO", page_icon="🔍", layout="wide")
+
+# Ponto único do CSS de layout: daqui a folha vale para todas as páginas, então
+# nenhuma delas precisa (nem pode) declarar a sua. Depois do `set_page_config`, que
+# tem de vir primeiro, e antes do `pg.run()`, para valer já na primeira pintura.
+apply_layout()
 
 
 # `st.navigation` roda antes de qualquer página, então a língua precisa resolver
