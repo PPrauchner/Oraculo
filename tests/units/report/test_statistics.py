@@ -3,7 +3,7 @@ from core.report.statistics import (
     summarize_by_category,
     summarize_category,
 )
-from utils.constants import ORIGIN_PRODUCTION, VERSION_UNAVAILABLE
+from utils.constants import ORIGIN_PRODUCTION, UNKNOWN
 
 
 def test_category_sums_size_and_averages_age():
@@ -21,14 +21,14 @@ def test_category_sums_size_and_averages_age():
 
 
 def test_unavailable_metrics_stay_out_of_the_aggregations():
-    """Sem Versão Usada, Tamanho/Idade são N/D: não entram na soma nem na média."""
+    """Sem Versão Usada, Tamanho/Idade são Indeterminados: fora da soma e da média."""
     dependencies = [
         {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
         {
             "package": "ruff",
             "origin": ORIGIN_PRODUCTION,
-            "size": VERSION_UNAVAILABLE,
-            "age": VERSION_UNAVAILABLE,
+            "size": UNKNOWN,
+            "age": UNKNOWN,
         },
     ]
 
@@ -39,14 +39,14 @@ def test_unavailable_metrics_stay_out_of_the_aggregations():
 
 
 def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
-    """Quantidade conta todas; a exclusão do N/D fica contabilizada, não escondida."""
+    """Quantidade conta todas; a exclusão fica contabilizada, não escondida."""
     dependencies = [
         {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
         {
             "package": "ruff",
             "origin": ORIGIN_PRODUCTION,
-            "size": VERSION_UNAVAILABLE,
-            "age": VERSION_UNAVAILABLE,
+            "size": UNKNOWN,
+            "age": UNKNOWN,
         },
     ]
 
@@ -74,8 +74,8 @@ def test_category_without_any_measured_metric_reports_unavailable():
         {
             "package": "ruff",
             "origin": ORIGIN_PRODUCTION,
-            "size": VERSION_UNAVAILABLE,
-            "age": VERSION_UNAVAILABLE,
+            "size": UNKNOWN,
+            "age": UNKNOWN,
         }
     ]
 
@@ -159,7 +159,7 @@ def test_summary_lines_disclose_how_many_dependencies_were_left_out():
     summary = summarize_category(
         [
             {"package": "a", "size": 1024, "age": 10},
-            {"package": "b", "size": VERSION_UNAVAILABLE, "age": VERSION_UNAVAILABLE},
+            {"package": "b", "size": UNKNOWN, "age": UNKNOWN},
         ]
     )
 
@@ -172,7 +172,7 @@ def test_summary_lines_disclose_how_many_dependencies_were_left_out():
 
 
 def test_summary_lines_of_an_empty_category_report_unavailable():
-    """Categoria vazia exibe N/D, sem nota de exclusão — não havia o que excluir."""
+    """Categoria vazia exibe o Indeterminado, sem nota — não havia o que excluir."""
     lines = format_summary_lines(summarize_category([]))
 
-    assert lines == ["Tamanho: N/D", "Idade média: N/D"]
+    assert lines == [f"Tamanho: {UNKNOWN}", f"Idade média: {UNKNOWN}"]

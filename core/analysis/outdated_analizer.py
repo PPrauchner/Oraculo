@@ -26,7 +26,7 @@ from utils.constants import (
     STATUS_OUTDATED,
     STATUS_UNKNOWN,
     STATUS_UP_TO_DATE,
-    VERSION_UNAVAILABLE,
+    UNKNOWN,
 )
 from utils.types import Dependency
 
@@ -37,8 +37,8 @@ def _used_version(dep: Dependency) -> str:
     A Versão Usada já chega resolvida (Lock ou pin exato), então não há
     especificador a extrair — e extrair mutilaria versão válida: truncar o sufixo
     PEP 440 faria `2.0.0b1` virar a chave `2.0.0` e ler a release *errada* em
-    `releases[]` (ADR-0004). O valor só é aceito se for uma versão PEP 440; "N/A"
-    (Fantasma) e "N/D" contam como indisponível.
+    `releases[]` (ADR-0004). O valor só é aceito se for uma versão PEP 440; o "N/A"
+    do Fantasma e o Indeterminado contam como indisponível.
 
     Args:
         dep: Dependência com a chave 'Versão Usada'.
@@ -66,18 +66,18 @@ def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
         dep: Dependência a preencher.
         data: Metadados já buscados no PyPI.
         version: Versão de referência (Versão Usada, ou a mais recente para
-            Fantasmas). ``None`` quando não há referência (Versão Usada N/D de uma
-            Dependência Declarada): Tamanho e Idade ficam indisponíveis, nunca 0.
+            Fantasmas). ``None`` quando não há referência (Versão Usada Indeterminada
+            de uma Dependência Declarada): Tamanho e Idade ficam assim, nunca 0.
     """
     if version is None:
-        dep["size"] = VERSION_UNAVAILABLE
-        dep["age"] = VERSION_UNAVAILABLE
+        dep["size"] = UNKNOWN
+        dep["age"] = UNKNOWN
         return
 
     size = get_release_size(data, version)
     age = get_release_age_days(data, version)
-    dep["size"] = size if size is not None else VERSION_UNAVAILABLE
-    dep["age"] = age if age is not None else VERSION_UNAVAILABLE
+    dep["size"] = size if size is not None else UNKNOWN
+    dep["age"] = age if age is not None else UNKNOWN
 
 
 def _checar_dependencia(dep: Dependency) -> Dependency:
@@ -106,7 +106,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         if not versao_usada:
             # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
             # indisponibilidade, independente de o pacote existir no PyPI.
-            dep["used_version"] = VERSION_UNAVAILABLE
+            dep["used_version"] = UNKNOWN
         _set_size_and_age(dep, data={}, version=None)
         return dep
 
@@ -116,7 +116,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma que o
         # pacote está em dia nem se copia a versão do PyPI (ADR-0002). O Status é a
         # mesma ausência da métrica — Indeterminado — e diz isso com a mesma palavra.
-        dep["used_version"] = VERSION_UNAVAILABLE
+        dep["used_version"] = UNKNOWN
         dep["status"]       = STATUS_UNKNOWN
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): usa a
         # versão mais recente como referência de Tamanho/Idade. Uma Dependência

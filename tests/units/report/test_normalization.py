@@ -11,7 +11,7 @@ from utils.constants import (
     STATUS_OUTDATED,
     STATUS_UNKNOWN,
     STATUS_UP_TO_DATE,
-    VERSION_UNAVAILABLE,
+    UNKNOWN,
 )
 
 EXPORT_SCHEMA = [
@@ -129,23 +129,23 @@ def test_normalize_formats_idade_in_days():
 
 
 def test_normalize_tamanho_idade_indisponivel_pass_through():
-    """Tamanho/Idade indisponíveis (N/D) permanecem N/D, nunca 0."""
+    """Tamanho/Idade Indeterminados atravessam a normalização, nunca viram 0."""
     input_data = [
-        {"package": "pkg", "size": "N/D", "age": "N/D", "origin": "Production"}
+        {"package": "pkg", "size": UNKNOWN, "age": UNKNOWN, "origin": "Production"}
     ]
 
     result = normalize(input_data)
 
-    assert result[0]["size"] == "N/D"
-    assert result[0]["age"] == "N/D"
+    assert result[0]["size"] == UNKNOWN
+    assert result[0]["age"] == UNKNOWN
 
 
 def test_normalize_missing_tamanho_idade_defaults_indisponivel():
-    """Sem Tamanho/Idade informados, exibe indisponível em vez de quebrar."""
+    """Sem Tamanho/Idade informados, exibe o Indeterminado em vez de quebrar."""
     result = normalize([{"package": "numpy", "origin": "Production"}])
 
-    assert result[0]["size"] == "N/D"
-    assert result[0]["age"] == "N/D"
+    assert result[0]["size"] == UNKNOWN
+    assert result[0]["age"] == UNKNOWN
 
 
 def test_normalize_ghost_marks_reference_as_latest_version():
@@ -258,7 +258,7 @@ def test_export_rows_origin_separates_production_from_development():
 
 
 def test_export_rows_keep_size_and_age_raw_or_unavailable():
-    """Tamanho e Idade saem crus para diffing; sem Versão Usada, N/D — nunca 0."""
+    """Tamanho e Idade saem crus para diffing; sem Versão Usada, Indeterminado."""
     with_metrics = {"package": "streamlit", "size": 2048, "age": 15}
     without_metrics = {"package": "ruff"}
 
@@ -272,8 +272,8 @@ def test_export_rows_keep_size_and_age_raw_or_unavailable():
 
     assert rows[0]["size"] == 2048
     assert rows[0]["age"] == 15
-    assert rows[1]["size"] == VERSION_UNAVAILABLE
-    assert rows[1]["age"] == VERSION_UNAVAILABLE
+    assert rows[1]["size"] == UNKNOWN
+    assert rows[1]["age"] == UNKNOWN
 
 
 def test_export_rows_do_not_duplicate_a_dependency():

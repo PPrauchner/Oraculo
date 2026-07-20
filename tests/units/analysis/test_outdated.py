@@ -9,7 +9,7 @@ Garantem a régua da Versão Usada (ADR-0002):
 E o Tamanho/Idade a partir dos metadados do PyPI (ADR-0004):
 - vêm da Versão Usada, não da versão mais recente;
 - Fantasma (sem Declaração) usa a versão mais recente como referência;
-- Versão Usada N/D de uma Dependência Declarada fica indisponível, nunca 0;
+- Versão Usada Indeterminada de uma Dependência Declarada fica assim, nunca 0;
 - pacote ausente do PyPI não quebra a análise dos demais.
 """
 
@@ -20,7 +20,7 @@ from utils.constants import (
     STATUS_OUTDATED,
     STATUS_UNKNOWN,
     STATUS_UP_TO_DATE,
-    VERSION_UNAVAILABLE,
+    UNKNOWN,
 )
 
 
@@ -58,7 +58,7 @@ def test_versao_usada_n_d_nao_e_reportada_como_atualizado():
         result = analyze_dependency_status(deps)
 
     assert result[0]["status"] != STATUS_UP_TO_DATE
-    assert result[0]["used_version"] == VERSION_UNAVAILABLE
+    assert result[0]["used_version"] == UNKNOWN
 
 
 def test_versao_usada_n_d_nao_copia_versao_do_pypi():
@@ -109,8 +109,8 @@ def test_versao_usada_n_d_declarada_tem_tamanho_e_idade_indisponiveis():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["size"] == VERSION_UNAVAILABLE
-    assert result[0]["age"] == VERSION_UNAVAILABLE
+    assert result[0]["size"] == UNKNOWN
+    assert result[0]["age"] == UNKNOWN
 
 
 def test_fantasma_usa_tamanho_e_idade_da_versao_mais_recente():
@@ -140,8 +140,8 @@ def test_pacote_ausente_do_pypi_nao_quebra_os_demais():
         result = analyze_dependency_status(deps)
 
     by_name = {dep["package"]: dep for dep in result}
-    assert by_name["pacote-interno"]["size"] == VERSION_UNAVAILABLE
-    assert by_name["pacote-interno"]["age"] == VERSION_UNAVAILABLE
+    assert by_name["pacote-interno"]["size"] == UNKNOWN
+    assert by_name["pacote-interno"]["age"] == UNKNOWN
     assert by_name["pacote-interno"]["status"] == STATUS_UNKNOWN
     assert by_name["pandas"]["size"] == 100  # os demais seguem analisados
 
@@ -189,12 +189,12 @@ def test_versao_usada_que_nao_e_pep_440_conta_como_indisponivel():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["used_version"] == VERSION_UNAVAILABLE
-    assert result[0]["size"] == VERSION_UNAVAILABLE
+    assert result[0]["used_version"] == UNKNOWN
+    assert result[0]["size"] == UNKNOWN
 
 
 def test_fantasma_ausente_do_pypi_reporta_versao_usada_indisponivel():
-    """Fantasma cujo Nome de Import não existe no PyPI (`yaml`) reporta N/D.
+    """Fantasma cujo Nome de Import não existe no PyPI (`yaml`) fica Indeterminado.
 
     O sentinela é o mesmo do caminho com PyPI: não conhecer a Versão Usada é
     indisponibilidade, não um "N/A" herdado do extrator de imports.
@@ -206,7 +206,7 @@ def test_fantasma_ausente_do_pypi_reporta_versao_usada_indisponivel():
     ):
         result = analyze_dependency_status(ghost)
 
-    assert result[0]["used_version"] == VERSION_UNAVAILABLE
+    assert result[0]["used_version"] == UNKNOWN
 
 
 def test_pin_de_pacote_ausente_do_pypi_e_preservado():

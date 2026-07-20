@@ -26,9 +26,11 @@ from utils.constants import (
     CATEGORY_ZOMBIE,
     ORIGIN_DEVELOPMENT,
     ORIGIN_PRODUCTION,
+    ORIGIN_UNAVAILABLE,
     OUTDATED_YES,
     STATUS_OUTDATED,
     STATUS_UP_TO_DATE,
+    UNKNOWN,
 )
 from utils.types import ExportRow
 
@@ -130,3 +132,32 @@ def test_a_marca_de_desatualizada_nao_fala_portugues():
 
     assert zombie["Outdated"] == OUTDATED_YES
     assert OUTDATED_YES == "Yes"
+
+
+def test_o_indeterminado_e_o_nao_aplicavel_nao_se_confundem_no_arquivo():
+    """Duas ausências distintas escrevem dois tokens distintos (CONTEXT.md).
+
+    `N/A` diz "não existe por definição": é a Origem de um Fantasma, que não vem de
+    Declaração nenhuma — nenhum arquivo a mais a preencheria. `Unknown` diz "o
+    ORÁCULO não tem como saber": é o Tamanho e a Idade sem Versão Usada resolvida,
+    e um Lock resolveria.
+
+    Colapsar os dois num token só apagaria, para quem lê o arquivo, a diferença
+    entre um dado que falta e um dado que não cabe — e é a primeira que diz ao
+    usuário que adotar um Lock melhoraria o relatório dele.
+    """
+    ghost = {"package": "requests", "used_version": "N/A"}  # sem Origem
+    unresolved = {"package": "ruff", "origin": ORIGIN_DEVELOPMENT}  # sem Versão Usada
+
+    rows = build_export_rows(
+        [ghost, unresolved],
+        zombies=[],
+        ghosts=[ghost],
+        project_name="grupo-03",
+        analysis_date="2026-07-20",
+    )
+    by_package = {row["package"]: row for row in rows}
+
+    assert by_package["requests"]["origin"] == ORIGIN_UNAVAILABLE == "N/A"
+    assert by_package["ruff"]["size"] == UNKNOWN == "Unknown"
+    assert by_package["ruff"]["age"] == UNKNOWN

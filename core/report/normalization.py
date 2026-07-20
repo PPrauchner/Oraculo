@@ -24,7 +24,7 @@ from utils.constants import (
     OUTDATED_YES,
     STATUS_OUTDATED,
     STATUS_UNKNOWN,
-    VERSION_UNAVAILABLE,
+    UNKNOWN,
 )
 from utils.types import Dependency, ExportRow, ReportRow
 
@@ -40,11 +40,11 @@ def format_size(size: object) -> str:
         size: Bytes inteiros da Versão Usada, ou o sentinela de indisponibilidade.
 
     Returns:
-        "X.Y MB" a partir de 1 MB, "X.Y KB" abaixo disso, ou "N/D" quando
-        indisponível — nunca 0 para o caso indisponível.
+        "X.Y MB" a partir de 1 MB, "X.Y KB" abaixo disso, ou o Indeterminado
+        quando não medido — nunca 0 para esse caso.
     """
     if not isinstance(size, (int, float)):
-        return VERSION_UNAVAILABLE
+        return UNKNOWN
 
     if size >= _BYTES_PER_MB:
         return f"{size / _BYTES_PER_MB:.1f} MB"
@@ -59,10 +59,10 @@ def format_age(age: object) -> str:
             indisponibilidade.
 
     Returns:
-        "N dia(s)", ou "N/D" quando indisponível.
+        "N dia(s)", ou o Indeterminado quando não medido.
     """
     if not isinstance(age, (int, float)):
-        return VERSION_UNAVAILABLE
+        return UNKNOWN
 
     days = int(age)
     return f"{days} dia" if days == 1 else f"{days} dias"
@@ -83,7 +83,7 @@ def _display_metric(
         Texto legível, anotado com "(última versão)" quando Fantasma e disponível.
     """
     display = formatter(raw)
-    if is_fantasma and display != VERSION_UNAVAILABLE:
+    if is_fantasma and display != UNKNOWN:
         display = f"{display} ({_LATEST_VERSION_NOTE})"
     return display
 
@@ -112,10 +112,10 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
                 "pypi_version": dep.get("pypi_version", "N/A"),
                 "status": dep.get("status", STATUS_UNKNOWN),
                 "size": _display_metric(
-                    dep.get("size", VERSION_UNAVAILABLE), is_fantasma, format_size
+                    dep.get("size", UNKNOWN), is_fantasma, format_size
                 ),
                 "age": _display_metric(
-                    dep.get("age", VERSION_UNAVAILABLE), is_fantasma, format_age
+                    dep.get("age", UNKNOWN), is_fantasma, format_age
                 ),
                 "origin": dep.get("origin", "N/A"),
             }
@@ -191,8 +191,8 @@ def build_export_rows(
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
                 "outdated": outdated,
-                "size": dep.get("size", VERSION_UNAVAILABLE),
-                "age": dep.get("age", VERSION_UNAVAILABLE),
+                "size": dep.get("size", UNKNOWN),
+                "age": dep.get("age", UNKNOWN),
             }
         )
 
