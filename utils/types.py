@@ -45,7 +45,7 @@ Dependency = TypedDict(
     {
         "package": str,
         "used_version": str,
-        "Versão PyPI": str,
+        "pypi_version": str,
         "status": str,
         # Preenchidos por `analysis` a partir do PyPI, ausentes até lá.
         "Tamanho": NotRequired[RawMetric],
@@ -60,7 +60,7 @@ ReportRow = TypedDict(
     {
         "package": str,
         "used_version": str,
-        "Versão PyPI": str,
+        "pypi_version": str,
         "status": str,
         # Já formatados para leitura ("1.2 MB", "30 dias"), diferente da exportação.
         "Tamanho": str,
@@ -79,7 +79,7 @@ ExportRow = TypedDict(
         "Categoria": str,
         "Origem": str,
         "used_version": str,
-        "Versão PyPI": str,
+        "pypi_version": str,
         # Desatualizada é coluna própria, e não valor de Categoria: uma dependência
         # pode ser Zumbi *e* Desatualizada, e um campo só perderia uma das leituras.
         "Desatualizada": str,

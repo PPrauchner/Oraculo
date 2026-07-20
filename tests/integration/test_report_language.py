@@ -27,7 +27,7 @@ REPORT_PAGE = str(Path(__file__).resolve().parents[2] / "pages" / "report.py")
 OUTDATED_DEPENDENCY = {
     "package": "requests",
     "used_version": "2.31.0",
-    "Versão PyPI": "2.32.0",
+    "pypi_version": "2.32.0",
     "status": "Desatualizado",
     "Tamanho": 100_000,
     "Idade": 400,
@@ -37,7 +37,7 @@ OUTDATED_DEPENDENCY = {
 ZOMBIE_DEPENDENCY = {
     "package": "rich",
     "used_version": "13.0.0",
-    "Versão PyPI": "13.0.0",
+    "pypi_version": "13.0.0",
     "status": "Atualizado",
     "Tamanho": 50_000,
     "Idade": 100,

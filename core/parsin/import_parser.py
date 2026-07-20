@@ -209,7 +209,7 @@ def parse_imports(
             {
                 "package": import_name,
                 "used_version": "N/A",
-                "Versão PyPI": "N/A",
+                "pypi_version": "N/A",
                 "status": "Desconhecido",
             }
         )

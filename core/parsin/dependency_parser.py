@@ -52,7 +52,7 @@ def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
     return {
         "package": pacote,
         "used_version": versao_usada,
-        "Versão PyPI": "N/A",
+        "pypi_version": "N/A",
         "status": "Desconhecido",
         "Origem": dep.get("Origem", ORIGIN_PRODUCTION),
     }

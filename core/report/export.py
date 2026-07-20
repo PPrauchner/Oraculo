@@ -34,7 +34,7 @@ CSV_HEADER = {
     "Categoria": "Category",
     "Origem": "Origin",
     "used_version": "Used Version",
-    "Versão PyPI": "PyPI Version",
+    "pypi_version": "PyPI Version",
     "Desatualizada": "Outdated",
     "Tamanho": "Size",
     "Idade": "Age",

@@ -24,7 +24,7 @@ DECLARATION_FIELDS = {"package", "used_version", "Origem"}
 DEPENDENCY_FIELDS = {
     "package",
     "used_version",
-    "Versão PyPI",
+    "pypi_version",
     "status",
     "Tamanho",
     "Idade",
@@ -43,7 +43,7 @@ EXPORT_FIELDS_IN_ORDER = [
     "Categoria",
     "Origem",
     "used_version",
-    "Versão PyPI",
+    "pypi_version",
     "Desatualizada",
     "Tamanho",
     "Idade",

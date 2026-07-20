@@ -95,7 +95,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
     if not pypi_version:
         # Pacote ausente do PyPI (privado/interno), falha de rede ou resposta sem
         # versão: indisponível, sem quebrar a análise dos demais pacotes.
-        dep["Versão PyPI"] = "N/A"
+        dep["pypi_version"] = "N/A"
         dep["status"]      = "Desconhecido"
         if not versao_usada:
             # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
@@ -104,7 +104,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         _set_size_and_age(dep, data={}, version=None)
         return dep
 
-    dep["Versão PyPI"] = pypi_version
+    dep["pypi_version"] = pypi_version
 
     if not versao_usada:
         # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma
