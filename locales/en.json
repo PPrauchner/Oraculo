@@ -23,7 +23,7 @@
   "home.run.invalid_source": "❌ Cannot run the analysis. Make sure the Target Project meets the minimum requirements.",
 
   "report.title": "📊 Dependency Report",
-  "report.category.all_dependencies": "All Dependencies",
+  "report.category.all_dependencies": "All",
   "report.category.zombies": "Zombies",
   "report.category.ghosts": "Ghosts",
   "report.category.outdated": "Outdated",
@@ -53,7 +53,7 @@
   "report.metrics.header": "Key Metrics",
   "report.health_index": "Project Health Index",
   "report.health_index.unavailable": "N/A",
-  "report.chart.header": "Share of Detected Problems",
+  "report.chart.header": "Detected Problems",
   "report.tables.header": "Tables by Category",
   "report.generate": "Generate Report 📋",
   "report.warning.not_run": "⚠️ Analysis not performed. Go back Home and start the audit.",

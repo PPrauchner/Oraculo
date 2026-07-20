@@ -23,7 +23,7 @@
   "home.run.invalid_source": "❌ Não é possível executar a análise. Certifique-se de que o Projeto-Alvo atende aos requisitos mínimos.",
 
   "report.title": "📊 Relatório de Dependências",
-  "report.category.all_dependencies": "Todas as Dependências",
+  "report.category.all_dependencies": "Todas",
   "report.category.zombies": "Zumbis",
   "report.category.ghosts": "Fantasmas",
   "report.category.outdated": "Desatualizadas",
@@ -53,7 +53,7 @@
   "report.metrics.header": "Principais Métricas",
   "report.health_index": "Índice de Saúde do Projeto",
   "report.health_index.unavailable": "N/D",
-  "report.chart.header": "Proporção de Problemas Detectados",
+  "report.chart.header": "Problemas Detectados",
   "report.tables.header": "Tabelas por Categoria",
   "report.generate": "Gerar Relatório 📋",
   "report.warning.not_run": "⚠️ Análise não realizada. Volte para a Home e inicie a auditoria.",
