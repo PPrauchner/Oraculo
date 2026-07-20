@@ -12,10 +12,10 @@ from core.report.normalization import normalize, build_export_rows, filter_expor
 from core.report.statistics import format_summary_lines, summarize_by_category
 from core.report.export import export_to_csv, export_to_json
 from utils.constants import (
-    MAPA_CORES_STATUS,
     CATEGORY_ZOMBIE,
     CATEGORY_GHOST,
 )
+from utils.theme import status_colors
 
 
 CATEGORY_NAMES = {
@@ -176,7 +176,9 @@ def _render_donut_chart(report_dict: dict[str, list]) -> None:
         values="Quantidade",
         names="Status",
         hole=0.4,
-        color_discrete_map=MAPA_CORES_STATUS,
+        # A cor de cada Categoria vem da paleta do tema, então a fatia acompanha o
+        # modo claro/escuro em vez de carregar um hex próprio.
+        color_discrete_map=status_colors(),
     )
 
     figure.update_layout(width=310, height=310, margin=dict(t=0, b=0, l=0, r=0))
