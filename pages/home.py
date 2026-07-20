@@ -32,18 +32,6 @@ UPLOAD_MODE = "📦 Upload de archive"
 DIRECTORY_MODE = "📂 Diretório local"
 
 
-def visual_css():
-    st.markdown(
-        """
-        <style>
-        .stDropzone, .stTextInput>div { border-radius: 10px !important; background: #1e1e1e !important; }
-        .stButton>button { width: 100%; background: #1a73e8 !important; color: white !important; font-weight: bold; height: 3em; }
-        </style>
-    """,
-        unsafe_allow_html=True,
-    )
-
-
 def principal_interface():
     st.title(t("home.title"))
     st.write("Informe o Projeto-Alvo por upload de archive ou por diretório local")
@@ -159,7 +147,10 @@ def entering_data():
 
 
 def principal_action():
-    if st.button("Executar Análise Completa"):
+    # Destaque e largura saem do próprio Streamlit: `type="primary"` pinta o botão
+    # com a cor primária da paleta, que o tema já adapta aos dois modos. Era isto
+    # que o CSS injetado fazia à mão, com um azul só dele.
+    if st.button("Executar Análise Completa", type="primary", width="stretch"):
         if st.session_state.get("archive") is None:
             st.error("Por favor, informe o Projeto-Alvo para análise.")
         elif not st.session_state.get("archive_is_valid", False):
@@ -170,7 +161,6 @@ def principal_action():
             st.switch_page("pages/loading.py")
 
 
-visual_css()
 principal_interface()
 st.divider()
 entering_data()
