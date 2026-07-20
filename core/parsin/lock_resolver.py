@@ -18,6 +18,8 @@ from core.parsin.declaration_collector import is_lock_filename
 from core.parsin.readers import parse_lock
 
 
+from utils.types import Dependency
+
 def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]:
     """Mapeia Nome de Distribuição normalizado à versão exata registrada no Lock.
 
@@ -37,16 +39,16 @@ def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]
 
     for _path, content in iter_archive_texts(archive, ignore_folders, is_lock_filename):
         for entry in parse_lock(content):
-            version = entry.get("Versão Usada", "")
+            version = entry.get("used_version", "")
             if version:
-                version_map[normalize_name(entry["Pacote"])] = version
+                version_map[normalize_name(entry["package"])] = version
 
     return version_map
 
 
 def resolve_used_versions(
-    declared: list[dict[str, str]], lock_version_map: dict[str, str]
-) -> list[dict[str, str]]:
+    declared: list[Dependency], lock_version_map: dict[str, str]
+) -> list[Dependency]:
     """Resolve a Versão Usada de cada pacote do conjunto com a versão do Lock.
 
     Para cada pacote já no conjunto, se o Lock registra sua versão (casando por Nome
@@ -62,8 +64,8 @@ def resolve_used_versions(
         O mesmo conjunto, com a Versão Usada resolvida onde o Lock a conhece.
     """
     for dep in declared:
-        version = lock_version_map.get(normalize_name(dep["Pacote"]))
+        version = lock_version_map.get(normalize_name(dep["package"]))
         if version:
-            dep["Versão Usada"] = version
+            dep["used_version"] = version
 
     return declared

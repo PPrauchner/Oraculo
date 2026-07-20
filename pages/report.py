@@ -9,27 +9,40 @@ import streamlit as st
 import plotly.express as px
 from utils.sidebar import sidebar
 from core.report.normalization import normalize, build_export_rows, filter_export_rows
-from core.report.statistics import format_summary_lines, summarize_by_category
+from core.report.statistics import summarize_by_category, summary_metrics
 from core.report.export import export_to_csv, export_to_json
 from utils.constants import (
-    MAPA_CORES_STATUS,
     CATEGORY_ZOMBIE,
     CATEGORY_GHOST,
+    STATUS_OUTDATED,
 )
+from utils.display import display_rows, format_summary_metric
+from utils.i18n import t
+from utils.theme import status_colors
 
 
-CATEGORY_NAMES = {
-    "all_dependencies": "Todas as Dependências",
-    "zombies": "Zumbis",
-    "ghosts": "Fantasmas",
-    "outdated": "Desatualizadas",
-}
+# Identidade estável de cada categoria do relatório. É ela que serve de chave do
+# `report_dict`, de chave dos checkboxes em `session_state` e de chave do mapa de
+# cores do donut — nunca o rótulo, que muda com a língua. Traduzir a chave faria a
+# troca de idioma desmarcar as caixas e derrubar as cores do gráfico (ADR-0009).
+REPORT_ALL = "all_dependencies"
+REPORT_ZOMBIES = "zombies"
+REPORT_GHOSTS = "ghosts"
+REPORT_OUTDATED = "outdated"
 
-# Ponte entre o rótulo do diálogo de exportação e a Categoria da linha exportada.
-# "Desatualizadas" não aparece aqui: é coluna própria, não Categoria.
+# Saudável não é aba nem métrica — é a fatia do donut que sobra quando nenhuma
+# análise apontou problema —, por isso fica fora de `REPORT_CATEGORIES`.
+REPORT_HEALTHY = "healthy"
+
+# As categorias do relatório, na ordem em que aparecem nas abas e nas métricas.
+REPORT_CATEGORIES = (REPORT_ALL, REPORT_ZOMBIES, REPORT_GHOSTS, REPORT_OUTDATED)
+
+# Ponte entre a categoria escolhida no diálogo e a Categoria da linha exportada.
+# "Desatualizadas" não aparece aqui: é coluna própria, não Categoria. O valor
+# exportado é fixo em inglês e não acompanha o seletor de língua (ADR-0008).
 EXPORT_CATEGORIES = {
-    CATEGORY_NAMES["zombies"]: CATEGORY_ZOMBIE,
-    CATEGORY_NAMES["ghosts"]: CATEGORY_GHOST,
+    REPORT_ZOMBIES: CATEGORY_ZOMBIE,
+    REPORT_GHOSTS: CATEGORY_GHOST,
 }
 
 CATEGORY_SESSION_KEYS = {
@@ -37,6 +50,19 @@ CATEGORY_SESSION_KEYS = {
     "zombies": "zombies",
     "ghosts": "ghosts",
 }
+
+
+def _category_label(category: str) -> str:
+    """Rótulo de uma categoria do relatório na língua da tela.
+
+    Args:
+        category: Identidade estável da categoria (`REPORT_*`), ou "healthy" para a
+            fatia das dependências sem problema apontado.
+
+    Returns:
+        O texto a exibir, resolvido na renderização — nunca guardado.
+    """
+    return t(f"report.category.{category}")
 
 
 def _build_report_dictionary() -> dict[str, list]:
@@ -47,44 +73,40 @@ def _build_report_dictionary() -> dict[str, list]:
     lendo do session_state populado pela página de loading.
 
     Returns:
-        Dicionário com chaves de categoria e listas de dependências como valores.
-        Exemplo: {
-            "Todas as Dependências": [...],
-            "Zumbis": [...],
-            "Fantasmas": [...],
-            "Desatualizadas": [...]
-        }
+        Dicionário da identidade estável de cada categoria (`REPORT_*`) para as
+        dependências que a compõem. A chave não é o rótulo: o rótulo só nasce na
+        renderização, na língua da tela.
     """
     all_deps = st.session_state.get("all_dependencies", [])
     zombies = st.session_state.get("zombies", [])
     ghosts = st.session_state.get("ghosts", [])
 
-    outdated = [dep for dep in all_deps if dep.get("Status") == "Desatualizado"]
+    outdated = [dep for dep in all_deps if dep.get("status") == STATUS_OUTDATED]
 
     return {
-        CATEGORY_NAMES["all_dependencies"]: all_deps,
-        CATEGORY_NAMES["zombies"]: zombies,
-        CATEGORY_NAMES["ghosts"]: ghosts,
-        CATEGORY_NAMES["outdated"]: outdated,
+        REPORT_ALL: all_deps,
+        REPORT_ZOMBIES: zombies,
+        REPORT_GHOSTS: ghosts,
+        REPORT_OUTDATED: outdated,
     }
 
 
 def _calculate_healthy_dependencies(report_dict: dict[str, list[dict]]) -> int:
-    all_deps = report_dict.get(CATEGORY_NAMES["all_dependencies"], [])
+    all_deps = report_dict.get(REPORT_ALL, [])
 
     # Criamos um set apenas com os IDs/Nomes das dependências problemáticas
     problematic_ids = set()
 
-    for category_key, category_label in CATEGORY_NAMES.items():
-        if category_key != "all_dependencies" and category_label in report_dict:
-            for dep in report_dict[category_label]:
+    for category in REPORT_CATEGORIES:
+        if category != REPORT_ALL and category in report_dict:
+            for dep in report_dict[category]:
                 # Guardamos apenas o identificador único (ex: o nome da lib)
-                problematic_ids.add(dep["Pacote"])
+                problematic_ids.add(dep["package"])
 
     # Contamos quantas deps do total NÃO estão no set de IDs problemáticos
     healthy_count = 0
     for dep in all_deps:
-        if dep["Pacote"] not in problematic_ids:
+        if dep["package"] not in problematic_ids:
             healthy_count += 1
 
     return healthy_count
@@ -94,16 +116,16 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     """
     Renderiza abas interativas com tabelas de dependências por categoria.
 
-    Cada aba contém uma tabela formatada via normalize() associada
-    a uma categoria de dependências.
+    `normalize` seleciona o dado e `display_rows` o veste na língua da tela: a
+    coluna e o valor de Status só viram texto aqui, na renderização (ADR-0010).
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
     """
-    tabs = st.tabs(list(report_dict.keys()))
-    for tab, (category_label, dependencies) in zip(tabs, report_dict.items()):
+    tabs = st.tabs([_category_label(category) for category in report_dict])
+    for tab, dependencies in zip(tabs, report_dict.values()):
         with tab:
-            st.table(normalize(dependencies))
+            st.table(display_rows(normalize(dependencies)))
 
 
 def _render_metrics(report_dict: dict[str, list]) -> None:
@@ -120,10 +142,10 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
     """
     summaries = summarize_by_category(report_dict)
     columns = st.columns(len(summaries))
-    for col, (category_label, summary) in zip(columns, summaries.items()):
-        col.metric(category_label, summary["Quantidade"])
-        for line in format_summary_lines(summary):
-            col.caption(line)
+    for col, (category, summary) in zip(columns, summaries.items()):
+        col.metric(_category_label(category), summary["count"])
+        for metric in summary_metrics(summary):
+            col.caption(format_summary_metric(metric))
 
 
 def _render_health_index(report_dict: dict[str, list]) -> None:
@@ -137,17 +159,17 @@ def _render_health_index(report_dict: dict[str, list]) -> None:
         report_dict: Estrutura de relatório com categorias e listas.
     """
     st.write("")
-    total_dependencies = len(report_dict.get(CATEGORY_NAMES["all_dependencies"], []))
+    total_dependencies = len(report_dict.get(REPORT_ALL, []))
 
     if total_dependencies == 0:
-        st.write("**Índice de Saúde do Projeto: N/A**")
+        st.write(f"**{t('report.health_index')}: {t('report.health_index.unavailable')}**")
         st.progress(0)
         return
 
     healthy_count = _calculate_healthy_dependencies(report_dict)
     health_percentage = int((healthy_count / total_dependencies) * 100)
 
-    st.write(f"**Índice de Saúde do Projeto: {health_percentage}%**")
+    st.write(f"**{t('report.health_index')}: {health_percentage}%**")
     st.progress(health_percentage / 100)
 
 
@@ -156,107 +178,129 @@ def _render_donut_chart(report_dict: dict[str, list]) -> None:
     Renderiza gráfico de pizza (donut) com proporção de problemas por categoria.
 
     Agrupa dados de todas as categorias em estrutura adequada para Plotly.
-    Extensível sem acoplamento: itera sobre CATEGORY_NAMES em lugar de hardcoding.
+    Extensível sem acoplamento: itera sobre REPORT_CATEGORIES em lugar de hardcoding.
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
     """
+    # Nomes das colunas do DataFrame do Plotly — um quarto vocabulário, e um que
+    # o usuário lê: é assim que a fatia se identifica no hover. "Quantidade" ficava
+    # em português sob `?lang=en`, e "Status" nomeava categorias, não o Status da
+    # dependência — colisão com a coluna da tabela ao lado.
+    category_column = t("report.chart.category")
+    count_column = t("report.chart.count")
+
     chart_data = {
-        "Status": ["OK ✅"],
-        "Quantidade": [_calculate_healthy_dependencies(report_dict)],
+        category_column: [_category_label(REPORT_HEALTHY)],
+        count_column: [_calculate_healthy_dependencies(report_dict)],
     }
 
-    for category_key, category_label in CATEGORY_NAMES.items():
-        if category_key != "all_dependencies" and category_label in report_dict:
-            chart_data["Status"].append(category_label)
-            chart_data["Quantidade"].append(len(report_dict[category_label]))
+    for category in REPORT_CATEGORIES:
+        if category != REPORT_ALL and category in report_dict:
+            chart_data[category_column].append(_category_label(category))
+            chart_data[count_column].append(len(report_dict[category]))
 
     figure = px.pie(
         chart_data,
-        values="Quantidade",
-        names="Status",
+        values=count_column,
+        names=category_column,
         hole=0.4,
-        color_discrete_map=MAPA_CORES_STATUS,
+        # A cor de cada Categoria vem da paleta do tema, então a fatia acompanha o
+        # modo claro/escuro em vez de carregar um hex próprio. O mapa é rechaveado
+        # no rótulo traduzido porque é por ele que o Plotly casa a fatia com a cor —
+        # a paleta continua indexada pela identidade estável da categoria.
+        color_discrete_map={
+            _category_label(category): color
+            for category, color in status_colors().items()
+        },
     )
 
     figure.update_layout(width=310, height=310, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(figure, use_container_width=False)
 
 
-@st.dialog("Configurações do Relatório")
+@st.dialog(t("report.export.title"))
 def _show_export_dialog(report_dict: dict[str, list]) -> None:
     """
     Exibe modal de diálogo para seleção e exportação de dados.
     """
     if not report_dict:
-        st.warning("Não há dados para exportar.")
+        st.warning(t("report.export.no_data"))
         return
 
-    ALL_LABEL = CATEGORY_NAMES["all_dependencies"]
-    other_labels = [label for label in report_dict.keys() if label != ALL_LABEL]
+    others = [category for category in report_dict if category != REPORT_ALL]
 
     def on_change_all():
         """Sincroniza todas as categorias com o checkbox 'Todas'."""
-        new_val = st.session_state[f"cb_{ALL_LABEL}"]
-        for label in other_labels:
-            st.session_state[f"cb_{label}"] = new_val
+        new_val = st.session_state[f"cb_{REPORT_ALL}"]
+        for category in others:
+            st.session_state[f"cb_{category}"] = new_val
 
     def on_change_individual():
         """Sincroniza o checkbox 'Todas' com as categorias individuais."""
         all_checked = all(
-            st.session_state.get(f"cb_{label}", False) for label in other_labels
+            st.session_state.get(f"cb_{category}", False) for category in others
         )
-        st.session_state[f"cb_{ALL_LABEL}"] = all_checked
+        st.session_state[f"cb_{REPORT_ALL}"] = all_checked
 
-    st.write("### 1. Selecione as categorias")
+    st.write(f"### {t('report.export.select_categories')}")
 
+    # A chave do checkbox é a identidade da categoria, não o rótulo: com o rótulo,
+    # trocar de língua criaria uma chave nova em `session_state` e a caixa marcada
+    # voltaria ao padrão sem que ninguém a tivesse desmarcado.
     st.checkbox(
-        ALL_LABEL,
-        key=f"cb_{ALL_LABEL}",
+        _category_label(REPORT_ALL),
+        key=f"cb_{REPORT_ALL}",
         on_change=on_change_all,
-        value=st.session_state.get(f"cb_{ALL_LABEL}", True),  # Valor padrão inicial
+        value=st.session_state.get(f"cb_{REPORT_ALL}", True),  # Valor padrão inicial
     )
 
-    cols = st.columns(len(other_labels))
-    for i, label in enumerate(other_labels):
+    cols = st.columns(len(others))
+    for i, category in enumerate(others):
         cols[i].checkbox(
-            label,
-            key=f"cb_{label}",
+            _category_label(category),
+            key=f"cb_{category}",
             on_change=on_change_individual,
-            value=st.session_state.get(f"cb_{label}", True),  # Valor padrão inicial
+            value=st.session_state.get(f"cb_{category}", True),  # Valor padrão inicial
         )
 
     st.divider()
 
-    st.write("### 2. Formato do arquivo")
-    file_format = st.radio("Escolha o formato:", ["CSV", "JSON"], horizontal=True)
+    st.write(f"### {t('report.export.file_format')}")
+    file_format = st.radio(
+        t("report.export.format_label"), ["CSV", "JSON"], horizontal=True
+    )
 
-    selected_labels = [l for l in report_dict.keys() if st.session_state.get(f"cb_{l}")]
+    selected = [
+        category
+        for category in report_dict
+        if st.session_state.get(f"cb_{category}")
+    ]
 
-    if not selected_labels:
-        st.error("Selecione pelo menos uma categoria.")
+    if not selected:
+        st.error(t("report.export.no_category"))
         return
 
     # As linhas nascem do conjunto auditado inteiro — já deduplicado e enriquecido
     # com o PyPI — e a seleção apenas filtra. Assim uma dependência que cai em duas
     # categorias (ex.: Zumbi e Desatualizada) continua exportando uma única linha.
     export_rows = build_export_rows(
-        report_dict[ALL_LABEL],
-        zombies=report_dict[CATEGORY_NAMES["zombies"]],
-        ghosts=report_dict[CATEGORY_NAMES["ghosts"]],
+        report_dict[REPORT_ALL],
+        zombies=report_dict[REPORT_ZOMBIES],
+        ghosts=report_dict[REPORT_GHOSTS],
         project_name=st.session_state.get("project_name", "N/A"),
         analysis_date=st.session_state.get("analysis_date", "N/A"),
     )
 
-    if st.session_state.get(f"cb_{ALL_LABEL}"):
+    if st.session_state.get(f"cb_{REPORT_ALL}"):
         final_list = export_rows
     else:
         selected_categories = {
-            EXPORT_CATEGORIES[label]
-            for label in selected_labels
-            if label in EXPORT_CATEGORIES
+            EXPORT_CATEGORIES[category]
+            for category in selected
+            if category in EXPORT_CATEGORIES
         }
-        include_outdated = CATEGORY_NAMES["outdated"] in selected_labels
+        include_outdated = REPORT_OUTDATED in selected
         final_list = filter_export_rows(
             export_rows, selected_categories, include_outdated
         )
@@ -271,7 +315,9 @@ def _show_export_dialog(report_dict: dict[str, list]) -> None:
     st.divider()
 
     st.download_button(
-        label=f"Baixar Relatório ({len(final_list)} itens) .{file_ext} 📥",
+        label=t("report.export.download").format(
+            count=len(final_list), extension=file_ext
+        ),
         data=exported_data,
         file_name=f"report_oraculo.{file_ext}",
         mime=mime_type,
@@ -287,35 +333,35 @@ def _main() -> None:
     e renderiza componentes (métricas, gráficos, tabelas, exportação).
     """
     if not st.session_state.get("analysis_complete", False):
-        st.warning("⚠️ Análise não realizada. Volte para a Home e inicie a auditoria.")
+        st.warning(t("report.warning.not_run"))
         st.stop()
 
     report_dict = _build_report_dictionary()
 
-    if not report_dict.get(CATEGORY_NAMES["all_dependencies"]):
-        st.warning("⚠️ Nenhuma dependência encontrada.")
+    if not report_dict.get(REPORT_ALL):
+        st.warning(t("report.warning.no_dependency"))
         st.stop()
 
     col_metrics, col_chart = st.columns([3, 2], gap="large")
 
     with col_metrics:
-        st.write("#### Principais Métricas")
+        st.write(f"#### {t('report.metrics.header')}")
         _render_metrics(report_dict)
         _render_health_index(report_dict)
 
     with col_chart:
-        st.write("#### Proporção de Problemas Detectados")
+        st.write(f"#### {t('report.chart.header')}")
         _render_donut_chart(report_dict)
 
-    st.write("#### Tabelas por Categoria")
+    st.write(f"#### {t('report.tables.header')}")
     _render_tabs_with_tables(report_dict)
 
     col1, col2, col3 = st.columns([2, 1, 2])
     with col2:
-        if st.button("Gerar Report 📋"):
+        if st.button(t("report.generate")):
             _show_export_dialog(report_dict)
 
 
 sidebar()
-st.title("📊 Relatório de Dependências")
+st.title(t("report.title"))
 _main()

@@ -58,7 +58,7 @@ justamente nas Exclusões.
 Tamanho e Idade vêm dos metadados do PyPI, não do disco
 ([ADR-0004](./docs/adr/0004-tamanho-e-idade-vem-dos-metadados-do-pypi.md)) — uma única
 requisição a `/pypi/NAME/json` por pacote traz os três dados. Sem Versão Usada resolvida,
-ambos saem como **N/D**: o Oráculo não inventa versão.
+ambos saem como **Indeterminado**: o ORÁCULO não inventa versão.
 
 ### Relatório
 

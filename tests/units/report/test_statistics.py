@@ -1,90 +1,90 @@
 from core.report.statistics import (
-    format_summary_lines,
     summarize_by_category,
     summarize_category,
+    summary_metrics,
 )
-from utils.constants import ORIGIN_PRODUCTION, VERSION_UNAVAILABLE
+from utils.constants import ORIGIN_PRODUCTION, UNKNOWN
 
 
 def test_category_sums_size_and_averages_age():
     """A categoria soma o Tamanho de suas dependências e faz a média da Idade."""
     dependencies = [
-        {"Pacote": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
-        {"Pacote": "plotly", "Origem": ORIGIN_PRODUCTION, "Tamanho": 3072, "Idade": 20},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
+        {"package": "plotly", "origin": ORIGIN_PRODUCTION, "size": 3072, "age": 20},
     ]
 
     summary = summarize_category(dependencies)
 
-    assert summary["Quantidade"] == 2
-    assert summary["Tamanho Total"] == 4096
-    assert summary["Idade Média"] == 15
+    assert summary["count"] == 2
+    assert summary["total_size"] == 4096
+    assert summary["average_age"] == 15
 
 
 def test_unavailable_metrics_stay_out_of_the_aggregations():
-    """Sem Versão Usada, Tamanho/Idade são N/D: não entram na soma nem na média."""
+    """Sem Versão Usada, Tamanho/Idade são Indeterminados: fora da soma e da média."""
     dependencies = [
-        {"Pacote": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
         {
-            "Pacote": "ruff",
-            "Origem": ORIGIN_PRODUCTION,
-            "Tamanho": VERSION_UNAVAILABLE,
-            "Idade": VERSION_UNAVAILABLE,
+            "package": "ruff",
+            "origin": ORIGIN_PRODUCTION,
+            "size": UNKNOWN,
+            "age": UNKNOWN,
         },
     ]
 
     summary = summarize_category(dependencies)
 
-    assert summary["Tamanho Total"] == 1024
-    assert summary["Idade Média"] == 10
+    assert summary["total_size"] == 1024
+    assert summary["average_age"] == 10
 
 
 def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
-    """Quantidade conta todas; a exclusão do N/D fica contabilizada, não escondida."""
+    """Quantidade conta todas; a exclusão fica contabilizada, não escondida."""
     dependencies = [
-        {"Pacote": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024, "age": 10},
         {
-            "Pacote": "ruff",
-            "Origem": ORIGIN_PRODUCTION,
-            "Tamanho": VERSION_UNAVAILABLE,
-            "Idade": VERSION_UNAVAILABLE,
+            "package": "ruff",
+            "origin": ORIGIN_PRODUCTION,
+            "size": UNKNOWN,
+            "age": UNKNOWN,
         },
     ]
 
     summary = summarize_category(dependencies)
 
-    assert summary["Quantidade"] == 2
-    assert summary["Sem Tamanho"] == 1
-    assert summary["Sem Idade"] == 1
+    assert summary["count"] == 2
+    assert summary["missing_size"] == 1
+    assert summary["missing_age"] == 1
 
 
 def test_empty_category_reports_unavailable_instead_of_dividing_by_zero():
     """Categoria vazia (ex.: nenhum Zumbi) é estado vazio, não erro."""
     summary = summarize_category([])
 
-    assert summary["Quantidade"] == 0
-    assert summary["Tamanho Total"] is None
-    assert summary["Idade Média"] is None
-    assert summary["Sem Tamanho"] == 0
-    assert summary["Sem Idade"] == 0
+    assert summary["count"] == 0
+    assert summary["total_size"] is None
+    assert summary["average_age"] is None
+    assert summary["missing_size"] == 0
+    assert summary["missing_age"] == 0
 
 
 def test_category_without_any_measured_metric_reports_unavailable():
     """Se ninguém tem Versão Usada resolvida, não há soma nem média a exibir."""
     dependencies = [
         {
-            "Pacote": "ruff",
-            "Origem": ORIGIN_PRODUCTION,
-            "Tamanho": VERSION_UNAVAILABLE,
-            "Idade": VERSION_UNAVAILABLE,
+            "package": "ruff",
+            "origin": ORIGIN_PRODUCTION,
+            "size": UNKNOWN,
+            "age": UNKNOWN,
         }
     ]
 
     summary = summarize_category(dependencies)
 
-    assert summary["Quantidade"] == 1
-    assert summary["Tamanho Total"] is None
-    assert summary["Idade Média"] is None
-    assert summary["Sem Tamanho"] == 1
+    assert summary["count"] == 1
+    assert summary["total_size"] is None
+    assert summary["average_age"] is None
+    assert summary["missing_size"] == 1
 
 
 # ============ summarize_by_category (estratificação por Categoria) ============
@@ -92,12 +92,12 @@ def test_category_without_any_measured_metric_reports_unavailable():
 
 def test_statistics_are_stratified_per_category():
     """Cada categoria do relatório ganha suas próprias estatísticas."""
-    zombie = {"Pacote": "altair", "Origem": ORIGIN_PRODUCTION, "Tamanho": 512, "Idade": 400}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "size": 512, "age": 400}
     healthy = {
-        "Pacote": "streamlit",
-        "Origem": ORIGIN_PRODUCTION,
-        "Tamanho": 1024,
-        "Idade": 10,
+        "package": "streamlit",
+        "origin": ORIGIN_PRODUCTION,
+        "size": 1024,
+        "age": 10,
     }
     report = {
         "Todas as Dependências": [zombie, healthy],
@@ -107,72 +107,86 @@ def test_statistics_are_stratified_per_category():
 
     summaries = summarize_by_category(report)
 
-    assert summaries["Todas as Dependências"]["Tamanho Total"] == 1536
-    assert summaries["Zumbis"]["Tamanho Total"] == 512
-    assert summaries["Zumbis"]["Idade Média"] == 400
-    assert summaries["Fantasmas"]["Quantidade"] == 0
+    assert summaries["Todas as Dependências"]["total_size"] == 1536
+    assert summaries["Zumbis"]["total_size"] == 512
+    assert summaries["Zumbis"]["average_age"] == 400
+    assert summaries["Fantasmas"]["count"] == 0
 
 
 def test_statistics_agree_with_the_category_tables():
     """A Quantidade de cada categoria bate com a lista que alimenta sua tabela."""
     report = {
-        "Todas as Dependências": [{"Pacote": "a"}, {"Pacote": "b"}, {"Pacote": "c"}],
-        "Zumbis": [{"Pacote": "a"}],
-        "Desatualizadas": [{"Pacote": "a"}, {"Pacote": "b"}],
+        "Todas as Dependências": [{"package": "a"}, {"package": "b"}, {"package": "c"}],
+        "Zumbis": [{"package": "a"}],
+        "Desatualizadas": [{"package": "a"}, {"package": "b"}],
     }
 
     summaries = summarize_by_category(report)
 
     for category_label, dependencies in report.items():
-        assert summaries[category_label]["Quantidade"] == len(dependencies)
+        assert summaries[category_label]["count"] == len(dependencies)
 
 
 def test_a_new_category_is_summarized_without_touching_the_aggregation():
     """Categoria nova entra na estratificação sozinha — nada de lista fixa."""
-    report = {"Categoria Inédita": [{"Pacote": "novo", "Tamanho": 2048, "Idade": 7}]}
+    report = {"Categoria Inédita": [{"package": "novo", "size": 2048, "age": 7}]}
 
     summaries = summarize_by_category(report)
 
     assert list(summaries) == ["Categoria Inédita"]
-    assert summaries["Categoria Inédita"]["Tamanho Total"] == 2048
+    assert summaries["Categoria Inédita"]["total_size"] == 2048
 
 
-# ============ format_summary_lines (exibição das estatísticas) ============
+# ============ summary_metrics (as estatísticas descritas para exibição) ============
 
 
-def test_summary_lines_show_size_in_readable_units_and_age_in_days():
-    """Tamanho somado sai em KB/MB; Idade média, em dias."""
+def test_summary_metrics_carry_the_value_not_the_sentence():
+    """`core/` descreve a métrica; quem a redige é `utils/display.py` (ADR-0010).
+
+    Enquanto isto devolvia "Tamanho: 2.0 MB" pronto, a caption chegava à tela em
+    português sob `?lang=en` e não havia mais o que traduzir.
+    """
     summary = summarize_category(
         [
-            {"Pacote": "a", "Tamanho": 1024 * 1024, "Idade": 10},
-            {"Pacote": "b", "Tamanho": 1024 * 1024, "Idade": 20},
+            {"package": "a", "size": 1024 * 1024, "age": 10},
+            {"package": "b", "size": 1024 * 1024, "age": 20},
         ]
     )
 
-    lines = format_summary_lines(summary)
+    metrics = summary_metrics(summary)
 
-    assert lines == ["Tamanho: 2.0 MB", "Idade média: 15 dias"]
+    assert [metric["metric"] for metric in metrics] == ["size", "age"]
+    assert metrics[0]["value"] == 2 * 1024 * 1024  # bytes crus, não "2.0 MB"
+    assert metrics[1]["value"] == 15  # dias, não "15 dias"
 
 
-def test_summary_lines_disclose_how_many_dependencies_were_left_out():
-    """A média não engana: a linha diz sobre quantas dependências ela foi calculada."""
+def test_summary_metrics_disclose_how_many_dependencies_were_left_out():
+    """A média não engana: a contagem viaja junto do valor que ela afeta."""
     summary = summarize_category(
         [
-            {"Pacote": "a", "Tamanho": 1024, "Idade": 10},
-            {"Pacote": "b", "Tamanho": VERSION_UNAVAILABLE, "Idade": VERSION_UNAVAILABLE},
+            {"package": "a", "size": 1024, "age": 10},
+            {"package": "b", "size": UNKNOWN, "age": UNKNOWN},
         ]
     )
 
-    lines = format_summary_lines(summary)
+    metrics = summary_metrics(summary)
 
-    assert lines == [
-        "Tamanho: 1.0 KB (1 de 2 sem dado)",
-        "Idade média: 10 dias (1 de 2 sem dado)",
-    ]
+    assert all(metric["missing"] == 1 for metric in metrics)
+    assert all(metric["total"] == 2 for metric in metrics)
 
 
-def test_summary_lines_of_an_empty_category_report_unavailable():
-    """Categoria vazia exibe N/D, sem nota de exclusão — não havia o que excluir."""
-    lines = format_summary_lines(summarize_category([]))
+def test_summary_metrics_of_an_empty_category_have_no_value_and_nothing_excluded():
+    """Categoria vazia não tem valor nem exclusão — não havia o que excluir."""
+    metrics = summary_metrics(summarize_category([]))
 
-    assert lines == ["Tamanho: N/D", "Idade média: N/D"]
+    assert all(metric["value"] is None for metric in metrics)
+    assert all(metric["missing"] == 0 for metric in metrics)
+
+
+def test_summary_metrics_keep_the_average_unrounded():
+    """Arredondar é decisão de exibição: a média sai como foi calculada."""
+    summary = summarize_category(
+        [{"package": "a", "age": 10}, {"package": "b", "age": 11}]
+    )
+
+    assert summary_metrics(summary)[1]["value"] == 10.5

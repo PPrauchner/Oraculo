@@ -6,7 +6,7 @@ e Origem) e retorna uma lista padronizada com a estrutura completa incluindo:
 - Pacote
 - Versão Usada
 - Versão Pypi (inicialmente "N/A")
-- Status (inicialmente "Desconhecido")
+- Status (inicialmente Indeterminado — antes do PyPI não há status a afirmar)
 - Origem (Produção quando não informada)
 
 Entrada:
@@ -17,11 +17,12 @@ Saída:
 """
 
 from typing import Dict, List, Optional
-from utils.constants import ORIGIN_PRODUCTION
+from utils.constants import ORIGIN_PRODUCTION, STATUS_UNKNOWN
+from utils.types import DeclarationEntry, Dependency
 from utils.functions import READERS
 from core.ingestion.filter import is_path_in_ignored_folders
 
-def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
+def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
     """
     Normaliza um dicionário de dependência individual.
 
@@ -42,22 +43,22 @@ def normalize_dependency(dep: Dict[str, str]) -> Optional[Dict[str, str]]:
         return None
 
     # Validar campos obrigatórios
-    pacote = dep.get("Pacote", "").strip()
-    versao_usada = dep.get("Versão Usada", "").strip()
+    pacote = dep.get("package", "").strip()
+    versao_usada = dep.get("used_version", "").strip()
 
     if not pacote:
         return None
 
     return {
-        "Pacote": pacote,
-        "Versão Usada": versao_usada,
-        "Versão PyPI": "N/A",
-        "Status": "Desconhecido",
-        "Origem": dep.get("Origem", ORIGIN_PRODUCTION),
+        "package": pacote,
+        "used_version": versao_usada,
+        "pypi_version": "N/A",
+        "status": STATUS_UNKNOWN,
+        "origin": dep.get("origin", ORIGIN_PRODUCTION),
     }
 
 
-def parse_dependencies(dependencies: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def parse_dependencies(dependencies: List[DeclarationEntry]) -> List[Dependency]:
     """
     Processa uma lista de dependências e retorna lista padronizada.
 
@@ -86,8 +87,8 @@ def parse_dependencies(dependencies: List[Dict[str, str]]) -> List[Dict[str, str
 
 
 def parse_dependencies_with_filter(
-    dependencies: List[Dict[str, str]], file_path: str, ignore_folders: List[str]
-) -> List[Dict[str, str]]:
+    dependencies: List[DeclarationEntry], file_path: str, ignore_folders: List[str]
+) -> List[Dependency]:
     """
     Processa dependências com filtro por pasta ignorada.
 

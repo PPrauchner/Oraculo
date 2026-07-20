@@ -14,8 +14,8 @@ from utils.functions import READERS
 def test_pin_exato_define_versao_usada():
     """Um pin exato (==X.Y.Z) determina a Versão Usada."""
     assert parse_dependency_string("requests==2.31.0") == {
-        "Pacote": "requests",
-        "Versão Usada": "2.31.0",
+        "package": "requests",
+        "used_version": "2.31.0",
     }
 
 
@@ -33,14 +33,14 @@ def test_especificador_nao_pinado_nao_define_versao_usada(line):
     """Sem pin exato, o especificador não determina Versão Usada (ADR-0002)."""
     result = parse_dependency_string(line)
 
-    assert result["Versão Usada"] == ""
+    assert result["used_version"] == ""
 
 
 def test_versao_excluida_nao_vira_versao_usada():
     """`!=1.25.0,>=1.21.1` não devolve a versão excluída (1.25.0) como usada."""
     result = parse_dependency_string("urllib3!=1.25.0,>=1.21.1")
 
-    assert result == {"Pacote": "urllib3", "Versão Usada": ""}
+    assert result == {"package": "urllib3", "used_version": ""}
 
 
 def test_pep621_dependencies_tem_origem_de_producao():
@@ -54,8 +54,8 @@ dependencies = ["requests>=2.33.0", "pandas>=3.0.1"]
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
-        {"Pacote": "pandas", "Versão Usada": "", "Origem": "Produção"},
+        {"package": "requests", "used_version": "", "origin": "Production"},
+        {"package": "pandas", "used_version": "", "origin": "Production"},
     ]
 
 
@@ -85,11 +85,11 @@ pythonpath = ["."]
 
     result = parse_pyproject(content)
 
-    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    origens = {dep["package"]: dep["origin"] for dep in result}
     assert origens == {
-        "pandas": "Produção",
-        "streamlit": "Produção",
-        "pytest": "Desenvolvimento",
+        "pandas": "Production",
+        "streamlit": "Production",
+        "pytest": "Development",
     }
 
 
@@ -102,14 +102,14 @@ def test_requirements_txt_tem_origem_de_producao():
     """requirements.txt declara Dependências de Produção."""
     result = parse_requirements("requests>=2.33.0\npandas>=3.0.1\n")
 
-    assert [dep["Origem"] for dep in result] == ["Produção", "Produção"]
+    assert [dep["origin"] for dep in result] == ["Production", "Production"]
 
 
 def test_requirements_dev_txt_tem_origem_de_desenvolvimento():
     """requirements-dev.txt declara Dependências de Desenvolvimento (ADR-0003)."""
     result = parse_requirements_dev("pytest>=8.0.0\nruff>=0.6.0\n")
 
-    assert [dep["Origem"] for dep in result] == ["Desenvolvimento", "Desenvolvimento"]
+    assert [dep["origin"] for dep in result] == ["Development", "Development"]
 
 
 def test_requirements_dev_tem_reader_proprio_no_registry():
@@ -130,9 +130,9 @@ dependencies:
 
     result = parse_environment_yml(content)
 
-    assert [(dep["Pacote"], dep["Origem"]) for dep in result] == [
-        ("numpy", "Produção"),
-        ("requests", "Produção"),
+    assert [(dep["package"], dep["origin"]) for dep in result] == [
+        ("numpy", "Production"),
+        ("requests", "Production"),
     ]
 
 
@@ -162,7 +162,7 @@ version = "2.33.0"
     result = parse_lock(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+        {"package": "requests", "used_version": "2.33.0", "origin": "Production"},
     ]
 
 
@@ -179,7 +179,7 @@ requests = "^2.33.0"
 
     result = parse_pyproject(content)
 
-    assert [dep["Pacote"] for dep in result] == ["requests"]
+    assert [dep["package"] for dep in result] == ["requests"]
 
 
 def test_dependency_groups_tem_origem_de_desenvolvimento():
@@ -196,12 +196,12 @@ docs = ["mkdocs>=1.6.0"]
 
     result = parse_pyproject(content)
 
-    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    origens = {dep["package"]: dep["origin"] for dep in result}
     assert origens == {
-        "streamlit": "Produção",
-        "pytest": "Desenvolvimento",
-        "ruff": "Desenvolvimento",
-        "mkdocs": "Desenvolvimento",
+        "streamlit": "Production",
+        "pytest": "Development",
+        "ruff": "Development",
+        "mkdocs": "Development",
     }
 
 
@@ -219,11 +219,11 @@ lint = ["mypy>=1.11.0"]
 
     result = parse_pyproject(content)
 
-    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    origens = {dep["package"]: dep["origin"] for dep in result}
     assert origens == {
-        "requests": "Produção",
-        "pytest": "Desenvolvimento",
-        "mypy": "Desenvolvimento",
+        "requests": "Production",
+        "pytest": "Development",
+        "mypy": "Development",
     }
 
 
@@ -241,8 +241,8 @@ pandas = ">=3.0.1"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
-        {"Pacote": "pandas", "Versão Usada": "", "Origem": "Produção"},
+        {"package": "requests", "used_version": "", "origin": "Production"},
+        {"package": "pandas", "used_version": "", "origin": "Production"},
     ]
 
 
@@ -263,7 +263,7 @@ requests = "2.33.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+        {"package": "requests", "used_version": "2.33.0", "origin": "Production"},
     ]
 
 
@@ -280,7 +280,7 @@ requests = { version = "2.33.0", extras = ["security"] }
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "2.33.0", "Origem": "Produção"},
+        {"package": "requests", "used_version": "2.33.0", "origin": "Production"},
     ]
 
 
@@ -297,7 +297,7 @@ requests = "*"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
+        {"package": "requests", "used_version": "", "origin": "Production"},
     ]
 
 
@@ -315,8 +315,8 @@ ruff = "^0.6.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "pytest", "Versão Usada": "", "Origem": "Desenvolvimento"},
-        {"Pacote": "ruff", "Versão Usada": "", "Origem": "Desenvolvimento"},
+        {"package": "pytest", "used_version": "", "origin": "Development"},
+        {"package": "ruff", "used_version": "", "origin": "Development"},
     ]
 
 
@@ -333,7 +333,7 @@ pytest = "^8.0.0"
 
     result = parse_pyproject(content)
 
-    assert [dep["Pacote"] for dep in result] == ["pytest"]
+    assert [dep["package"] for dep in result] == ["pytest"]
 
 
 def test_group_do_poetry_com_valor_nao_tabela_nao_derruba_pipeline():
@@ -350,7 +350,7 @@ requests = "^2.33.0"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
+        {"package": "requests", "used_version": "", "origin": "Production"},
     ]
 
 
@@ -372,10 +372,10 @@ mypy = "^1.11.0"
 
     result = parse_pyproject(content)
 
-    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    origens = {dep["package"]: dep["origin"] for dep in result}
     assert origens == {
-        "requests": "Produção",
-        "mypy": "Desenvolvimento",
+        "requests": "Production",
+        "mypy": "Development",
     }
 
 
@@ -409,7 +409,7 @@ dev = "pytest"
     result = parse_pyproject(content)
 
     assert result == [
-        {"Pacote": "requests", "Versão Usada": "", "Origem": "Produção"},
+        {"package": "requests", "used_version": "", "origin": "Production"},
     ]
 
 
@@ -431,9 +431,9 @@ mkdocs = "^1.6.0"
 
     result = parse_pyproject(content)
 
-    origens = {dep["Pacote"]: dep["Origem"] for dep in result}
+    origens = {dep["package"]: dep["origin"] for dep in result}
     assert origens == {
-        "requests": "Produção",
-        "mypy": "Desenvolvimento",
-        "mkdocs": "Desenvolvimento",
+        "requests": "Production",
+        "mypy": "Development",
+        "mkdocs": "Development",
     }

@@ -150,15 +150,9 @@ _Avoid_: indisponível, faltando, sem dados
 
 ## Vocabulário do dado exportado
 
-> ⚠️ **Estado-alvo do [ADR-0008](./docs/adr/0008-o-csv-e-contrato-a-lingua-e-so-da-tela.md),
-> ainda não implementado** (ver [`docs/plano-melhorias.md`](./docs/plano-melhorias.md)).
-> Hoje o CSV emite os termos em português — `Zumbi`, `Fantasma`, `Saudável`, `Produção`,
-> `Desenvolvimento`, `Sim`/`Não` —, porque `export_to_csv` deriva o cabeçalho das chaves
-> internas, que ainda são as do glossário acima. Só `N/A` já corresponde. A tabela abaixo
-> descreve o contrato de destino, não o comportamento atual.
-
-O CSV será contrato estável em inglês e não acompanhará a língua da tela (ADR-0008). Estes
-serão os únicos valores que ele emite — a tradução para exibição é responsabilidade de `pages/`:
+O CSV é contrato estável em inglês e não acompanha a língua da tela (ADR-0008). Estes são
+os únicos valores que ele emite — traduzir para exibição é responsabilidade de
+`utils/display.py`, e a tradução nunca alcança o arquivo:
 
 | Coluna | Valores |
 |---|---|
@@ -167,3 +161,13 @@ serão os únicos valores que ele emite — a tradução para exibição é resp
 | `Status` | `Outdated` · `Up to date` · `Unknown` · `Invalid version` |
 | `Outdated` | `Yes` · `No` |
 | ausência | `Unknown` (Indeterminado) · `N/A` (Não Aplicável) |
+
+O `Status` não é coluna do CSV: ele decide a coluna `Outdated` e aparece na tabela da tela.
+Está aqui porque seus valores são identidade estável pela mesma razão que os das outras —
+são comparados, não só exibidos.
+
+Três vocabulários convivem, separados de propósito para que mexer num não alcance os
+outros por acidente: a **chave interna** (`used_version`, snake_case), o **cabeçalho do
+CSV** (`Used Version`, fixo em inglês, em `CSV_HEADER`) e o **rótulo da tela** (`Versão
+Usada` / `Used Version`, em `locales/`). O glossário acima faz a ponte com o termo de
+domínio em português.

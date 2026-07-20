@@ -9,11 +9,12 @@ dependencies = [
     "plotly>=6.6.0",
     "pyyaml>=6.0.3",
     "requests>=2.33.0",
-    "streamlit>=1.37.0",
+    "streamlit>=1.56.0",
 ]
 
 [dependency-groups]
 dev = [
+    "mypy>=2.3.0",
     "pytest>=8.0.0",
 ]
 
@@ -21,3 +22,13 @@ dev = [
 # Sem isto a coleta falha com "No module named 'core'".
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.11"
+
+# `requests` e `plotly` não publicam tipos. O aviso é sobre a biblioteca, não
+# sobre o nosso código, e afogaria o sinal que a ADR-0011 quer ver: a chave
+# escrita errada durante a migração da ADR-0008.
+[[tool.mypy.overrides]]
+module = ["requests.*", "plotly.*", "plotly.express.*"]
+ignore_missing_imports = true

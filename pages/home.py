@@ -20,31 +20,34 @@ from pathlib import Path
 import streamlit as st
 from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
+from utils.messages import format_error
+from utils.i18n import t
 from core.ingestion.decompressor import process_uploaded_file
 from core.ingestion.filter import get_unique_folders, validate_project_structure
 from core.ingestion.source import ProjectSource, open_directory
 
 sidebar()
 
-UPLOAD_MODE = "📦 Upload de archive"
-DIRECTORY_MODE = "📂 Diretório local"
+# Valor estável do modo de ingestão, não rótulo. Ele é comparado por igualdade logo
+# abaixo e vai parar em `st.session_state["ingestion_mode"]`: se fosse o texto da
+# tela, trocar de língua quebraria a comparação e guardaria rótulo traduzido no
+# estado, que é justamente o que ADR-0009 proíbe. O rótulo nasce no `format_func`.
+UPLOAD_MODE = "upload"
+DIRECTORY_MODE = "directory"
 
 
-def visual_css():
-    st.markdown(
-        """
-        <style>
-        .stDropzone, .stTextInput>div { border-radius: 10px !important; background: #1e1e1e !important; }
-        .stButton>button { width: 100%; background: #1a73e8 !important; color: white !important; font-weight: bold; height: 3em; }
-        </style>
-    """,
-        unsafe_allow_html=True,
-    )
+def _mode_label(mode: str) -> str:
+    """Rótulo de um modo de ingestão na língua da tela."""
+    return t(f"home.mode.{mode}")
 
 
 def principal_interface():
-    st.title("🚀 Iniciar Auditoria")
-    st.write("Informe o Projeto-Alvo por upload de archive ou por diretório local")
+    # Hierarquia pela API, sem uma linha de CSS: `header` abre a tela um nível abaixo
+    # do `title`, que em tela larga achatava tudo o que vinha depois, e `caption`
+    # rebaixa a linha de apoio a peso e cor secundários — o cinza sai do tema e
+    # acompanha os modos claro e escuro sozinho (issue #50).
+    st.header(t("home.title"))
+    st.caption(t("home.intro"))
 
 
 def _clear_source():
@@ -66,17 +69,17 @@ def _load_source(source: ProjectSource, project_name: str) -> None:
     st.session_state["project_name"] = project_name
 
     ignore_folders = st.session_state.get("ignore_folders", [])
-    is_valid, error_msg = validate_project_structure(source, ignore_folders)
+    is_valid, error = validate_project_structure(source, ignore_folders)
     st.session_state["archive_is_valid"] = is_valid
 
-    if not is_valid:
-        st.error(error_msg)
+    if error is not None:
+        st.error(format_error(error))
 
 
 def _entering_by_upload():
     """Recebe o Projeto-Alvo compactado."""
     file = st.file_uploader(
-        "Zip, tar.gz ou tar",
+        t("home.upload.label"),
         type=[key for key in EXTRATORES.keys()],
         key="file_uploaded",
     )
@@ -87,7 +90,7 @@ def _entering_by_upload():
 
     archive = process_uploaded_file(file)
     if not archive:
-        st.error("❌ Não foi possível abrir o archive. Verifique se ele não está corrompido.")
+        st.error(t("home.upload.failed"))
         _clear_source()
         return
 
@@ -99,19 +102,19 @@ def _entering_by_upload():
 def _entering_by_directory():
     """Recebe o Projeto-Alvo apontando para o diretório do código (US-01)."""
     typed_path = st.text_input(
-        "Caminho do diretório do Projeto-Alvo",
+        t("home.directory.label"),
         key="project_directory",
-        placeholder="C:\\Users\\voce\\projetos\\meu-projeto",
-        help="O ORÁCULO roda na sua máquina, então o caminho local resolve.",
+        placeholder=t("home.directory.placeholder"),
+        help=t("home.directory.help"),
     )
 
     if not typed_path.strip():
         _clear_source()
         return
 
-    directory, error_msg = open_directory(typed_path)
-    if directory is None:
-        st.error(error_msg)
+    directory, error = open_directory(typed_path)
+    if error is not None:
+        st.error(format_error(error))
         _clear_source()
         return
 
@@ -119,17 +122,23 @@ def _entering_by_directory():
 
 
 def entering_data():
-    col1, col2 = st.columns([1.5, 1])
+    # A coluna da fonte carrega o campo de caminho e a dropzone, que precisam de
+    # largura; a das Configurações carrega uma linha — ou o multiselect, ou a frase
+    # que explica por que ele ainda não está lá.
+    col1, col2 = st.columns([2, 1])
 
-    with col1:
-        st.subheader("Informe o Projeto-Alvo")
+    # `border=True` é a moldura da API: a cor sai do `borderColor` do tema e segue os
+    # modos claro e escuro sozinha, sem folha de estilo própria (issue #39).
+    with col1.container(border=True):
+        st.subheader(t("home.source.header"))
         # Uma fonte por vez: com os dois campos visíveis, "qual vale quando os
         # dois estão preenchidos" vira uma pergunta sem resposta óbvia.
         mode = st.radio(
-            "Como trazer o Projeto-Alvo:",
+            t("home.mode.label"),
             [UPLOAD_MODE, DIRECTORY_MODE],
             horizontal=True,
             key="ingestion_mode",
+            format_func=_mode_label,
         )
 
         if mode == UPLOAD_MODE:
@@ -137,8 +146,8 @@ def entering_data():
         else:
             _entering_by_directory()
 
-    with col2:
-        st.subheader("Configurações")
+    with col2.container(border=True):
+        st.subheader(t("home.settings.header"))
         opcoes = st.session_state.get("folder_list", [])
 
         # Trocar de Projeto-Alvo troca as pastas oferecidas; uma Exclusão marcada
@@ -149,26 +158,31 @@ def entering_data():
                 folder for folder in selecionadas if folder in opcoes
             ]
 
-        st.multiselect(
-            "Pastas a ignorar:",
-            options=opcoes,
-            key="ignore_folders",
-        )
+        # A Exclusão não tem o que oferecer antes de existir uma fonte: um multiselect
+        # sem opção lê-se como controle quebrado, e não como etapa ainda não cumprida.
+        if opcoes:
+            st.multiselect(
+                t("home.settings.ignore_folders"),
+                options=opcoes,
+                key="ignore_folders",
+            )
+        else:
+            st.caption(t("home.settings.no_source"))
 
 
 def principal_action():
-    if st.button("Executar Análise Completa"):
+    # Destaque e largura saem do próprio Streamlit: `type="primary"` pinta o botão
+    # com a cor primária da paleta, que o tema já adapta aos dois modos. Era isto
+    # que o CSS injetado fazia à mão, com um azul só dele.
+    if st.button(t("home.run"), type="primary", width="stretch"):
         if st.session_state.get("archive") is None:
-            st.error("Por favor, informe o Projeto-Alvo para análise.")
+            st.error(t("home.run.no_source"))
         elif not st.session_state.get("archive_is_valid", False):
-            st.error(
-                "❌ Não é possível executar a análise. Certifique-se de que o arquivo atende aos requisitos mínimos."
-            )
+            st.error(t("home.run.invalid_source"))
         else:
             st.switch_page("pages/loading.py")
 
 
-visual_css()
 principal_interface()
 st.divider()
 entering_data()

@@ -15,7 +15,7 @@ def _make_zip(files: dict[str, str]) -> zipfile.ZipFile:
 
 def _packages(archive, ignore_folders: list[str] | None = None) -> set[str]:
     """Devolve o conjunto de Imports Raiz encontrados pelo parser."""
-    return {item["Pacote"] for item in parse_imports(archive, ignore_folders or [])}
+    return {item["package"] for item in parse_imports(archive, ignore_folders or [])}
 
 
 def test_indented_imports_are_detected_as_root_imports():

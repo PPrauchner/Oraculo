@@ -51,7 +51,7 @@ version = "2.2.1"
 
     audited = collect_declarations(archive, ignore_folders=[])
 
-    names = {dep["Pacote"] for dep in audited}
+    names = {dep["package"] for dep in audited}
     assert names == {"requests"}
 
 
@@ -66,23 +66,23 @@ def test_audited_set_is_union_of_all_declarations():
 
     audited = collect_declarations(archive, ignore_folders=[])
 
-    origins = {dep["Pacote"]: dep["Origem"] for dep in audited}
-    assert origins == {"requests": "Produção", "pytest": "Desenvolvimento"}
+    origins = {dep["package"]: dep["origin"] for dep in audited}
+    assert origins == {"requests": "Production", "pytest": "Development"}
 
 
 def test_duplicate_package_deduped_with_first_origin():
     """Pacote declarado duas vezes aparece uma só, com a Origem da primeira."""
     dependencies = [
-        {"Pacote": "requests", "Origem": "Produção"},
-        {"Pacote": "requests", "Origem": "Desenvolvimento"},
-        {"Pacote": "pandas", "Origem": "Produção"},
+        {"package": "requests", "origin": "Production"},
+        {"package": "requests", "origin": "Development"},
+        {"package": "pandas", "origin": "Production"},
     ]
 
     merged = merge_declarations(dependencies)
 
     assert merged == [
-        {"Pacote": "requests", "Origem": "Produção"},
-        {"Pacote": "pandas", "Origem": "Produção"},
+        {"package": "requests", "origin": "Production"},
+        {"package": "pandas", "origin": "Production"},
     ]
 
 
@@ -97,7 +97,7 @@ def test_declarations_inside_exclusions_are_ignored():
 
     audited = collect_declarations(archive, ignore_folders=["tests"])
 
-    names = {dep["Pacote"] for dep in audited}
+    names = {dep["package"] for dep in audited}
     assert names == {"requests"}
 
 

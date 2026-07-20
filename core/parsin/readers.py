@@ -21,10 +21,11 @@ from typing import Dict, List, Optional
 import yaml
 
 from utils.constants import ORIGIN_DEVELOPMENT, ORIGIN_PRODUCTION
+from utils.types import DeclarationEntry
 from utils.functions import READERS, registrar
 
 
-def parse_dependency_string(line: str) -> Optional[Dict[str, str]]:
+def parse_dependency_string(line: str) -> Optional[DeclarationEntry]:
     """
     Analisa uma linha de texto e retorna nome e Versão Usada da dependência.
 
@@ -69,10 +70,10 @@ def parse_dependency_string(line: str) -> Optional[Dict[str, str]]:
     pin_match = re.match(r"={2,3}\s*(\d[^\s,;]*)", version_raw)
     version = pin_match.group(1) if pin_match else ""
 
-    return {"Pacote": name, "Versão Usada": version}
+    return {"package": name, "used_version": version}
 
 
-def _clean_conda_dep(dep_string: str) -> Optional[Dict[str, str]]:
+def _clean_conda_dep(dep_string: str) -> Optional[DeclarationEntry]:
     """
     Analisa uma entrada de dependência do Conda (environment.yml).
 
@@ -95,7 +96,7 @@ def _clean_conda_dep(dep_string: str) -> Optional[Dict[str, str]]:
     return parse_dependency_string(dep_string)
 
 
-def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, str]]:
+def _parse_dependency_list(entries: List[str], origin: str) -> List[DeclarationEntry]:
     """
     Analisa uma lista de declarações PEP 508 e carimba a Origem de cada uma.
 
@@ -111,11 +112,11 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[Dict[str, st
     if not isinstance(entries, list):
         return []
 
-    dependencies = []
+    dependencies: List[DeclarationEntry] = []
     for entry in entries:
         result = parse_dependency_string(str(entry))
-        if result and result["Pacote"] != "python":
-            result["Origem"] = origin
+        if result and result["package"] != "python":
+            result["origin"] = origin
             dependencies.append(result)
     return dependencies
 
@@ -159,7 +160,7 @@ def _as_pep_508_specifier(spec: object) -> str:
     return text
 
 
-def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[str, str]]:
+def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[DeclarationEntry]:
     """
     Analisa uma tabela de dependências do Poetry e carimba a Origem de cada uma.
 
@@ -185,7 +186,7 @@ def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Dict[
     return _parse_dependency_list(entries, origin)
 
 
-def _parse_requirements_content(content: str, origin: str) -> List[Dict[str, str]]:
+def _parse_requirements_content(content: str, origin: str) -> List[DeclarationEntry]:
     """
     Lê o conteúdo de um requirements e carimba a Origem de cada dependência.
 
@@ -206,7 +207,7 @@ def _parse_requirements_content(content: str, origin: str) -> List[Dict[str, str
 
 
 @registrar(READERS, "requirements.txt")
-def parse_requirements(content: str) -> List[Dict[str, str]]:
+def parse_requirements(content: str) -> List[DeclarationEntry]:
     """
     Lê um requirements.txt, cujas dependências são de Produção.
 
@@ -220,7 +221,7 @@ def parse_requirements(content: str) -> List[Dict[str, str]]:
 
 
 @registrar(READERS, "requirements-dev.txt")
-def parse_requirements_dev(content: str) -> List[Dict[str, str]]:
+def parse_requirements_dev(content: str) -> List[DeclarationEntry]:
     """
     Lê um requirements-dev.txt, cujas dependências são de Desenvolvimento.
 
@@ -237,7 +238,7 @@ def parse_requirements_dev(content: str) -> List[Dict[str, str]]:
 
 
 @registrar(READERS, "environment.yml")
-def parse_environment_yml(content: str) -> List[Dict[str, str]]:
+def parse_environment_yml(content: str) -> List[DeclarationEntry]:
     """
     Lê um environment.yml (Conda) e extrai suas dependências.
 
@@ -256,7 +257,7 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
     Returns:
         Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
-    dependencies = []
+    dependencies: List[DeclarationEntry] = []
 
     try:
         data = yaml.safe_load(content)
@@ -273,7 +274,7 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
                 continue
             result = _clean_conda_dep(entry)
             if result:
-                result["Origem"] = ORIGIN_PRODUCTION
+                result["origin"] = ORIGIN_PRODUCTION
                 dependencies.append(result)
             continue
 
@@ -286,7 +287,7 @@ def parse_environment_yml(content: str) -> List[Dict[str, str]]:
 
 
 @registrar(READERS, "pyproject.toml")
-def parse_pyproject(content: str) -> List[Dict[str, str]]:
+def parse_pyproject(content: str) -> List[DeclarationEntry]:
     """
     Lê um pyproject.toml (PEP 621 e Poetry) e extrai suas dependências.
 
@@ -336,7 +337,7 @@ def parse_pyproject(content: str) -> List[Dict[str, str]]:
 
 
 @registrar(READERS, ".lock")
-def parse_lock(content: str) -> List[Dict[str, str]]:
+def parse_lock(content: str) -> List[DeclarationEntry]:
     """
     Lê arquivos *.lock no formato TOML (uv.lock, poetry.lock).
 
@@ -352,7 +353,7 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
     Returns:
         Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
     """
-    dependencies = []
+    dependencies: List[DeclarationEntry] = []
 
     try:
         data = tomllib.loads(content)
@@ -365,9 +366,9 @@ def parse_lock(content: str) -> List[Dict[str, str]]:
         if name and name.lower() != "python":
             dependencies.append(
                 {
-                    "Pacote": name.lower(),
-                    "Versão Usada": version if version else "",
-                    "Origem": ORIGIN_PRODUCTION,
+                    "package": name.lower(),
+                    "used_version": version if version else "",
+                    "origin": ORIGIN_PRODUCTION,
                 }
             )
 

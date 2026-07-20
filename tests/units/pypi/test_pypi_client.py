@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 import requests
 
+from core.pypi import pypi_client
 from core.pypi.pypi_client import (
     fetch_package_data,
     get_latest_version,
@@ -50,7 +51,7 @@ _SAMPLE = {
 def test_fetch_devolve_tamanho_do_wheel_da_versao():
     """Uma única resposta mockada fornece o Tamanho (bytes do wheel) da versão."""
     with patch(
-        "core.pypi.pypi_client.requests.get",
+        "core.pypi.pypi_client._SESSION.get",
         return_value=_pypi_response(_SAMPLE),
     ):
         data = fetch_package_data("pandas")
@@ -76,10 +77,28 @@ def test_versao_sem_wheel_usa_o_sdist():
 def test_pacote_ausente_do_pypi_devolve_none():
     """404/rede indisponível não quebra a análise: fetch devolve None."""
     with patch(
-        "core.pypi.pypi_client.requests.get",
+        "core.pypi.pypi_client._SESSION.get",
         side_effect=requests.exceptions.RequestException("404"),
     ):
         assert fetch_package_data("pacote-interno-privado") is None
+
+
+def test_requisicoes_passam_por_uma_unica_sessao_compartilhada():
+    """Todas as buscas passam pela mesma `Session` do módulo.
+
+    As buscas correm em paralelo (32 threads); uma `Session` compartilhada
+    reaproveita conexão e handshake TLS entre elas. Irrelevante para 6 pacotes,
+    relevante para 100+.
+    """
+    assert isinstance(pypi_client._SESSION, requests.Session)
+
+    with patch.object(
+        pypi_client._SESSION, "get", return_value=_pypi_response(_SAMPLE)
+    ) as session_get:
+        fetch_package_data("pandas")
+        fetch_package_data("flask")
+
+    assert session_get.call_count == 2
 
 
 def test_tamanho_nao_depende_da_ordem_dos_wheels_na_resposta():

@@ -15,13 +15,56 @@ import csv
 import io
 import json
 
+from utils.types import ExportRow
 
-def export_to_csv(report_data: list[dict]) -> bytes:
+# Chave interna → rótulo da coluna no arquivo baixado.
+#
+# O cabeçalho era efeito colateral do dicionário: `export_to_csv` o derivava de
+# `report_data[0].keys()`, então renomear uma chave por razão de código reescrevia
+# o arquivo exportado sem que ninguém percebesse. A ADR-0008 tornou o cabeçalho
+# escolha explícita, e é isto: os dois vocabulários ficam separados de propósito,
+# para que mexer num não alcance o outro por acidente.
+#
+# A ordem é a ordem das colunas, e ela é contrato — a US-07 depende de que dois
+# exports do mesmo Projeto-Alvo se concatenem numa série temporal.
+CSV_HEADER = {
+    "analysis_date": "Analysis Date",
+    "project": "Project",
+    "package": "Package",
+    "category": "Category",
+    "origin": "Origin",
+    "used_version": "Used Version",
+    "pypi_version": "PyPI Version",
+    "outdated": "Outdated",
+    "size": "Size",
+    "age": "Age",
+}
+
+
+def _as_csv_row(row: ExportRow) -> dict[str, object]:
+    """Traduz uma linha interna para os rótulos do cabeçalho.
+
+    A travessia passa por um `dict` comum de propósito: num `TypedDict` a chave
+    precisa ser literal, e aqui ela vem do mapeamento. É também onde os dois
+    vocabulários se encontram — o único ponto do código em que isso acontece.
+
+    Args:
+        row: Linha da exportação, com as chaves internas.
+
+    Returns:
+        A mesma linha, com os rótulos que o usuário lê no arquivo.
+    """
+    values: dict[str, object] = dict(row)
+
+    return {label: values[key] for key, label in CSV_HEADER.items()}
+
+
+def export_to_csv(report_data: list[ExportRow]) -> bytes:
     """
     Converte uma lista de dicionários em um arquivo CSV.
 
     Args:
-        report_data (list[dict]): Lista de dicionários representando os dados do relatório.
+        report_data: Linhas da exportação, na ordem das colunas do esquema.
 
     Returns:
         bytes: Conteúdo do arquivo CSV em formato de bytes.
@@ -31,19 +74,19 @@ def export_to_csv(report_data: list[dict]) -> bytes:
         return b""
 
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=report_data[0].keys())
+    writer = csv.DictWriter(output, fieldnames=list(CSV_HEADER.values()))
     writer.writeheader()
-    writer.writerows(report_data)
+    writer.writerows(_as_csv_row(row) for row in report_data)
 
     return output.getvalue().encode("utf-8")
 
 
-def export_to_json(report_data: list[dict]) -> bytes:
+def export_to_json(report_data: list[ExportRow]) -> bytes:
     """
     Converte uma lista de dicionários em um arquivo JSON.
 
     Args:
-        report_data (list[dict]): Lista de dicionários representando os dados do relatório.
+        report_data: Linhas da exportação, na ordem das colunas do esquema.
 
     Returns:
         bytes: Conteúdo do arquivo JSON em formato de bytes.

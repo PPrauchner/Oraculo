@@ -14,9 +14,10 @@ Saída:
 
 from core.analysis.name_matching import import_names_for, normalize_name
 from utils.constants import ORIGIN_UNAVAILABLE
+from utils.types import Dependency
 
 
-def is_ghost(dep: dict) -> bool:
+def is_ghost(dep: Dependency) -> bool:
     """Indica se uma dependência é Fantasma, pela ausência de Origem.
 
     Fantasma não vem de Declaração, logo não tem Origem (CONTEXT.md) — é esse o
@@ -30,17 +31,19 @@ def is_ghost(dep: dict) -> bool:
     Returns:
         True se a dependência for Fantasma.
     """
-    return dep.get("Origem", ORIGIN_UNAVAILABLE) == ORIGIN_UNAVAILABLE
+    return dep.get("origin", ORIGIN_UNAVAILABLE) == ORIGIN_UNAVAILABLE
 
 
-def analyze_ghost_dependencies(declared: list[dict], imports: list[dict]) -> list[dict]:
+def analyze_ghost_dependencies(
+    declared: list[Dependency], imports: list[Dependency]
+) -> list[Dependency]:
     """Identifica dependências fantasmas comparando imports com dependências declaradas."""
     declared_names: set[str] = set()
     for dep in declared:
-        declared_names |= import_names_for(dep["Pacote"])
+        declared_names |= import_names_for(dep["package"])
     ghosts = []
     for imp in imports:
-        if normalize_name(imp["Pacote"]) not in declared_names:
+        if normalize_name(imp["package"]) not in declared_names:
             ghosts.append(imp)
 
     return ghosts

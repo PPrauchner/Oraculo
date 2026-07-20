@@ -11,10 +11,10 @@ Entrada:
 Saída:
 - Lista de dicionários com imports encontrados:
   {
-    "Pacote": "nome_do_modulo",
-    "Versão Usada": "N/A",
-    "Versão Pypi": "N/A",
-    "Status": "Desconhecido"
+    "package": "nome_do_modulo",
+    "used_version": "N/A",
+    "pypi_version": "N/A",
+    "status": "Unknown"
   }
 """
 
@@ -22,7 +22,8 @@ import ast
 
 from core.ingestion.filter import is_path_in_ignored_folders
 from core.ingestion.source import ProjectSource, list_paths, read_text
-from utils.constants import PYTHON_STDLIB_MODULES
+from utils.constants import PYTHON_STDLIB_MODULES, STATUS_UNKNOWN
+from utils.types import Dependency
 
 # Pasta que apenas embrulha os Módulos Próprios num layout `src/`
 SRC_LAYOUT_FOLDER = "src"
@@ -159,7 +160,7 @@ def extract_imports_from_code(code: str, own_modules: set[str] | None = None) ->
 
 def parse_imports(
     source: ProjectSource, ignore_folders: list[str]
-) -> list[dict[str, str]]:
+) -> list[Dependency]:
     """
     Extrai os Imports Raiz de todos os arquivos Python do Projeto-Alvo.
 
@@ -202,14 +203,14 @@ def parse_imports(
         all_imports.update(imports)
 
     # Converter para lista de dicionários padronizada
-    result = []
+    result: list[Dependency] = []
     for import_name in sorted(all_imports):
         result.append(
             {
-                "Pacote": import_name,
-                "Versão Usada": "N/A",
-                "Versão PyPI": "N/A",
-                "Status": "Desconhecido",
+                "package": import_name,
+                "used_version": "N/A",
+                "pypi_version": "N/A",
+                "status": STATUS_UNKNOWN,
             }
         )
 
@@ -218,7 +219,7 @@ def parse_imports(
 
 def parse_imports_with_filter(
     source: ProjectSource, ignore_folders: list[str]
-) -> list[dict[str, str]]:
+) -> list[Dependency]:
     """
     Wrapper para parse_imports com validação de entrada.
 

@@ -105,41 +105,39 @@ def test_exclusion_accepts_a_folder_written_with_separators():
     assert is_path_in_ignored_folders("tests/test_service.py", ["./tests/"]) is True
 
 
-# --- validate_project_structure: mensagens neutras quanto à fonte -------------
+# --- validate_project_structure: códigos neutros quanto à fonte ---------------
 
 
 def test_a_project_with_code_and_a_declaration_is_valid():
-    assert validate_project_structure(dict(PROJECT)) == (True, "")
+    assert validate_project_structure(dict(PROJECT)) == (True, None)
 
 
 def test_a_directory_source_is_validated_like_an_archive(tmp_path):
     (tmp_path / "main.py").write_text("import requests\n", encoding="utf-8")
     (tmp_path / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
 
-    assert validate_project_structure(tmp_path) == (True, "")
+    assert validate_project_structure(tmp_path) == (True, None)
 
 
 def test_a_project_without_python_files_is_invalid():
     is_valid, error = validate_project_structure({"pyproject.toml": ""})
 
     assert is_valid is False
-    assert "ZIP" not in error
-    assert ".py" in error
+    assert error == ("missing_python_files", {})
 
 
 def test_a_project_without_a_declaration_is_invalid():
     is_valid, error = validate_project_structure({"main.py": "import requests\n"})
 
     assert is_valid is False
-    assert "ZIP" not in error
-    assert "dependências" in error
+    assert error == ("missing_declaration", {})
 
 
 def test_an_empty_project_is_invalid():
     is_valid, error = validate_project_structure({})
 
     assert is_valid is False
-    assert "ZIP" not in error
+    assert error == ("missing_python_and_declaration", {})
 
 
 def test_an_unsupported_source_kind_is_diagnosed_as_such():
@@ -151,15 +149,28 @@ def test_an_unsupported_source_kind_is_diagnosed_as_such():
     is_valid, error = validate_project_structure(object())
 
     assert is_valid is False
-    assert ".py" not in error
-    assert "não suportada" in error
+    assert error == ("unsupported_source", {})
 
 
 def test_a_missing_source_is_invalid():
     is_valid, error = validate_project_structure(None)
 
     assert is_valid is False
-    assert error != ""
+    assert error == ("source_missing", {})
+
+
+def test_a_source_that_fails_while_being_read_reports_the_reason(monkeypatch):
+    """A falha de leitura carrega o motivo cru; a frase é montada por quem exibe."""
+
+    def _fail(*_args, **_kwargs):
+        raise OSError("archive truncado")
+
+    monkeypatch.setattr("core.ingestion.filter.list_paths", _fail)
+
+    is_valid, error = validate_project_structure(dict(PROJECT))
+
+    assert is_valid is False
+    assert error == ("project_read_failed", {"reason": "archive truncado"})
 
 
 def test_a_project_whose_only_code_is_in_an_exclusion_is_invalid():

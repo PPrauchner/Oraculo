@@ -180,15 +180,17 @@ def test_open_directory_accepts_a_readable_project_directory(tmp_path):
 
     source, error = open_directory(str(directory))
 
-    assert error == ""
+    assert error is None
     assert source == directory
 
 
 def test_open_directory_rejects_a_missing_path(tmp_path):
-    source, error = open_directory(str(tmp_path / "nao-existe"))
+    missing = tmp_path / "nao-existe"
+
+    source, error = open_directory(str(missing))
 
     assert source is None
-    assert "não encontrado" in error
+    assert error == ("directory_not_found", {"path": str(missing)})
 
 
 def test_open_directory_rejects_a_file(tmp_path):
@@ -198,14 +200,14 @@ def test_open_directory_rejects_a_file(tmp_path):
     source, error = open_directory(str(target))
 
     assert source is None
-    assert "não é um diretório" in error
+    assert error == ("path_is_not_a_directory", {"path": str(target)})
 
 
 def test_open_directory_rejects_an_empty_path():
     source, error = open_directory("   ")
 
     assert source is None
-    assert error != ""
+    assert error == ("empty_path", {})
 
 
 def test_open_directory_rejects_a_directory_that_is_not_a_python_project(tmp_path):
@@ -216,7 +218,7 @@ def test_open_directory_rejects_a_directory_that_is_not_a_python_project(tmp_pat
     source, error = open_directory(str(tmp_path))
 
     assert source is None
-    assert "não parece um projeto Python" in error
+    assert error == ("not_a_python_project", {"path": str(tmp_path)})
 
 
 def test_open_directory_does_not_walk_the_tree_to_decide(tmp_path, monkeypatch):
@@ -230,7 +232,7 @@ def test_open_directory_does_not_walk_the_tree_to_decide(tmp_path, monkeypatch):
 
     source, error = open_directory(str(tmp_path))
 
-    assert error == ""
+    assert error is None
     assert source == tmp_path
 
 
@@ -239,7 +241,7 @@ def test_open_directory_accepts_a_project_declared_only_by_requirements(tmp_path
 
     source, error = open_directory(str(tmp_path))
 
-    assert error == ""
+    assert error is None
     assert source == tmp_path
 
 
@@ -301,7 +303,7 @@ def test_read_text_of_a_directory_refuses_environment_folders(tmp_path):
     not hasattr(Path, "chmod"), reason="permissões não simuláveis nesta plataforma"
 )
 def test_open_directory_rejects_an_unreadable_directory(tmp_path, monkeypatch):
-    """Sem permissão de leitura: mensagem clara, não PermissionError."""
+    """Sem permissão de leitura: código de erro claro, não PermissionError."""
     directory = _make_directory(tmp_path / "alvo", dict(PROJECT))
 
     def _deny(*_args, **_kwargs):
@@ -312,7 +314,24 @@ def test_open_directory_rejects_an_unreadable_directory(tmp_path, monkeypatch):
     source, error = open_directory(str(directory))
 
     assert source is None
-    assert "permissão" in error
+    assert error == ("directory_not_readable", {"path": str(directory)})
+
+
+def test_open_directory_reports_the_reason_an_unreadable_directory_failed(
+    tmp_path, monkeypatch
+):
+    """O motivo do OSError é dado, não a frase pronta: quem renderiza compõe."""
+    directory = _make_directory(tmp_path / "alvo", dict(PROJECT))
+
+    def _fail(*_args, **_kwargs):
+        raise OSError("disco removido")
+
+    monkeypatch.setattr("os.scandir", _fail)
+
+    source, error = open_directory(str(directory))
+
+    assert source is None
+    assert error == ("directory_read_failed", {"reason": "disco removido"})
 
 
 def test_archive_index_is_built_once_however_many_files_are_read(monkeypatch):

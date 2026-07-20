@@ -131,14 +131,14 @@ def test_the_two_modes_stay_identical_under_exclusions(project_directory, projec
 
 def test_the_environment_folders_of_the_directory_are_not_audited(project_directory):
     """`.venv` está em disco mas não é o Projeto-Alvo: não gera Import Raiz."""
-    packages = {item["Pacote"] for item in parse_imports(project_directory, [])}
+    packages = {item["package"] for item in parse_imports(project_directory, [])}
 
     assert "botocore" not in packages
 
 
 def test_the_exclusion_reaches_a_wrapped_archive(project_zip):
     """Issue #26: com pasta-embrulho, marcar `tests` exclui de verdade."""
-    packages = {item["Pacote"] for item in parse_imports(project_zip, ["tests"])}
+    packages = {item["package"] for item in parse_imports(project_zip, ["tests"])}
 
     assert "responses" not in packages
 
@@ -148,13 +148,13 @@ def test_the_audit_finds_what_it_should_in_both_modes(project_directory, project
     for source in (project_directory, project_zip):
         report = _audit(source, ["tests", "docs"])
 
-        declared = {dep["Pacote"] for dep in report["declared"]}
-        packages = {item["Pacote"] for item in report["imports"]}
+        declared = {dep["package"] for dep in report["declared"]}
+        packages = {item["package"] for item in report["imports"]}
 
         assert declared == {"requests", "pandas", "plotly", "pytest"}
         # `core` é Módulo Próprio e `os` é stdlib: nenhum dos dois é Import Raiz
         assert packages == {"requests", "pandas", "plotly", "yaml"}
-        assert report["valid"] == (True, "")
+        assert report["valid"] == (True, None)
         assert report["folders"] == ["adr", "core", "docs", "helpers", "tests"]
 
 
@@ -163,7 +163,7 @@ def test_the_used_version_comes_from_the_lock_in_both_modes(
 ):
     for source in (project_directory, project_zip):
         versions = {
-            dep["Pacote"]: dep["Versão Usada"] for dep in _audit(source, [])["declared"]
+            dep["package"]: dep["used_version"] for dep in _audit(source, [])["declared"]
         }
 
         assert versions["requests"] == "2.33.0"

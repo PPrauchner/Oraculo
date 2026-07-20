@@ -12,8 +12,6 @@ Saída:
 - Estrutura de dados organizada (ex: Dicionário)
 """
 
-from typing import Callable
-
 from core.analysis.ghost_analizer import is_ghost
 from utils.constants import (
     CATEGORY_GHOST,
@@ -22,126 +20,70 @@ from utils.constants import (
     ORIGIN_UNAVAILABLE,
     OUTDATED_NO,
     OUTDATED_YES,
-    VERSION_UNAVAILABLE,
+    STATUS_OUTDATED,
+    STATUS_UNKNOWN,
+    UNKNOWN,
 )
-
-_OUTDATED_STATUS = "Desatualizado"
-
-_BYTES_PER_KB = 1024
-_BYTES_PER_MB = 1024 * 1024
-_LATEST_VERSION_NOTE = "última versão"
+from utils.types import Dependency, ExportRow, ReportRow
 
 
-def format_size(size: object) -> str:
-    """Formata o Tamanho cru (bytes) em unidade legível (KB/MB).
+def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
+    """Seleciona, de cada Dependência, o que a tabela do relatório exibe.
 
-    Args:
-        size: Bytes inteiros da Versão Usada, ou o sentinela de indisponibilidade.
-
-    Returns:
-        "X.Y MB" a partir de 1 MB, "X.Y KB" abaixo disso, ou "N/D" quando
-        indisponível — nunca 0 para o caso indisponível.
-    """
-    if not isinstance(size, (int, float)):
-        return VERSION_UNAVAILABLE
-
-    if size >= _BYTES_PER_MB:
-        return f"{size / _BYTES_PER_MB:.1f} MB"
-    return f"{size / _BYTES_PER_KB:.1f} KB"
-
-
-def format_age(age: object) -> str:
-    """Formata a Idade crua (dias inteiros) em texto legível.
+    Devolve dado e identidade, nunca texto pronto: Tamanho em bytes, Idade em dias,
+    Status como identidade estável. Quem escolhe unidade, redação e língua é
+    `utils/display.py` (ADR-0010) — enquanto esta função devolvia "30 dias", a
+    tabela respondia em português sob `?lang=en`.
 
     Args:
-        age: Dias inteiros desde a publicação da Versão Usada, ou o sentinela de
-            indisponibilidade.
+        list_analyzed: Dependências com seus resultados de análise.
 
     Returns:
-        "N dia(s)", ou "N/D" quando indisponível.
-    """
-    if not isinstance(age, (int, float)):
-        return VERSION_UNAVAILABLE
-
-    days = int(age)
-    return f"{days} dia" if days == 1 else f"{days} dias"
-
-
-def _display_metric(
-    raw: object, is_fantasma: bool, formatter: Callable[[object], str]
-) -> str:
-    """Formata Tamanho/Idade e, para Fantasma, explicita que é da versão mais recente.
-
-    Args:
-        raw: Valor cru da métrica.
-        is_fantasma: Se a dependência é Fantasma (sem Declaração/Versão Usada), caso
-            em que a referência é a versão mais recente do PyPI.
-        formatter: `format_size` ou `format_age`.
-
-    Returns:
-        Texto legível, anotado com "(última versão)" quando Fantasma e disponível.
-    """
-    display = formatter(raw)
-    if is_fantasma and display != VERSION_UNAVAILABLE:
-        display = f"{display} ({_LATEST_VERSION_NOTE})"
-    return display
-
-
-def normalize(list_analyzed: list) -> list[dict]:
-    """
-    Constrói um Dicionário consolidando os resultados das análises.
-
-    Args:
-        list_analyzed (list): Lista de dependências com seus resultados de análise.
-
-    Returns:
-        list[dict]: Lista de dicionários representando o relatório final.
+        Uma linha por dependência, ou uma linha de Não Aplicável quando não há
+        nenhuma — a tabela precisa de forma mesmo vazia.
     """
 
-    rows = []
+    rows: list[ReportRow] = []
 
     for dep in list_analyzed:
-        # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): seu
-        # Tamanho/Idade referem-se à versão mais recente, e a tabela o explicita.
-        is_fantasma = is_ghost(dep)
         rows.append(
             {
-                "Pacote": dep.get("Pacote", "N/A"),
-                "Versão Usada": dep.get("Versão Usada", "N/A"),
-                "Versão PyPI": dep.get("Versão PyPI", "N/A"),
-                "Status": dep.get("Status", "Desconhecido"),
-                "Tamanho": _display_metric(
-                    dep.get("Tamanho", VERSION_UNAVAILABLE), is_fantasma, format_size
-                ),
-                "Idade": _display_metric(
-                    dep.get("Idade", VERSION_UNAVAILABLE), is_fantasma, format_age
-                ),
-                "Origem": dep.get("Origem", "N/A"),
+                "package": dep.get("package", ORIGIN_UNAVAILABLE),
+                "used_version": dep.get("used_version", ORIGIN_UNAVAILABLE),
+                "pypi_version": dep.get("pypi_version", ORIGIN_UNAVAILABLE),
+                "status": dep.get("status", STATUS_UNKNOWN),
+                "size": dep.get("size", UNKNOWN),
+                "age": dep.get("age", UNKNOWN),
+                "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
+                # Fantasma não tem Declaração, logo não tem Versão Usada (CONTEXT.md):
+                # seu Tamanho/Idade referem-se à versão mais recente do PyPI, e a
+                # tabela precisa poder dizer isso.
+                "metrics_from_latest": is_ghost(dep),
             }
         )
 
     if not rows:
-        return [
-            {
-                "Pacote": "N/A",
-                "Versão Usada": "N/A",
-                "Versão PyPI": "N/A",
-                "Status": "N/A",
-                "Tamanho": "N/A",
-                "Idade": "N/A",
-                "Origem": "N/A",
-            }
-        ]
+        empty: ReportRow = {
+            "package": ORIGIN_UNAVAILABLE,
+            "used_version": ORIGIN_UNAVAILABLE,
+            "pypi_version": ORIGIN_UNAVAILABLE,
+            "status": ORIGIN_UNAVAILABLE,
+            "size": ORIGIN_UNAVAILABLE,
+            "age": ORIGIN_UNAVAILABLE,
+            "origin": ORIGIN_UNAVAILABLE,
+            "metrics_from_latest": False,
+        }
+        return [empty]
     return rows
 
 
 def build_export_rows(
-    dependencies: list[dict],
-    zombies: list[dict],
-    ghosts: list[dict],
+    dependencies: list[Dependency],
+    zombies: list[Dependency],
+    ghosts: list[Dependency],
     project_name: str,
     analysis_date: str,
-) -> list[dict]:
+) -> list[ExportRow]:
     """Monta as linhas da exportação (US-06/US-07), uma por dependência.
 
     O esquema acrescenta um eixo temporal (Data da Análise) e de identidade
@@ -164,12 +106,12 @@ def build_export_rows(
     Returns:
         Uma linha por dependência, na ordem das colunas do esquema.
     """
-    zombie_names = {dep["Pacote"] for dep in zombies}
-    ghost_names = {dep["Pacote"] for dep in ghosts}
+    zombie_names = {dep["package"] for dep in zombies}
+    ghost_names = {dep["package"] for dep in ghosts}
 
-    rows = []
+    rows: list[ExportRow] = []
     for dep in dependencies:
-        package = dep.get("Pacote", "N/A")
+        package = dep.get("package", "N/A")
 
         if package in zombie_names:
             category = CATEGORY_ZOMBIE
@@ -178,21 +120,21 @@ def build_export_rows(
         else:
             category = CATEGORY_HEALTHY
 
-        outdated = OUTDATED_YES if dep.get("Status") == _OUTDATED_STATUS else OUTDATED_NO
+        outdated = OUTDATED_YES if dep.get("status") == STATUS_OUTDATED else OUTDATED_NO
 
         rows.append(
             {
-                "Data da Análise": analysis_date,
-                "Projeto": project_name,
-                "Pacote": package,
-                "Categoria": category,
+                "analysis_date": analysis_date,
+                "project": project_name,
+                "package": package,
+                "category": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
-                "Origem": dep.get("Origem", ORIGIN_UNAVAILABLE),
-                "Versão Usada": dep.get("Versão Usada", "N/A"),
-                "Versão PyPI": dep.get("Versão PyPI", "N/A"),
-                "Desatualizada": outdated,
-                "Tamanho": dep.get("Tamanho", VERSION_UNAVAILABLE),
-                "Idade": dep.get("Idade", VERSION_UNAVAILABLE),
+                "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
+                "used_version": dep.get("used_version", "N/A"),
+                "pypi_version": dep.get("pypi_version", "N/A"),
+                "outdated": outdated,
+                "size": dep.get("size", UNKNOWN),
+                "age": dep.get("age", UNKNOWN),
             }
         )
 
@@ -200,10 +142,10 @@ def build_export_rows(
 
 
 def filter_export_rows(
-    rows: list[dict],
+    rows: list[ExportRow],
     categories: set[str],
     include_outdated: bool,
-) -> list[dict]:
+) -> list[ExportRow]:
     """Seleciona as linhas de exportação pedidas, sem repetir nenhuma dependência.
 
     Desatualizada não é Categoria, então entra como critério à parte. Uma linha que
@@ -221,6 +163,6 @@ def filter_export_rows(
     return [
         row
         for row in rows
-        if row["Categoria"] in categories
-        or (include_outdated and row["Desatualizada"] == OUTDATED_YES)
+        if row["category"] in categories
+        or (include_outdated and row["outdated"] == OUTDATED_YES)
     ]

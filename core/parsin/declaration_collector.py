@@ -15,6 +15,7 @@ from typing import Callable, Dict, List
 
 from utils.constants import LOCK_EXTENSION
 from utils.functions import READERS
+from utils.types import Dependency
 from core.ingestion.archive_walker import iter_archive_texts
 from core.parsin.dependency_parser import parse_dependencies
 
@@ -65,7 +66,7 @@ def _is_declaration(file_name: str) -> bool:
     return _match_declaration_reader(file_name) is not None
 
 
-def merge_declarations(dependencies: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def merge_declarations(dependencies: List[Dependency]) -> List[Dependency]:
     """Une Declarações deduplicando por Nome de Distribuição.
 
     Um pacote declarado em mais de uma Declaração aparece uma única vez, com a
@@ -80,7 +81,7 @@ def merge_declarations(dependencies: List[Dict[str, str]]) -> List[Dict[str, str
     seen = set()
     merged = []
     for dep in dependencies:
-        key = dep["Pacote"].lower()
+        key = dep["package"].lower()
         if key in seen:
             continue
         seen.add(key)
@@ -88,7 +89,7 @@ def merge_declarations(dependencies: List[Dict[str, str]]) -> List[Dict[str, str
     return merged
 
 
-def collect_declarations(archive, ignore_folders: List[str]) -> List[Dict[str, str]]:
+def collect_declarations(archive, ignore_folders: List[str]) -> List[Dependency]:
     """Monta o conjunto auditado como a união de todas as Declarações.
 
     Para cada Declaração fora das Exclusões, acumula seus pacotes. O Lock é ignorado
@@ -103,7 +104,7 @@ def collect_declarations(archive, ignore_folders: List[str]) -> List[Dict[str, s
         Conjunto auditado como lista de dependências normalizadas. Vazio se o
         Projeto-Alvo não tiver nenhuma Declaração fora das Exclusões.
     """
-    declared: List[Dict[str, str]] = []
+    declared: List[Dependency] = []
 
     for file_path, content in iter_archive_texts(
         archive, ignore_folders, _is_declaration
