@@ -50,7 +50,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
     """Exporta um conjunto auditado mínimo: um Zumbi Desatualizado e uma saudável."""
     dependencies = [
         {
-            "Pacote": "altair",
+            "package": "altair",
             "Origem": ORIGIN_PRODUCTION,
             "Versão Usada": "4.0.0",
             "Versão PyPI": "5.2.0",
@@ -59,7 +59,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "Idade": 400,
         },
         {
-            "Pacote": "pytest",
+            "package": "pytest",
             "Origem": ORIGIN_DEVELOPMENT,
             "Versão Usada": "8.0.0",
             "Versão PyPI": "8.0.0",

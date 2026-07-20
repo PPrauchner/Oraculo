@@ -107,7 +107,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
         is_fantasma = is_ghost(dep)
         rows.append(
             {
-                "Pacote": dep.get("Pacote", "N/A"),
+                "package": dep.get("package", "N/A"),
                 "Versão Usada": dep.get("Versão Usada", "N/A"),
                 "Versão PyPI": dep.get("Versão PyPI", "N/A"),
                 "Status": dep.get("Status", "Desconhecido"),
@@ -123,7 +123,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
 
     if not rows:
         empty: ReportRow = {
-            "Pacote": "N/A",
+            "package": "N/A",
             "Versão Usada": "N/A",
             "Versão PyPI": "N/A",
             "Status": "N/A",
@@ -164,12 +164,12 @@ def build_export_rows(
     Returns:
         Uma linha por dependência, na ordem das colunas do esquema.
     """
-    zombie_names = {dep["Pacote"] for dep in zombies}
-    ghost_names = {dep["Pacote"] for dep in ghosts}
+    zombie_names = {dep["package"] for dep in zombies}
+    ghost_names = {dep["package"] for dep in ghosts}
 
     rows: list[ExportRow] = []
     for dep in dependencies:
-        package = dep.get("Pacote", "N/A")
+        package = dep.get("package", "N/A")
 
         if package in zombie_names:
             category = CATEGORY_ZOMBIE
@@ -184,7 +184,7 @@ def build_export_rows(
             {
                 "Data da Análise": analysis_date,
                 "Projeto": project_name,
-                "Pacote": package,
+                "package": package,
                 "Categoria": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
                 "Origem": dep.get("Origem", ORIGIN_UNAVAILABLE),

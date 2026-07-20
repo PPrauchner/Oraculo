@@ -27,12 +27,12 @@ def analyze_zombie_dependencies(
     corresponde a ela. Continua no Total e recebe Tamanho, Idade e status de
     Desatualizada — apenas não é cobrada por não ser importada.
     """
-    imp_names = {normalize_name(d["Pacote"]) for d in imports}
+    imp_names = {normalize_name(d["package"]) for d in imports}
     zombies = []
     for dep in declared:
         if dep.get("Origem") == ORIGIN_DEVELOPMENT:
             continue
-        if imp_names.isdisjoint(import_names_for(dep["Pacote"])):
+        if imp_names.isdisjoint(import_names_for(dep["package"])):
             zombies.append(dep)
 
     return zombies

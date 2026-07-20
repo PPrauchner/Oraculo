@@ -25,7 +25,7 @@ def _zip(files: dict[str, str]) -> zipfile.ZipFile:
 
 def test_lock_resolve_versao_usada_do_conjunto():
     """Com Lock presente, a Versão Usada vem da versão exata do Lock (ADR-0002)."""
-    declared = [{"Pacote": "requests", "Versão Usada": ""}]
+    declared = [{"package": "requests", "Versão Usada": ""}]
 
     resolved = resolve_used_versions(declared, {"requests": "2.31.0"})
 
@@ -34,7 +34,7 @@ def test_lock_resolve_versao_usada_do_conjunto():
 
 def test_lock_vence_o_pin_da_declaracao():
     """A versão do Lock resolve a Versão Usada mesmo sobre um pin declarado."""
-    declared = [{"Pacote": "requests", "Versão Usada": "2.20.0"}]
+    declared = [{"package": "requests", "Versão Usada": "2.20.0"}]
 
     resolved = resolve_used_versions(declared, {"requests": "2.31.0"})
 
@@ -43,7 +43,7 @@ def test_lock_vence_o_pin_da_declaracao():
 
 def test_sem_lock_o_pin_permanece_a_versao_usada():
     """Sem Lock, um pin declarado continua sendo a Versão Usada (ADR-0002)."""
-    declared = [{"Pacote": "requests", "Versão Usada": "2.31.0"}]
+    declared = [{"package": "requests", "Versão Usada": "2.31.0"}]
 
     resolved = resolve_used_versions(declared, {})
 
@@ -52,7 +52,7 @@ def test_sem_lock_o_pin_permanece_a_versao_usada():
 
 def test_sem_lock_sem_pin_a_versao_usada_fica_indefinida():
     """Sem Lock e sem pin, a Versão Usada permanece indefinida (ADR-0002)."""
-    declared = [{"Pacote": "requests", "Versão Usada": ""}]
+    declared = [{"package": "requests", "Versão Usada": ""}]
 
     resolved = resolve_used_versions(declared, {})
 
@@ -61,17 +61,17 @@ def test_sem_lock_sem_pin_a_versao_usada_fica_indefinida():
 
 def test_lock_nao_acrescenta_pacotes_ao_conjunto():
     """Transitivas do Lock ausentes do conjunto não são adicionadas (ADR-0002)."""
-    declared = [{"Pacote": "requests", "Versão Usada": ""}]
+    declared = [{"package": "requests", "Versão Usada": ""}]
     lock_map = {"requests": "2.31.0", "certifi": "2024.2.2", "urllib3": "2.2.1"}
 
     resolved = resolve_used_versions(declared, lock_map)
 
-    assert [dep["Pacote"] for dep in resolved] == ["requests"]
+    assert [dep["package"] for dep in resolved] == ["requests"]
 
 
 def test_join_normaliza_o_nome_de_distribuicao():
     """O casamento Lock↔conjunto normaliza Nome de Distribuição (scikit-learn)."""
-    declared = [{"Pacote": "scikit-learn", "Versão Usada": ""}]
+    declared = [{"package": "scikit-learn", "Versão Usada": ""}]
 
     resolved = resolve_used_versions(declared, {"scikit_learn": "1.5.0"})
 
@@ -122,5 +122,5 @@ version = "2024.2.2"
     lock_map = build_lock_version_map(archive, ignore_folders=[])
     resolved = resolve_used_versions(audited, lock_map)
 
-    assert [dep["Pacote"] for dep in resolved] == ["requests"]
+    assert [dep["package"] for dep in resolved] == ["requests"]
     assert resolved[0]["Versão Usada"] == "2.31.0"

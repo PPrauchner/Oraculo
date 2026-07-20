@@ -25,7 +25,7 @@ REPORT_PAGE = str(Path(__file__).resolve().parents[2] / "pages" / "report.py")
 # As chaves de dado seguem em português porque o esquema é contrato e não acompanha
 # o seletor (ADR-0008) — é justamente o que separa dado de rótulo.
 OUTDATED_DEPENDENCY = {
-    "Pacote": "requests",
+    "package": "requests",
     "Versão Usada": "2.31.0",
     "Versão PyPI": "2.32.0",
     "Status": "Desatualizado",
@@ -35,7 +35,7 @@ OUTDATED_DEPENDENCY = {
 }
 
 ZOMBIE_DEPENDENCY = {
-    "Pacote": "rich",
+    "package": "rich",
     "Versão Usada": "13.0.0",
     "Versão PyPI": "13.0.0",
     "Status": "Atualizado",

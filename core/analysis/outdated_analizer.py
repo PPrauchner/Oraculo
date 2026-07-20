@@ -88,7 +88,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         O mesmo dicionário com 'Versão PyPI', 'Status', 'Tamanho' e 'Idade'
         preenchidos.
     """
-    data = fetch_package_data(dep["Pacote"])
+    data = fetch_package_data(dep["package"])
     versao_usada = _used_version(dep)
     pypi_version = get_latest_version(data) if data else ""
 

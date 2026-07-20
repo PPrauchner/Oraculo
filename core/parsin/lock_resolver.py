@@ -41,7 +41,7 @@ def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]
         for entry in parse_lock(content):
             version = entry.get("Versão Usada", "")
             if version:
-                version_map[normalize_name(entry["Pacote"])] = version
+                version_map[normalize_name(entry["package"])] = version
 
     return version_map
 
@@ -64,7 +64,7 @@ def resolve_used_versions(
         O mesmo conjunto, com a Versão Usada resolvida onde o Lock a conhece.
     """
     for dep in declared:
-        version = lock_version_map.get(normalize_name(dep["Pacote"]))
+        version = lock_version_map.get(normalize_name(dep["package"]))
         if version:
             dep["Versão Usada"] = version
 

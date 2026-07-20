@@ -40,10 +40,10 @@ def analyze_ghost_dependencies(
     """Identifica dependências fantasmas comparando imports com dependências declaradas."""
     declared_names: set[str] = set()
     for dep in declared:
-        declared_names |= import_names_for(dep["Pacote"])
+        declared_names |= import_names_for(dep["package"])
     ghosts = []
     for imp in imports:
-        if normalize_name(imp["Pacote"]) not in declared_names:
+        if normalize_name(imp["package"]) not in declared_names:
             ghosts.append(imp)
 
     return ghosts

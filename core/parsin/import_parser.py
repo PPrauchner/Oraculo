@@ -11,7 +11,7 @@ Entrada:
 Saída:
 - Lista de dicionários com imports encontrados:
   {
-    "Pacote": "nome_do_modulo",
+    "package": "nome_do_modulo",
     "Versão Usada": "N/A",
     "Versão Pypi": "N/A",
     "Status": "Desconhecido"
@@ -207,7 +207,7 @@ def parse_imports(
     for import_name in sorted(all_imports):
         result.append(
             {
-                "Pacote": import_name,
+                "package": import_name,
                 "Versão Usada": "N/A",
                 "Versão PyPI": "N/A",
                 "Status": "Desconhecido",

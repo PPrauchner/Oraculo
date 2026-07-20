@@ -49,7 +49,7 @@ def test_oraculo_nao_declara_altair() -> None:
 
     result = parse_pyproject(content)
 
-    assert "altair" not in {dep["Pacote"] for dep in result}
+    assert "altair" not in {dep["package"] for dep in result}
 
 
 def test_nenhum_import_raiz_e_fantasma(
@@ -63,7 +63,7 @@ def test_nenhum_import_raiz_e_fantasma(
     """
     declared, imports = auditoria
 
-    ghosts = sorted(ghost["Pacote"] for ghost in analyze_ghost_dependencies(declared, imports))
+    ghosts = sorted(ghost["package"] for ghost in analyze_ghost_dependencies(declared, imports))
 
     assert ghosts == []
 
@@ -83,6 +83,6 @@ def test_nenhuma_dependencia_de_producao_e_zumbi(
     """
     declared, imports = auditoria
 
-    zombies = sorted(zombie["Pacote"] for zombie in analyze_zombie_dependencies(declared, imports))
+    zombies = sorted(zombie["package"] for zombie in analyze_zombie_dependencies(declared, imports))
 
     assert zombies == []

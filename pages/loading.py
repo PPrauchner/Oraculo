@@ -174,7 +174,7 @@ def _execute_analysis_pipeline() -> None:
         seen = set()
         unique_deps = []
         for dep in all_deps:
-            pkg_name = dep["Pacote"].lower()
+            pkg_name = dep["package"].lower()
             if pkg_name not in seen:
                 seen.add(pkg_name)
                 unique_deps.append(dep)

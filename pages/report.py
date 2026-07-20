@@ -99,12 +99,12 @@ def _calculate_healthy_dependencies(report_dict: dict[str, list[dict]]) -> int:
         if category != REPORT_ALL and category in report_dict:
             for dep in report_dict[category]:
                 # Guardamos apenas o identificador único (ex: o nome da lib)
-                problematic_ids.add(dep["Pacote"])
+                problematic_ids.add(dep["package"])
 
     # Contamos quantas deps do total NÃO estão no set de IDs problemáticos
     healthy_count = 0
     for dep in all_deps:
-        if dep["Pacote"] not in problematic_ids:
+        if dep["package"] not in problematic_ids:
             healthy_count += 1
 
     return healthy_count

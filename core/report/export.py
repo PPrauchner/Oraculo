@@ -30,7 +30,7 @@ from utils.types import ExportRow
 CSV_HEADER = {
     "Data da Análise": "Analysis Date",
     "Projeto": "Project",
-    "Pacote": "Package",
+    "package": "Package",
     "Categoria": "Category",
     "Origem": "Origin",
     "Versão Usada": "Used Version",

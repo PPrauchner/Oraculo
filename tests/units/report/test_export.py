@@ -33,7 +33,7 @@ def _dependencies() -> list[dict]:
     """Conjunto auditado mínimo: um Zumbi Desatualizado e uma dependência saudável."""
     return [
         {
-            "Pacote": "altair",
+            "package": "altair",
             "Origem": ORIGIN_PRODUCTION,
             "Versão Usada": "4.0.0",
             "Versão PyPI": "5.2.0",
@@ -42,7 +42,7 @@ def _dependencies() -> list[dict]:
             "Idade": 400,
         },
         {
-            "Pacote": "streamlit",
+            "package": "streamlit",
             "Origem": ORIGIN_PRODUCTION,
             "Versão Usada": "1.40.0",
             "Versão PyPI": "1.40.0",

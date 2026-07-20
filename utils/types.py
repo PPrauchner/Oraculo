@@ -30,7 +30,7 @@ RawMetric = int | str
 DeclarationEntry = TypedDict(
     "DeclarationEntry",
     {
-        "Pacote": str,
+        "package": str,
         # Vazia quando a Declaração não fixa versão — pin exato é o único que
         # define Versão Usada (ADR-0002), e o Lock resolve o resto depois.
         "Versão Usada": str,
@@ -43,7 +43,7 @@ DeclarationEntry = TypedDict(
 Dependency = TypedDict(
     "Dependency",
     {
-        "Pacote": str,
+        "package": str,
         "Versão Usada": str,
         "Versão PyPI": str,
         "Status": str,
@@ -58,7 +58,7 @@ Dependency = TypedDict(
 ReportRow = TypedDict(
     "ReportRow",
     {
-        "Pacote": str,
+        "package": str,
         "Versão Usada": str,
         "Versão PyPI": str,
         "Status": str,
@@ -75,7 +75,7 @@ ExportRow = TypedDict(
         # A ordem de declaração é a ordem das colunas do CSV (ADR-0008).
         "Data da Análise": str,
         "Projeto": str,
-        "Pacote": str,
+        "package": str,
         "Categoria": str,
         "Origem": str,
         "Versão Usada": str,

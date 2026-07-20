@@ -81,7 +81,7 @@ def merge_declarations(dependencies: List[Dependency]) -> List[Dependency]:
     seen = set()
     merged = []
     for dep in dependencies:
-        key = dep["Pacote"].lower()
+        key = dep["package"].lower()
         if key in seen:
             continue
         seen.add(key)

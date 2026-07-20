@@ -9,8 +9,8 @@ from utils.constants import ORIGIN_PRODUCTION, VERSION_UNAVAILABLE
 def test_category_sums_size_and_averages_age():
     """A categoria soma o Tamanho de suas dependências e faz a média da Idade."""
     dependencies = [
-        {"Pacote": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
-        {"Pacote": "plotly", "Origem": ORIGIN_PRODUCTION, "Tamanho": 3072, "Idade": 20},
+        {"package": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "plotly", "Origem": ORIGIN_PRODUCTION, "Tamanho": 3072, "Idade": 20},
     ]
 
     summary = summarize_category(dependencies)
@@ -23,9 +23,9 @@ def test_category_sums_size_and_averages_age():
 def test_unavailable_metrics_stay_out_of_the_aggregations():
     """Sem Versão Usada, Tamanho/Idade são N/D: não entram na soma nem na média."""
     dependencies = [
-        {"Pacote": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
         {
-            "Pacote": "ruff",
+            "package": "ruff",
             "Origem": ORIGIN_PRODUCTION,
             "Tamanho": VERSION_UNAVAILABLE,
             "Idade": VERSION_UNAVAILABLE,
@@ -41,9 +41,9 @@ def test_unavailable_metrics_stay_out_of_the_aggregations():
 def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
     """Quantidade conta todas; a exclusão do N/D fica contabilizada, não escondida."""
     dependencies = [
-        {"Pacote": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
         {
-            "Pacote": "ruff",
+            "package": "ruff",
             "Origem": ORIGIN_PRODUCTION,
             "Tamanho": VERSION_UNAVAILABLE,
             "Idade": VERSION_UNAVAILABLE,
@@ -72,7 +72,7 @@ def test_category_without_any_measured_metric_reports_unavailable():
     """Se ninguém tem Versão Usada resolvida, não há soma nem média a exibir."""
     dependencies = [
         {
-            "Pacote": "ruff",
+            "package": "ruff",
             "Origem": ORIGIN_PRODUCTION,
             "Tamanho": VERSION_UNAVAILABLE,
             "Idade": VERSION_UNAVAILABLE,
@@ -92,9 +92,9 @@ def test_category_without_any_measured_metric_reports_unavailable():
 
 def test_statistics_are_stratified_per_category():
     """Cada categoria do relatório ganha suas próprias estatísticas."""
-    zombie = {"Pacote": "altair", "Origem": ORIGIN_PRODUCTION, "Tamanho": 512, "Idade": 400}
+    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "Tamanho": 512, "Idade": 400}
     healthy = {
-        "Pacote": "streamlit",
+        "package": "streamlit",
         "Origem": ORIGIN_PRODUCTION,
         "Tamanho": 1024,
         "Idade": 10,
@@ -116,9 +116,9 @@ def test_statistics_are_stratified_per_category():
 def test_statistics_agree_with_the_category_tables():
     """A Quantidade de cada categoria bate com a lista que alimenta sua tabela."""
     report = {
-        "Todas as Dependências": [{"Pacote": "a"}, {"Pacote": "b"}, {"Pacote": "c"}],
-        "Zumbis": [{"Pacote": "a"}],
-        "Desatualizadas": [{"Pacote": "a"}, {"Pacote": "b"}],
+        "Todas as Dependências": [{"package": "a"}, {"package": "b"}, {"package": "c"}],
+        "Zumbis": [{"package": "a"}],
+        "Desatualizadas": [{"package": "a"}, {"package": "b"}],
     }
 
     summaries = summarize_by_category(report)
@@ -129,7 +129,7 @@ def test_statistics_agree_with_the_category_tables():
 
 def test_a_new_category_is_summarized_without_touching_the_aggregation():
     """Categoria nova entra na estratificação sozinha — nada de lista fixa."""
-    report = {"Categoria Inédita": [{"Pacote": "novo", "Tamanho": 2048, "Idade": 7}]}
+    report = {"Categoria Inédita": [{"package": "novo", "Tamanho": 2048, "Idade": 7}]}
 
     summaries = summarize_by_category(report)
 
@@ -144,8 +144,8 @@ def test_summary_lines_show_size_in_readable_units_and_age_in_days():
     """Tamanho somado sai em KB/MB; Idade média, em dias."""
     summary = summarize_category(
         [
-            {"Pacote": "a", "Tamanho": 1024 * 1024, "Idade": 10},
-            {"Pacote": "b", "Tamanho": 1024 * 1024, "Idade": 20},
+            {"package": "a", "Tamanho": 1024 * 1024, "Idade": 10},
+            {"package": "b", "Tamanho": 1024 * 1024, "Idade": 20},
         ]
     )
 
@@ -158,8 +158,8 @@ def test_summary_lines_disclose_how_many_dependencies_were_left_out():
     """A média não engana: a linha diz sobre quantas dependências ela foi calculada."""
     summary = summarize_category(
         [
-            {"Pacote": "a", "Tamanho": 1024, "Idade": 10},
-            {"Pacote": "b", "Tamanho": VERSION_UNAVAILABLE, "Idade": VERSION_UNAVAILABLE},
+            {"package": "a", "Tamanho": 1024, "Idade": 10},
+            {"package": "b", "Tamanho": VERSION_UNAVAILABLE, "Idade": VERSION_UNAVAILABLE},
         ]
     )
 
