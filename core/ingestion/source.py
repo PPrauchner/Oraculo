@@ -4,7 +4,7 @@ A fonte de arquivos do Projeto-Alvo, reduzida a duas primitivas.
 Responsabilidades:
 - Listar os caminhos do Projeto-Alvo, relativos à sua raiz (`list_paths`).
 - Ler o conteúdo de um arquivo pelo caminho (`read_text`).
-- Abrir um diretório local como fonte, com erro legível (`open_directory`).
+- Abrir um diretório local como fonte, com código de erro (`open_directory`).
 
 Único módulo do projeto autorizado a conhecer `ZipFile`/`TarFile`: o despacho por
 `isinstance` fica confinado aqui (ADR-0006). Quem consome pede caminho e conteúdo,
@@ -27,6 +27,11 @@ from weakref import WeakKeyDictionary
 # As espécies de fonte que o despacho reconhece (ADR-0006). `dict` mapeia caminho a
 # conteúdo e serve de dublê nos testes, sem construir um archive de verdade.
 ProjectSource = zipfile.ZipFile | tarfile.TarFile | Path | dict[str, str]
+
+# Como `core/ingestion/` recusa um Projeto-Alvo: um código estável em inglês mais os
+# dados que o descrevem (ADR-0010). O código não muda com a língua da tela — traduzir
+# e escolher ícone é decisão de quem renderiza, não de quem detecta o problema.
+IngestionError = tuple[str, dict[str, str]]
 
 # Pastas que nunca fazem parte do Projeto-Alvo: ambiente virtual, cache de
 # ferramenta e metadados de VCS. Um diretório em disco as carrega e um archive
@@ -382,7 +387,7 @@ def read_text(source: ProjectSource, path: str) -> str | None:
     return _decode(data)
 
 
-def open_directory(path: str) -> tuple[Path | None, str]:
+def open_directory(path: str) -> tuple[Path | None, IngestionError | None]:
     """Abre um diretório local como fonte do Projeto-Alvo.
 
     Valida existência, tipo, permissão de leitura e a marca de projeto Python na
@@ -394,34 +399,30 @@ def open_directory(path: str) -> tuple[Path | None, str]:
         path: Caminho digitado pelo usuário.
 
     Returns:
-        Par (fonte, erro). Com sucesso, o Path do diretório e "". Em falha, None e
-        a mensagem a exibir — `core/` não conhece Streamlit, então quem chama é
-        que decide como mostrá-la.
+        Par (fonte, erro). Com sucesso, o Path do diretório e None. Em falha, None
+        e o `IngestionError` que descreve a recusa — quem chama escolhe ícone,
+        formatação e língua (ADR-0010).
     """
     cleaned = path.strip().strip('"').strip("'")
     if not cleaned:
-        return None, "❌ Informe o caminho do diretório do Projeto-Alvo."
+        return None, ("empty_path", {})
 
     directory = Path(cleaned).expanduser()
 
     if not directory.exists():
-        return None, f"❌ Caminho não encontrado: {directory}"
+        return None, ("directory_not_found", {"path": str(directory)})
 
     if not directory.is_dir():
-        return None, f"❌ O caminho informado não é um diretório: {directory}"
+        return None, ("path_is_not_a_directory", {"path": str(directory)})
 
     try:
         is_project = _looks_like_a_python_project(directory)
     except PermissionError:
-        return None, f"❌ Sem permissão de leitura em: {directory}"
+        return None, ("directory_not_readable", {"path": str(directory)})
     except OSError as error:
-        return None, f"❌ Não foi possível ler o diretório: {error}"
+        return None, ("directory_read_failed", {"reason": str(error)})
 
     if not is_project:
-        return None, (
-            f"❌ O caminho não parece um projeto Python: {directory}\n"
-            "Esperado, na raiz, um arquivo .py ou uma Declaração "
-            "(pyproject.toml, requirements.txt, environment.yml)."
-        )
+        return None, ("not_a_python_project", {"path": str(directory)})
 
-    return directory, ""
+    return directory, None
