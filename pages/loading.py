@@ -68,7 +68,7 @@ def _render_progress_steps(step_labels: list[str], current_step: int) -> str:
         weight = "bold" if j == current_step else "normal"
         html += f'<div style="color:{color}; opacity:{opacity}; font-weight:{weight}">{label}{cursor}</div>'
 
-    html += "</div></div></div>"
+    html += "</div></div>"
     return html
 
 
@@ -261,7 +261,6 @@ def _render_loading_ui() -> None:
 
     _execute_analysis_pipeline()
 
-    st.markdown("</div>", unsafe_allow_html=True)
     st.switch_page("pages/report.py")
 
 
