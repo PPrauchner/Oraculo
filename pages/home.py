@@ -28,13 +28,22 @@ from core.ingestion.source import ProjectSource, open_directory
 
 sidebar()
 
-UPLOAD_MODE = "📦 Upload de archive"
-DIRECTORY_MODE = "📂 Diretório local"
+# Valor estável do modo de ingestão, não rótulo. Ele é comparado por igualdade logo
+# abaixo e vai parar em `st.session_state["ingestion_mode"]`: se fosse o texto da
+# tela, trocar de língua quebraria a comparação e guardaria rótulo traduzido no
+# estado, que é justamente o que ADR-0009 proíbe. O rótulo nasce no `format_func`.
+UPLOAD_MODE = "upload"
+DIRECTORY_MODE = "directory"
+
+
+def _mode_label(mode: str) -> str:
+    """Rótulo de um modo de ingestão na língua da tela."""
+    return t(f"home.mode.{mode}")
 
 
 def principal_interface():
     st.title(t("home.title"))
-    st.write("Informe o Projeto-Alvo por upload de archive ou por diretório local")
+    st.write(t("home.intro"))
 
 
 def _clear_source():
@@ -66,7 +75,7 @@ def _load_source(source: ProjectSource, project_name: str) -> None:
 def _entering_by_upload():
     """Recebe o Projeto-Alvo compactado."""
     file = st.file_uploader(
-        "Zip, tar.gz ou tar",
+        t("home.upload.label"),
         type=[key for key in EXTRATORES.keys()],
         key="file_uploaded",
     )
@@ -77,7 +86,7 @@ def _entering_by_upload():
 
     archive = process_uploaded_file(file)
     if not archive:
-        st.error("❌ Não foi possível abrir o archive. Verifique se ele não está corrompido.")
+        st.error(t("home.upload.failed"))
         _clear_source()
         return
 
@@ -89,10 +98,10 @@ def _entering_by_upload():
 def _entering_by_directory():
     """Recebe o Projeto-Alvo apontando para o diretório do código (US-01)."""
     typed_path = st.text_input(
-        "Caminho do diretório do Projeto-Alvo",
+        t("home.directory.label"),
         key="project_directory",
-        placeholder="C:\\Users\\voce\\projetos\\meu-projeto",
-        help="O ORÁCULO roda na sua máquina, então o caminho local resolve.",
+        placeholder=t("home.directory.placeholder"),
+        help=t("home.directory.help"),
     )
 
     if not typed_path.strip():
@@ -112,14 +121,15 @@ def entering_data():
     col1, col2 = st.columns([1.5, 1])
 
     with col1:
-        st.subheader("Informe o Projeto-Alvo")
+        st.subheader(t("home.source.header"))
         # Uma fonte por vez: com os dois campos visíveis, "qual vale quando os
         # dois estão preenchidos" vira uma pergunta sem resposta óbvia.
         mode = st.radio(
-            "Como trazer o Projeto-Alvo:",
+            t("home.mode.label"),
             [UPLOAD_MODE, DIRECTORY_MODE],
             horizontal=True,
             key="ingestion_mode",
+            format_func=_mode_label,
         )
 
         if mode == UPLOAD_MODE:
@@ -128,7 +138,7 @@ def entering_data():
             _entering_by_directory()
 
     with col2:
-        st.subheader("Configurações")
+        st.subheader(t("home.settings.header"))
         opcoes = st.session_state.get("folder_list", [])
 
         # Trocar de Projeto-Alvo troca as pastas oferecidas; uma Exclusão marcada
@@ -140,7 +150,7 @@ def entering_data():
             ]
 
         st.multiselect(
-            "Pastas a ignorar:",
+            t("home.settings.ignore_folders"),
             options=opcoes,
             key="ignore_folders",
         )
@@ -150,13 +160,11 @@ def principal_action():
     # Destaque e largura saem do próprio Streamlit: `type="primary"` pinta o botão
     # com a cor primária da paleta, que o tema já adapta aos dois modos. Era isto
     # que o CSS injetado fazia à mão, com um azul só dele.
-    if st.button("Executar Análise Completa", type="primary", width="stretch"):
+    if st.button(t("home.run"), type="primary", width="stretch"):
         if st.session_state.get("archive") is None:
-            st.error("Por favor, informe o Projeto-Alvo para análise.")
+            st.error(t("home.run.no_source"))
         elif not st.session_state.get("archive_is_valid", False):
-            st.error(
-                "❌ Não é possível executar a análise. Certifique-se de que o arquivo atende aos requisitos mínimos."
-            )
+            st.error(t("home.run.invalid_source"))
         else:
             st.switch_page("pages/loading.py")
 
