@@ -215,16 +215,7 @@ def _render_donut_chart(report_dict: dict[str, list]) -> None:
         },
     )
 
-    # A legenda em pé, ao lado da rosca, comia metade da largura da figura e forçava
-    # uma coluna larga o bastante para espremer as métricas ao lado (as captions
-    # quebravam em duas linhas). Deitada embaixo, a rosca fica maior numa figura mais
-    # estreita — as duas leituras ganham, e nenhum rótulo precisou encolher.
-    figure.update_layout(
-        width=290,
-        height=360,
-        margin=dict(t=0, b=0, l=0, r=0),
-        legend=dict(orientation="h", yanchor="bottom", y=0, xanchor="center", x=0.5),
-    )
+    figure.update_layout(width=310, height=310, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(figure, use_container_width=False)
 
 
@@ -351,12 +342,7 @@ def _main() -> None:
         st.warning(t("report.warning.no_dependency"))
         st.stop()
 
-    # 5:2 e não 3:2 porque a conta é apertada: `READING_MAX_WIDTH` fixa o corpo em
-    # 1100px, e as quatro métricas dividem o que sobra. Em 3:2 cada uma ficava com
-    # ~148px e "Tamanho total: 11.9 MB" precisa de ~167px — daí a quebra de linha.
-    # Em 5:2 sobram ~179px por métrica, e a coluna do gráfico ainda comporta a rosca
-    # agora que a legenda desceu para baixo dela.
-    col_metrics, col_chart = st.columns([5, 2], gap="large")
+    col_metrics, col_chart = st.columns([3, 2], gap="large")
 
     with col_metrics:
         st.write(f"#### {t('report.metrics.header')}")
