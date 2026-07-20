@@ -183,7 +183,7 @@ def build_export_rows(
         rows.append(
             {
                 "analysis_date": analysis_date,
-                "Projeto": project_name,
+                "project": project_name,
                 "package": package,
                 "Categoria": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).

@@ -13,7 +13,7 @@ from utils.constants import (
 
 EXPORT_SCHEMA = [
     "analysis_date",
-    "Projeto",
+    "project",
     "package",
     "Categoria",
     "origin",
@@ -180,7 +180,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
     assert len(rows) == 1
     assert list(rows[0].keys()) == EXPORT_SCHEMA
     assert rows[0]["analysis_date"] == "2026-07-18"
-    assert rows[0]["Projeto"] == "grupo-03"
+    assert rows[0]["project"] == "grupo-03"
     assert rows[0]["package"] == "pandas"
     assert rows[0]["Categoria"] == CATEGORY_HEALTHY
 
@@ -306,7 +306,7 @@ def test_export_rows_distinguish_two_analyses_of_the_same_project():
     )
 
     assert first[0]["analysis_date"] != second[0]["analysis_date"]
-    assert first[0]["Projeto"] == second[0]["Projeto"]
+    assert first[0]["project"] == second[0]["project"]
 
 
 # ============ filter_export_rows (seleção de categorias na exportação) ============

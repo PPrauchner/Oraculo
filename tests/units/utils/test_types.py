@@ -38,7 +38,7 @@ REPORT_FIELDS = DEPENDENCY_FIELDS
 # desalinha exports do mesmo Projeto-Alvo feitos em datas diferentes.
 EXPORT_FIELDS_IN_ORDER = [
     "analysis_date",
-    "Projeto",
+    "project",
     "package",
     "Categoria",
     "origin",

@@ -29,7 +29,7 @@ from utils.types import ExportRow
 # exports do mesmo Projeto-Alvo se concatenem numa série temporal.
 CSV_HEADER = {
     "analysis_date": "Analysis Date",
-    "Projeto": "Project",
+    "project": "Project",
     "package": "Package",
     "Categoria": "Category",
     "origin": "Origin",
