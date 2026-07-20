@@ -17,6 +17,7 @@
   "home.directory.help": "ORÁCULO runs on your machine, so a local path works.",
   "home.settings.header": "Settings",
   "home.settings.ignore_folders": "Folders to ignore:",
+  "home.settings.no_source": "The folders you can exclude appear here once you provide the Target Project.",
   "home.run": "Run Full Analysis",
   "home.run.no_source": "Please provide the Target Project to analyse.",
   "home.run.invalid_source": "❌ Cannot run the analysis. Make sure the Target Project meets the minimum requirements.",

@@ -17,6 +17,7 @@
   "home.directory.help": "O ORÁCULO roda na sua máquina, então o caminho local resolve.",
   "home.settings.header": "Configurações",
   "home.settings.ignore_folders": "Pastas a ignorar:",
+  "home.settings.no_source": "As pastas que você pode excluir aparecem aqui depois que o Projeto-Alvo for informado.",
   "home.run": "Executar Análise Completa",
   "home.run.no_source": "Por favor, informe o Projeto-Alvo para análise.",
   "home.run.invalid_source": "❌ Não é possível executar a análise. Certifique-se de que o Projeto-Alvo atende aos requisitos mínimos.",

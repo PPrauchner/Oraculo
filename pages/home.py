@@ -149,11 +149,16 @@ def entering_data():
                 folder for folder in selecionadas if folder in opcoes
             ]
 
-        st.multiselect(
-            t("home.settings.ignore_folders"),
-            options=opcoes,
-            key="ignore_folders",
-        )
+        # A Exclusão não tem o que oferecer antes de existir uma fonte: um multiselect
+        # sem opção lê-se como controle quebrado, e não como etapa ainda não cumprida.
+        if opcoes:
+            st.multiselect(
+                t("home.settings.ignore_folders"),
+                options=opcoes,
+                key="ignore_folders",
+            )
+        else:
+            st.caption(t("home.settings.no_source"))
 
 
 def principal_action():
