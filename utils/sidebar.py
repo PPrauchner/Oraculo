@@ -13,7 +13,34 @@ Saída:
 
 from utils.constants import BLUE
 from utils.constants import SVG_LUPA
+from utils.i18n import LANGUAGE_PARAM, available_languages, current_language, t, translate
 import streamlit as st
+
+
+def language_selector() -> None:
+    """Oferece as línguas disponíveis e guarda a escolha na URL.
+
+    Cada opção aparece na própria língua (`language.name`), então acrescentar um
+    arquivo em `locales/` basta para a língua entrar aqui — sem `if` novo (ADR-0009).
+    O widget não usa `key`: a língua mora em `?lang=`, e ter os dois guardando a
+    mesma coisa criaria duas fontes da verdade que discordam no refresh.
+    """
+    languages = available_languages()
+    current = current_language()
+
+    chosen = st.selectbox(
+        t("sidebar.language"),
+        options=languages,
+        index=languages.index(current),
+        format_func=lambda language: translate("language.name", language),
+    )
+
+    if chosen != current:
+        st.query_params[LANGUAGE_PARAM] = chosen
+        # Sem o rerun a tela sai metade em cada língua: o que já foi renderizado
+        # acima leu o parâmetro antigo. Não há laço — depois do rerun a escolha e a
+        # URL concordam, e a condição fica falsa.
+        st.rerun()
 
 
 def sidebar() -> None:
@@ -36,8 +63,10 @@ def sidebar() -> None:
             unsafe_allow_html=True,
         )
 
-        st.markdown("Auditoria de Dependências Python")
+        st.markdown(t("sidebar.subtitle"))
+
+        language_selector()
 
         st.divider()
 
-    st.sidebar.info("Dica: Ignore pastas de ambiente virtual para acelerar a análise.")
+    st.sidebar.info(t("sidebar.tip"))
