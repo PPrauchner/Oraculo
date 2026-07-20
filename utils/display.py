@@ -206,9 +206,15 @@ def display_rows(rows: list[ReportRow]) -> list[dict[str, str]]:
     return table
 
 
-# Identidade da métrica → rótulo da caption e formatador do seu valor. O rótulo
-# nomeia a agregação, e não a coluna: é o Tamanho *somado* e a Idade *média* da
-# categoria, e chamá-los como a tabela ao lado confundiria as duas leituras.
+# Identidade da métrica → rótulo da caption e formatador do seu valor.
+#
+# O rótulo repete o da coluna da tabela ("Tamanho", "Idade") embora descreva outra
+# coisa: aqui é o Tamanho *somado* e a Idade *média* da categoria. Chamá-los
+# "Tamanho total" e "Idade média", que é o preciso, não cabe — `READING_MAX_WIDTH`
+# fixa o corpo em 1100px e cada métrica fica com ~148px, contra os ~172px que o
+# rótulo longo pede, então a caption quebrava em duas linhas. A precisão do rótulo
+# perdeu para a largura, de propósito; o que a métrica agrega está no `CategorySummary`
+# e em `summary_metrics`, para quem for mexer aqui.
 SUMMARY_METRICS: dict[str, tuple[str, Callable[[RawMetric], str]]] = {
     "size": ("report.summary.total_size", format_size),
     "age": ("report.summary.average_age", format_age),
