@@ -1,0 +1,7 @@
+{
+  "language.name": "English",
+  "home.title": "🚀 Start Audit",
+  "sidebar.subtitle": "Python Dependency Audit",
+  "sidebar.language": "Language",
+  "sidebar.tip": "Tip: ignore virtual environment folders to speed up the analysis."
+}
