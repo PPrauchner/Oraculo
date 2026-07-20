@@ -150,8 +150,15 @@ _Avoid_: indisponível, faltando, sem dados
 
 ## Vocabulário do dado exportado
 
-O CSV é contrato estável em inglês e não acompanha a língua da tela (ADR-0008). Estes são os
-únicos valores que ele emite — a tradução para exibição é responsabilidade de `pages/`:
+> ⚠️ **Estado-alvo do [ADR-0008](./docs/adr/0008-o-csv-e-contrato-a-lingua-e-so-da-tela.md),
+> ainda não implementado** (ver [`docs/plano-melhorias.md`](./docs/plano-melhorias.md)).
+> Hoje o CSV emite os termos em português — `Zumbi`, `Fantasma`, `Saudável`, `Produção`,
+> `Desenvolvimento`, `Sim`/`Não` —, porque `export_to_csv` deriva o cabeçalho das chaves
+> internas, que ainda são as do glossário acima. Só `N/A` já corresponde. A tabela abaixo
+> descreve o contrato de destino, não o comportamento atual.
+
+O CSV será contrato estável em inglês e não acompanhará a língua da tela (ADR-0008). Estes
+serão os únicos valores que ele emite — a tradução para exibição é responsabilidade de `pages/`:
 
 | Coluna | Valores |
 |---|---|
