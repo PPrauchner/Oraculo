@@ -59,11 +59,11 @@ dependencies = ["requests>=2.33.0", "pandas>=3.0.1"]
     ]
 
 
-def test_pyproject_do_proprio_baita_auditor_e_lido():
-    """Um Projeto-Alvo com a forma do Baita Auditor é lido com a Origem correta.
+def test_pyproject_do_proprio_oraculo_e_lido():
+    """Um Projeto-Alvo com a forma do ORÁCULO é lido com a Origem correta.
 
     Snapshot fixo, não o pyproject.toml vivo do repositório: a Origem que o reader
-    devolve não pode depender de o Baita Auditor trocar de dependência (issue #21).
+    devolve não pode depender de o ORÁCULO trocar de dependência (issue #21).
     """
     content = """
 [project]
@@ -119,8 +119,6 @@ def test_requirements_dev_tem_reader_proprio_no_registry():
 
 def test_environment_yml_tem_origem():
     """environment.yml declara o ambiente de execução: Origem de Produção."""
-    pytest.importorskip("yaml", reason="parse_environment_yml depende de PyYAML")
-
     content = """
 name: alvo
 dependencies:
@@ -136,6 +134,21 @@ dependencies:
         ("numpy", "Produção"),
         ("requests", "Produção"),
     ]
+
+
+def test_environment_yml_com_dependencies_vazio_nao_quebra() -> None:
+    """`dependencies:` sem itens devolve lista vazia, não TypeError.
+
+    O YAML resolve a chave presente e vazia para None, e não para lista: o
+    `.get("dependencies", [])` não protege, porque a chave existe. Um Projeto-Alvo
+    com essa Declaração abortaria a análise inteira.
+    """
+    content = """
+name: alvo
+dependencies:
+"""
+
+    assert parse_environment_yml(content) == []
 
 
 def test_lock_tem_origem():

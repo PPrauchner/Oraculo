@@ -1,4 +1,7 @@
-# Baita Auditor
+# ORÁCULO
+
+**O**rganizador e **R**astreador **A**utomático de **C**ódigo, **U**so de **L**ibraries e
+**O**corrências.
 
 Ferramenta de auditoria de dependências de projetos Python. Cruza o que um projeto
 **declara** depender com o que seu código **realmente importa**, e confronta ambos com
@@ -9,7 +12,7 @@ o PyPI para avaliar a saúde das dependências.
 ### O que é analisado
 
 **Projeto-Alvo**:
-O projeto Python cujas dependências estão sendo auditadas. Nunca é o Baita Auditor em si.
+O projeto Python cujas dependências estão sendo auditadas. Nunca é o ORÁCULO em si.
 _Avoid_: projeto, input, upload
 
 **Declaração**:
@@ -128,3 +131,39 @@ _Avoid_: tempo de vida, antiguidade, defasagem
 Proporção de Dependências Declaradas que não são Zumbis, Fantasmas nem Desatualizadas.
 Mais exigente que a Categoria Saudável, que ignora Desatualizada.
 _Avoid_: score, nota, percentual
+
+### Ausência de valor
+
+Duas ausências diferentes, que o relatório não pode confundir: uma é limite do que se sabe,
+a outra é propriedade do que se auditou.
+
+**Indeterminado**:
+O ORÁCULO não tem como saber o valor. É o caso da Versão Usada sem Lock e sem pin — e, por
+consequência, do Tamanho e da Idade que dependem dela. Um Lock resolveria.
+_Avoid_: vazio, nulo, zero, desconhecido pelo PyPI
+
+**Não Aplicável**:
+O valor não existe para aquela dependência, por definição. É o caso da Origem de um Fantasma:
+ele não vem de Declaração nenhuma, então não há seção de onde ter vindo. Nenhum arquivo a mais
+preencheria isso.
+_Avoid_: indisponível, faltando, sem dados
+
+## Vocabulário do dado exportado
+
+> ⚠️ **Estado-alvo do [ADR-0008](./docs/adr/0008-o-csv-e-contrato-a-lingua-e-so-da-tela.md),
+> ainda não implementado** (ver [`docs/plano-melhorias.md`](./docs/plano-melhorias.md)).
+> Hoje o CSV emite os termos em português — `Zumbi`, `Fantasma`, `Saudável`, `Produção`,
+> `Desenvolvimento`, `Sim`/`Não` —, porque `export_to_csv` deriva o cabeçalho das chaves
+> internas, que ainda são as do glossário acima. Só `N/A` já corresponde. A tabela abaixo
+> descreve o contrato de destino, não o comportamento atual.
+
+O CSV será contrato estável em inglês e não acompanhará a língua da tela (ADR-0008). Estes
+serão os únicos valores que ele emite — a tradução para exibição é responsabilidade de `pages/`:
+
+| Coluna | Valores |
+|---|---|
+| `Category` | `Zombie` · `Ghost` · `Healthy` |
+| `Origin` | `Production` · `Development` · `N/A` |
+| `Status` | `Outdated` · `Up to date` · `Unknown` · `Invalid version` |
+| `Outdated` | `Yes` · `No` |
+| ausência | `Unknown` (Indeterminado) · `N/A` (Não Aplicável) |

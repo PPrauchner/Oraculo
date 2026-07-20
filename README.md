@@ -106,11 +106,14 @@ divergentes que não esteja na tabela ainda gera **dois falsos positivos** — v
 import) ao mesmo tempo. Mitigação consciente, não solução completa; ampliar a tabela
 resolve caso a caso.
 
-### `environment.yml` depende de PyYAML
+### PyYAML é exigido mesmo sem `environment.yml`
 
-O parser de `environment.yml` só funciona se `PyYAML` estiver disponível no ambiente.
-Ele não é declarado nas dependências da aplicação, então na instalação padrão a leitura
-desse formato degrada silenciosamente para uma lista vazia.
+`core/parsin/readers.py` importa `yaml` no topo do módulo, e `declaration_collector`
+importa `readers` para popular o registry — então o `PyYAML` entra em toda análise, mesmo
+quando o Projeto-Alvo não tem `environment.yml`. Por isso ele é Dependência de Produção
+declarada: sem ele a aplicação não sobe, em vez de apenas perder o suporte a Conda. A
+leitura de `environment.yml` não degrada mais em silêncio para uma lista vazia — ou o
+formato é lido, ou a instalação está incompleta.
 
 ### Ingestão apenas por upload
 
@@ -234,7 +237,7 @@ python -m venv .venv
 source .venv/bin/activate       # Linux/Mac
 .venv\Scripts\activate          # Windows
 
-pip install streamlit plotly pandas requests packaging
+pip install streamlit plotly requests packaging pyyaml
 streamlit run main.py
 ```
 
@@ -246,9 +249,9 @@ streamlit run main.py
 |---|---|
 | `streamlit` | Interface web e navegação entre páginas |
 | `plotly` | Gráficos do relatório |
-| `pandas` | Manipulação de tabelas |
 | `requests` | Requisições à API do PyPI |
 | `packaging` | Comparação semântica de versões no `outdated_analizer` |
+| `pyyaml` | Leitura de `environment.yml` (Conda) no `readers` |
 
 ---
 

@@ -32,7 +32,7 @@ def sidebar() -> None:
     with st.sidebar:
 
         st.markdown(
-            f'<h1 style="display: flex; align-items: center; color: {BLUE}">{SVG_LUPA} Baita Auditor</h1>',
+            f'<h1 style="display: flex; align-items: center; color: {BLUE}">{SVG_LUPA} ORÁCULO</h1>',
             unsafe_allow_html=True,
         )
 

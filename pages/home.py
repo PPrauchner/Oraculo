@@ -102,7 +102,7 @@ def _entering_by_directory():
         "Caminho do diretório do Projeto-Alvo",
         key="project_directory",
         placeholder="C:\\Users\\voce\\projetos\\meu-projeto",
-        help="O Baita Auditor roda na sua máquina, então o caminho local resolve.",
+        help="O ORÁCULO roda na sua máquina, então o caminho local resolve.",
     )
 
     if not typed_path.strip():

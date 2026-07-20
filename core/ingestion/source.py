@@ -108,7 +108,7 @@ def _looks_like_a_python_project(directory: Path) -> bool:
     """Indica se a raiz do diretório tem marca de projeto Python.
 
     Olha só o primeiro nível, de propósito: é a checagem barata que impede o
-    Baita Auditor de percorrer uma árvore enorme (a pasta do usuário, um disco
+    ORÁCULO de percorrer uma árvore enorme (a pasta do usuário, um disco
     inteiro) antes de descobrir que ali não há Projeto-Alvo algum.
 
     Args:
@@ -387,7 +387,7 @@ def open_directory(path: str) -> tuple[Path | None, str]:
 
     Valida existência, tipo, permissão de leitura e a marca de projeto Python na
     raiz. A última é o que impede apontar para a pasta do usuário e esperar o
-    Baita Auditor percorrer o disco inteiro antes de reclamar; a auditoria dos
+    ORÁCULO percorrer o disco inteiro antes de reclamar; a auditoria dos
     requisitos mínimos, essa sim completa, fica com `validate_project_structure`.
 
     Args:
