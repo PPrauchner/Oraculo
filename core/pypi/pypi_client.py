@@ -15,6 +15,10 @@ from utils.constants import PYPI_BASE_URL
 
 _TIMEOUT_SECONDS = 5
 
+# As buscas correm em paralelo (32 threads). Uma Session compartilhada mantém o
+# pool de conexões vivo entre elas, poupando o handshake TLS a cada pacote.
+_SESSION = requests.Session()
+
 
 def fetch_package_data(package_name: str) -> dict | None:
     """Busca os metadados de um pacote no PyPI em uma única requisição.
@@ -30,7 +34,7 @@ def fetch_package_data(package_name: str) -> dict | None:
     url = f"{PYPI_BASE_URL}/{package_name}/json"
 
     try:
-        response = requests.get(url, timeout=_TIMEOUT_SECONDS)
+        response = _SESSION.get(url, timeout=_TIMEOUT_SECONDS)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as error:
