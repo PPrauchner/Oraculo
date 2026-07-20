@@ -154,7 +154,7 @@ def test_the_audit_finds_what_it_should_in_both_modes(project_directory, project
         assert declared == {"requests", "pandas", "plotly", "pytest"}
         # `core` é Módulo Próprio e `os` é stdlib: nenhum dos dois é Import Raiz
         assert packages == {"requests", "pandas", "plotly", "yaml"}
-        assert report["valid"] == (True, "")
+        assert report["valid"] == (True, None)
         assert report["folders"] == ["adr", "core", "docs", "helpers", "tests"]
 
 
