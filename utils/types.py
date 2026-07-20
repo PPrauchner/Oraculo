@@ -82,7 +82,7 @@ ExportRow = TypedDict(
         "pypi_version": str,
         # Desatualizada é coluna própria, e não valor de Categoria: uma dependência
         # pode ser Zumbi *e* Desatualizada, e um campo só perderia uma das leituras.
-        "Desatualizada": str,
+        "outdated": str,
         # Crus, nunca formatados: o CSV é para diffing e concatenação ao longo do
         # tempo, não para leitura humana direta — essa é a `normalize`.
         "size": RawMetric,

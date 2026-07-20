@@ -190,7 +190,7 @@ def build_export_rows(
                 "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
-                "Desatualizada": outdated,
+                "outdated": outdated,
                 "size": dep.get("size", VERSION_UNAVAILABLE),
                 "age": dep.get("age", VERSION_UNAVAILABLE),
             }
@@ -222,5 +222,5 @@ def filter_export_rows(
         row
         for row in rows
         if row["category"] in categories
-        or (include_outdated and row["Desatualizada"] == OUTDATED_YES)
+        or (include_outdated and row["outdated"] == OUTDATED_YES)
     ]

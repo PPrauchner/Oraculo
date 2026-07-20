@@ -19,7 +19,7 @@ EXPORT_SCHEMA = [
     "origin",
     "used_version",
     "pypi_version",
-    "Desatualizada",
+    "outdated",
     "size",
     "age",
 ]
@@ -207,7 +207,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
 
     assert len(rows) == 1
     assert rows[0]["category"] == CATEGORY_ZOMBIE
-    assert rows[0]["Desatualizada"] == OUTDATED_YES
+    assert rows[0]["outdated"] == OUTDATED_YES
 
 
 def test_export_rows_categorize_zombie_ghost_and_healthy():

@@ -44,7 +44,7 @@ EXPORT_FIELDS_IN_ORDER = [
     "origin",
     "used_version",
     "pypi_version",
-    "Desatualizada",
+    "outdated",
     "size",
     "age",
 ]
