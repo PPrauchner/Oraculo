@@ -6,25 +6,29 @@ como temas, cores, fontes e outros parâmetros de estilo.
 """
 
 # ============ Cores =================#
+# Nenhuma cor é definida aqui. A paleta é única e mora em `.streamlit/config.toml`;
+# este módulo só diz *qual token* cada Categoria usa, e `utils/theme.py` resolve o
+# token na cor. Guardar o hex nos dois lugares é o que fazia a paleta divergir —
+# eram três azuis diferentes antes (issue #39).
 
 import sys
 
 
-MAPA_CORES_STATUS = {
-    "OK ✅": "#2ECC71",  # GREEN
-    "Zumbis": "#9B59B6",  # PURPLE
-    "Fantasmas": "#E74C3C",  # RED
-    "Desatualizadas": "#3498DB",  # BLUE
+# Categoria (rótulo do gráfico) -> token semântico do tema. O Streamlit já adapta
+# esses tokens aos dois fundos, então a Categoria não precisa saber se a tela está
+# clara ou escura.
+STATUS_COLOR_TOKENS = {
+    "OK ✅": "greenColor",  # Saudável
+    "Zumbis": "violetColor",
+    "Fantasmas": "redColor",
+    "Desatualizadas": "blueColor",
 }
-COR_PADRAO = "#95A5A6"
-BLUE = "#3498DB"
-GREEN = "#2ECC71"
-RED = "#E74C3C"
-PURPLE = "#9B59B6"
 # ============ Cores =================#
 
+# A lupa herda a cor de quem a contém (`stroke="currentColor"`), então ela segue o
+# tema sem carregar cor própria.
 SVG_LUPA = """
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="scale(-1, 1)" transform-origin="center" style="margin-right: 10px; vertical-align: middle; color: #4F8BF9;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="scale(-1, 1)" transform-origin="center" style="margin-right: 10px; vertical-align: middle;">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
