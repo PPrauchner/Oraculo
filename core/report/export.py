@@ -31,7 +31,7 @@ CSV_HEADER = {
     "analysis_date": "Analysis Date",
     "project": "Project",
     "package": "Package",
-    "Categoria": "Category",
+    "category": "Category",
     "origin": "Origin",
     "used_version": "Used Version",
     "pypi_version": "PyPI Version",

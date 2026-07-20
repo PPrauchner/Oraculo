@@ -40,7 +40,7 @@ EXPORT_FIELDS_IN_ORDER = [
     "analysis_date",
     "project",
     "package",
-    "Categoria",
+    "category",
     "origin",
     "used_version",
     "pypi_version",

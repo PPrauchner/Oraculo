@@ -185,7 +185,7 @@ def build_export_rows(
                 "analysis_date": analysis_date,
                 "project": project_name,
                 "package": package,
-                "Categoria": category,
+                "category": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
                 "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
                 "used_version": dep.get("used_version", "N/A"),
@@ -221,6 +221,6 @@ def filter_export_rows(
     return [
         row
         for row in rows
-        if row["Categoria"] in categories
+        if row["category"] in categories
         or (include_outdated and row["Desatualizada"] == OUTDATED_YES)
     ]

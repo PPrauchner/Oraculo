@@ -76,7 +76,7 @@ ExportRow = TypedDict(
         "analysis_date": str,
         "project": str,
         "package": str,
-        "Categoria": str,
+        "category": str,
         "origin": str,
         "used_version": str,
         "pypi_version": str,

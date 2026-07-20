@@ -15,7 +15,7 @@ EXPORT_SCHEMA = [
     "analysis_date",
     "project",
     "package",
-    "Categoria",
+    "category",
     "origin",
     "used_version",
     "pypi_version",
@@ -182,7 +182,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
     assert rows[0]["analysis_date"] == "2026-07-18"
     assert rows[0]["project"] == "grupo-03"
     assert rows[0]["package"] == "pandas"
-    assert rows[0]["Categoria"] == CATEGORY_HEALTHY
+    assert rows[0]["category"] == CATEGORY_HEALTHY
 
 
 def test_export_rows_zombie_and_outdated_share_a_single_row():
@@ -206,7 +206,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
     )
 
     assert len(rows) == 1
-    assert rows[0]["Categoria"] == CATEGORY_ZOMBIE
+    assert rows[0]["category"] == CATEGORY_ZOMBIE
     assert rows[0]["Desatualizada"] == OUTDATED_YES
 
 
@@ -224,7 +224,7 @@ def test_export_rows_categorize_zombie_ghost_and_healthy():
         analysis_date="2026-07-18",
     )
 
-    categories = {row["package"]: row["Categoria"] for row in rows}
+    categories = {row["package"]: row["category"] for row in rows}
 
     assert categories == {
         "altair": CATEGORY_ZOMBIE,
@@ -339,7 +339,7 @@ def test_filter_selects_outdated_regardless_of_category():
     rows = filter_export_rows(_sample_export_rows(), set(), True)
 
     assert [row["package"] for row in rows] == ["altair"]
-    assert rows[0]["Categoria"] == CATEGORY_ZOMBIE
+    assert rows[0]["category"] == CATEGORY_ZOMBIE
 
 
 def test_filter_does_not_duplicate_a_row_matched_twice():
