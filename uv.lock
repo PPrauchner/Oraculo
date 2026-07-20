@@ -629,7 +629,7 @@ requires-dist = [
     { name = "plotly", specifier = ">=6.6.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "requests", specifier = ">=2.33.0" },
-    { name = "streamlit", specifier = ">=1.37.0" },
+    { name = "streamlit", specifier = ">=1.56.0" },
 ]
 
 [package.metadata.requires-dev]
