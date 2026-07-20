@@ -2,56 +2,38 @@
 Traduz o código de erro que `core/` devolve para a frase que o usuário lê.
 
 Responsabilidades:
-- Guardar o texto de cada código de erro de ingestão.
+- Nomear a chave de locale de um código de erro (`error_key`).
 - Compor a frase final com os parâmetros do erro (`format_error`).
 
 `core/` detecta o problema e o nomeia em inglês; a redação, a língua e o ícone são
-decisão de quem renderiza (ADR-0010). Fica em `utils/` — e não dentro de uma página —
-porque `home.py` e `loading.py` exibem os mesmos erros, e é aqui que a resolução por
-`locales/*.json` (ADR-0009) vai entrar no lugar deste dicionário.
+decisão de quem renderiza (ADR-0010). O texto mora em `locales/*.json`, junto com o
+resto da tela (ADR-0009): existe um caminho de tradução só, então o seletor de língua
+alcança o erro como alcança qualquer outro rótulo. Fica em `utils/` — e não dentro de
+uma página — porque `home.py` e `loading.py` exibem os mesmos erros.
 """
 
 from core.ingestion.source import IngestionError
+from utils.i18n import t
 
-# Texto de cada código de erro de `core/ingestion/`. Provisoriamente em português e
-# em código; ADR-0009 move isto para `locales/en.json` e `locales/pt.json`.
-ERROR_MESSAGES: dict[str, str] = {
-    "empty_path": "Informe o caminho do diretório do Projeto-Alvo.",
-    "directory_not_found": "Caminho não encontrado: {path}",
-    "path_is_not_a_directory": "O caminho informado não é um diretório: {path}",
-    "directory_not_readable": "Sem permissão de leitura em: {path}",
-    "directory_read_failed": "Não foi possível ler o diretório: {reason}",
-    "not_a_python_project": (
-        "O caminho não parece um projeto Python: {path}\n"
-        "Esperado, na raiz, um arquivo .py ou uma Declaração "
-        "(pyproject.toml, requirements.txt, environment.yml)."
-    ),
-    "source_missing": "O Projeto-Alvo não foi processado corretamente.",
-    "unsupported_source": (
-        "Fonte do Projeto-Alvo não suportada.\n"
-        "Informe um diretório local ou um archive (zip, tar.gz ou tar)."
-    ),
-    "project_read_failed": "Erro ao ler o Projeto-Alvo: {reason}",
-    "missing_python_and_declaration": (
-        "O Projeto-Alvo deve conter:\n"
-        "  1. Pelo menos um arquivo .py\n"
-        "  2. Arquivo de dependências (requirements.txt, pyproject.toml, "
-        "environment.yml ou .lock)"
-    ),
-    "missing_python_files": (
-        "Nenhum arquivo .py encontrado no Projeto-Alvo.\n"
-        "Certifique-se de que o código-fonte está incluído e fora das Exclusões."
-    ),
-    "missing_declaration": (
-        "Nenhum arquivo de dependências encontrado.\n"
-        "Incluir um dos seguintes: requirements.txt, pyproject.toml, "
-        "environment.yml ou .lock"
-    ),
-}
+# Namespace dos códigos de erro dentro do locale. Sem ele, um código vindo de `core/`
+# poderia colidir com a chave de um rótulo de tela.
+ERROR_KEY_PREFIX = "error."
+
+
+def error_key(code: str) -> str:
+    """Chave de locale correspondente a um código de erro de `core/`.
+
+    Args:
+        code: Código estável em inglês, como `core/ingestion/` o devolve.
+
+    Returns:
+        A chave a procurar em `locales/*.json`.
+    """
+    return f"{ERROR_KEY_PREFIX}{code}"
 
 
 def format_error(error: IngestionError) -> str:
-    """Compõe a frase de um erro devolvido por `core/`.
+    """Compõe a frase de um erro devolvido por `core/`, na língua da tela.
 
     Args:
         error: Par (código, parâmetros) como `core/ingestion/` o devolve.
@@ -62,9 +44,13 @@ def format_error(error: IngestionError) -> str:
         usuário precisa ver.
     """
     code, params = error
-    template = ERROR_MESSAGES.get(code)
+    key = error_key(code)
+    template = t(key)
 
-    if template is None:
+    # `t` devolve a própria chave quando ela falta em todas as línguas. Aqui isso
+    # significa código sem tradução — e o que o usuário vê então é o código, que ao
+    # menos é pesquisável, nunca o identificador de locale, que não diz nada.
+    if template == key:
         return code
 
     try:
