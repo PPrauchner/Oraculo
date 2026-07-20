@@ -36,6 +36,67 @@ def _bordered_container_calls(source: str) -> list[ast.Call]:
     ]
 
 
+def _renderer_of(source: str, key: str) -> str | None:
+    """Método do Streamlit que desenha o rótulo de uma chave do locale.
+
+    Args:
+        source: Código do módulo de tela.
+        key: Chave do locale, como está em `locales/*.json`.
+
+    Returns:
+        O nome do método (`title`, `header`, `caption`, …), ou `None` se a chave não
+        é desenhada no módulo.
+    """
+    tree = ast.parse(source)
+
+    for node in ast.walk(tree):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.args
+        ):
+            continue
+
+        first = node.args[0]
+        if (
+            isinstance(first, ast.Call)
+            and isinstance(first.func, ast.Name)
+            and first.func.id == "t"
+            and first.args
+            and isinstance(first.args[0], ast.Constant)
+            and first.args[0].value == key
+        ):
+            return node.func.attr
+
+    return None
+
+
+def test_the_home_title_steps_down_from_the_largest_heading():
+    """O título é médio, e não o maior nível disponível.
+
+    Em tela larga o `st.title` domina tudo e achata o resto da hierarquia. Um nível
+    abaixo, ele ainda abre a tela mas deixa espaço para as seções existirem —
+    `st.header` acima, `st.subheader` das seções logo abaixo (issue #50).
+    """
+    source = HOME_MODULE.read_text(encoding="utf-8")
+
+    assert _renderer_of(source, "home.title") == "header"
+    assert _renderer_of(source, "home.source.header") == "subheader"
+    assert _renderer_of(source, "home.settings.header") == "subheader"
+
+
+def test_the_home_subtitle_reads_as_a_subtitle():
+    """A linha sob o título tem peso e cor secundários, e vem da API.
+
+    Como `st.write` ela pesava o mesmo que qualquer texto corrido, e a hierarquia
+    título → subtítulo sumia. `st.caption` resolve sem uma linha de CSS: o cinza
+    secundário sai do tema e acompanha os modos claro e escuro sozinho.
+    """
+    source = HOME_MODULE.read_text(encoding="utf-8")
+
+    assert _renderer_of(source, "home.intro") == "caption"
+
+
 def test_both_home_sections_sit_in_a_bordered_container():
     """Informe o Projeto-Alvo e Configurações são duas seções, e a tela precisa dizer isso."""
     source = HOME_MODULE.read_text(encoding="utf-8")

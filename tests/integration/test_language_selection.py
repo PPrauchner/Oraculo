@@ -11,6 +11,10 @@ Responsabilidades:
 - Guardar que nenhum rótulo traduzido encosta em `session_state`.
 - Guardar que a tela fala uma língua só, títulos de navegação inclusive.
 - Guardar que trocar de língua não derruba o Projeto-Alvo já carregado.
+
+O título da home é lido em `app.header`, e não em `app.title`: a issue #50 baixou-o um
+nível para que as seções coubessem na hierarquia. O que se afere aqui continua sendo a
+língua do título, não o tamanho dele.
 """
 
 from pathlib import Path
@@ -47,14 +51,14 @@ def test_the_app_opens_in_english_without_a_lang_in_the_url():
     """Padrão inglês: o projeto virou portfólio e a banca deixou de ser o público."""
     app = _run()
 
-    assert app.title[0].value == translate("home.title", "en")
+    assert app.header[0].value == translate("home.title", "en")
 
 
 def test_a_shared_link_arrives_already_translated():
     """`?lang=pt` na URL é o que faz o link ser compartilhável e sobreviver ao refresh."""
     app = _run("pt")
 
-    assert app.title[0].value == translate("home.title", "pt")
+    assert app.header[0].value == translate("home.title", "pt")
     assert app.sidebar.markdown[1].value == translate("sidebar.subtitle", "pt")
 
 
@@ -63,7 +67,7 @@ def test_a_typed_garbage_lang_still_opens_the_app():
     app = _run("klingon")
 
     assert app.exception == []
-    assert app.title[0].value == translate("home.title", "en")
+    assert app.header[0].value == translate("home.title", "en")
 
 
 def test_the_selector_offers_every_language_in_its_own_name():
@@ -94,7 +98,7 @@ def test_choosing_a_language_retranslates_the_screen():
 
     app.sidebar.selectbox[0].set_value("pt").run()
 
-    assert app.title[0].value == translate("home.title", "pt")
+    assert app.header[0].value == translate("home.title", "pt")
     assert app.sidebar.selectbox[0].label == translate("sidebar.language", "pt")
 
 
@@ -180,7 +184,7 @@ def test_switching_language_keeps_the_loaded_target_project():
 
     assert app.session_state["archive"] is not None
     assert app.session_state["archive_is_valid"]
-    assert app.title[0].value == translate("home.title", "pt")
+    assert app.header[0].value == translate("home.title", "pt")
 
 
 def test_switching_language_keeps_the_checked_exclusions():
