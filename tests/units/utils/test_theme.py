@@ -129,6 +129,48 @@ def test_cores_das_categorias_saem_todas_da_paleta():
         assert colors[label] == declared[token]
 
 
+def _project_modules() -> list[Path]:
+    """Todo módulo do projeto — o que desenha tela e o que não desenha."""
+    return sorted(
+        [PROJECT_ROOT / "main.py"]
+        + [
+            module
+            for directory in ("pages", "utils", "core")
+            for module in (PROJECT_ROOT / directory).rglob("*.py")
+        ]
+    )
+
+
+# Escrever o tema por código: `set_option("theme...")` levanta exceção, porque
+# `theme.base` é `scriptable = False`.
+THEME_WRITE = re.compile(r"set_option\(\s*f?[\"']theme")
+
+# A porta dos fundos: `st._config.set_option` contorna a trava, mas escreve na
+# configuração **global do servidor** — a escolha de um visitante trocaria o tema de
+# todos os outros.
+PRIVATE_CONFIG = re.compile(r"\b_config\b")
+
+
+def test_nenhum_modulo_tenta_escrever_o_tema():
+    """O tema é do mecanismo nativo do Streamlit; o código só lê (issue #48).
+
+    `theme.base` é `scriptable = False` de propósito, e o contorno pela API privada
+    trocaria uma preferência por-sessão, que já funciona, por uma global do servidor.
+    A decisão está registrada em `.out-of-scope/seletor-de-tema-customizado.md`; este
+    teste é o que impede de ela ser refeita sem querer.
+
+    Ler continua liberado — é o que `theme_color` faz com `get_option`.
+    """
+    offenders = {}
+
+    for module in _project_modules():
+        source = module.read_text(encoding="utf-8")
+        if THEME_WRITE.search(source) or PRIVATE_CONFIG.search(source):
+            offenders[module.name] = module.relative_to(PROJECT_ROOT).as_posix()
+
+    assert offenders == {}
+
+
 def test_nenhuma_cor_fixa_sobrou_no_codigo():
     """A paleta existe num lugar só: nenhum hex solto em `pages/` ou `utils/`.
 
