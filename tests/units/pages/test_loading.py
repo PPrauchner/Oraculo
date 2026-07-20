@@ -8,6 +8,7 @@ HTML desbalanceado.
 """
 
 import ast
+import re
 from pathlib import Path
 
 PAGES_DIR = Path(__file__).resolve().parents[3] / "pages"
@@ -64,3 +65,41 @@ def test_html_do_loader_fecha_as_divs_que_abre():
     source = LOADING_MODULE.read_text(encoding="utf-8")
 
     assert source.count("<div") == source.count("</div>")
+
+
+def test_loader_nao_estoura_a_altura_da_viewport():
+    """O bloco de carregamento cabe na tela, sem forçar barra de rolagem.
+
+    O `min-height: 150vh` deixava a tela de carregamento 1,5x mais alta que a
+    viewport: a auditoria inteira rodava com o usuário olhando para uma barra de
+    rolagem que não levava a lugar nenhum (issue #39).
+    """
+    source = LOADING_MODULE.read_text(encoding="utf-8")
+
+    oversized = re.findall(r"(?:min-)?height:\s*(\d+)vh", source)
+
+    assert [size for size in oversized if int(size) > 100] == []
+
+
+def test_o_anel_do_loader_e_redondo():
+    """O "ring" é um círculo: `border-radius: 50%`, não 70%."""
+    source = LOADING_MODULE.read_text(encoding="utf-8")
+
+    assert "border-radius: 70%" not in source
+    assert "border-radius: 50%" in source
+
+
+def test_nenhuma_pagina_injeta_folha_de_estilo_propria():
+    """Nenhuma página redefine a aparência por conta própria.
+
+    `visual_css()` pintava dropzone e botão com um azul só dela, brigando com o
+    tema. Aparência agora vem de `.streamlit/config.toml`; o único `<style>` que
+    sobra é o layout do loader, que não tem equivalente declarativo.
+    """
+    offenders = [
+        module.name
+        for module in PAGES_DIR.glob("*.py")
+        if _count_function_definitions(module.read_text(encoding="utf-8"), "visual_css")
+    ]
+
+    assert offenders == []
