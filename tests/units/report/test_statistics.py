@@ -15,9 +15,9 @@ def test_category_sums_size_and_averages_age():
 
     summary = summarize_category(dependencies)
 
-    assert summary["Quantidade"] == 2
-    assert summary["Tamanho Total"] == 4096
-    assert summary["Idade Média"] == 15
+    assert summary["count"] == 2
+    assert summary["total_size"] == 4096
+    assert summary["average_age"] == 15
 
 
 def test_unavailable_metrics_stay_out_of_the_aggregations():
@@ -34,8 +34,8 @@ def test_unavailable_metrics_stay_out_of_the_aggregations():
 
     summary = summarize_category(dependencies)
 
-    assert summary["Tamanho Total"] == 1024
-    assert summary["Idade Média"] == 10
+    assert summary["total_size"] == 1024
+    assert summary["average_age"] == 10
 
 
 def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
@@ -52,20 +52,20 @@ def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
 
     summary = summarize_category(dependencies)
 
-    assert summary["Quantidade"] == 2
-    assert summary["Sem Tamanho"] == 1
-    assert summary["Sem Idade"] == 1
+    assert summary["count"] == 2
+    assert summary["missing_size"] == 1
+    assert summary["missing_age"] == 1
 
 
 def test_empty_category_reports_unavailable_instead_of_dividing_by_zero():
     """Categoria vazia (ex.: nenhum Zumbi) é estado vazio, não erro."""
     summary = summarize_category([])
 
-    assert summary["Quantidade"] == 0
-    assert summary["Tamanho Total"] is None
-    assert summary["Idade Média"] is None
-    assert summary["Sem Tamanho"] == 0
-    assert summary["Sem Idade"] == 0
+    assert summary["count"] == 0
+    assert summary["total_size"] is None
+    assert summary["average_age"] is None
+    assert summary["missing_size"] == 0
+    assert summary["missing_age"] == 0
 
 
 def test_category_without_any_measured_metric_reports_unavailable():
@@ -81,10 +81,10 @@ def test_category_without_any_measured_metric_reports_unavailable():
 
     summary = summarize_category(dependencies)
 
-    assert summary["Quantidade"] == 1
-    assert summary["Tamanho Total"] is None
-    assert summary["Idade Média"] is None
-    assert summary["Sem Tamanho"] == 1
+    assert summary["count"] == 1
+    assert summary["total_size"] is None
+    assert summary["average_age"] is None
+    assert summary["missing_size"] == 1
 
 
 # ============ summarize_by_category (estratificação por Categoria) ============
@@ -107,10 +107,10 @@ def test_statistics_are_stratified_per_category():
 
     summaries = summarize_by_category(report)
 
-    assert summaries["Todas as Dependências"]["Tamanho Total"] == 1536
-    assert summaries["Zumbis"]["Tamanho Total"] == 512
-    assert summaries["Zumbis"]["Idade Média"] == 400
-    assert summaries["Fantasmas"]["Quantidade"] == 0
+    assert summaries["Todas as Dependências"]["total_size"] == 1536
+    assert summaries["Zumbis"]["total_size"] == 512
+    assert summaries["Zumbis"]["average_age"] == 400
+    assert summaries["Fantasmas"]["count"] == 0
 
 
 def test_statistics_agree_with_the_category_tables():
@@ -124,7 +124,7 @@ def test_statistics_agree_with_the_category_tables():
     summaries = summarize_by_category(report)
 
     for category_label, dependencies in report.items():
-        assert summaries[category_label]["Quantidade"] == len(dependencies)
+        assert summaries[category_label]["count"] == len(dependencies)
 
 
 def test_a_new_category_is_summarized_without_touching_the_aggregation():
@@ -134,7 +134,7 @@ def test_a_new_category_is_summarized_without_touching_the_aggregation():
     summaries = summarize_by_category(report)
 
     assert list(summaries) == ["Categoria Inédita"]
-    assert summaries["Categoria Inédita"]["Tamanho Total"] == 2048
+    assert summaries["Categoria Inédita"]["total_size"] == 2048
 
 
 # ============ format_summary_lines (exibição das estatísticas) ============

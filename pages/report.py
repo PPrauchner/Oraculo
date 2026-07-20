@@ -142,7 +142,7 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
     summaries = summarize_by_category(report_dict)
     columns = st.columns(len(summaries))
     for col, (category, summary) in zip(columns, summaries.items()):
-        col.metric(_category_label(category), summary["Quantidade"])
+        col.metric(_category_label(category), summary["count"])
         for line in format_summary_lines(summary):
             col.caption(line)
 

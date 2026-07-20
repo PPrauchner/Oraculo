@@ -8,6 +8,7 @@ Responsabilidades:
 """
 
 from core.report.normalization import format_age, format_size
+from utils.types import CategorySummary
 
 
 def _available(dependencies: list[dict], metric: str) -> list[float]:
@@ -28,30 +29,30 @@ def _available(dependencies: list[dict], metric: str) -> list[float]:
     return [value for value in values if isinstance(value, (int, float))]
 
 
-def summarize_category(dependencies: list[dict]) -> dict:
+def summarize_category(dependencies: list[dict]) -> CategorySummary:
     """Agrega Quantidade, Tamanho e Idade das dependências de uma categoria.
 
     Args:
         dependencies: Dependências da categoria.
 
     Returns:
-        "Quantidade" (todas as dependências da categoria), "Tamanho Total" e
-        "Idade Média" (só as efetivamente medidas, ou ``None`` quando nenhuma foi),
-        e "Sem Tamanho"/"Sem Idade" com quantas ficaram de fora de cada agregação.
+        `count` (todas as dependências da categoria), `total_size` e `average_age`
+        (só as efetivamente medidas, ou ``None`` quando nenhuma foi), e
+        `missing_size`/`missing_age` com quantas ficaram de fora de cada agregação.
     """
     sizes = _available(dependencies, "size")
     ages = _available(dependencies, "age")
 
     return {
-        "Quantidade": len(dependencies),
-        "Tamanho Total": sum(sizes) if sizes else None,
-        "Idade Média": sum(ages) / len(ages) if ages else None,
-        "Sem Tamanho": len(dependencies) - len(sizes),
-        "Sem Idade": len(dependencies) - len(ages),
+        "count": len(dependencies),
+        "total_size": sum(sizes) if sizes else None,
+        "average_age": sum(ages) / len(ages) if ages else None,
+        "missing_size": len(dependencies) - len(sizes),
+        "missing_age": len(dependencies) - len(ages),
     }
 
 
-def summarize_by_category(report: dict[str, list[dict]]) -> dict[str, dict]:
+def summarize_by_category(report: dict[str, list[dict]]) -> dict[str, CategorySummary]:
     """Estratifica as estatísticas por Categoria (US-06).
 
     Percorre as categorias que o relatório trouxer, sem lista fixa: acrescentar
@@ -88,7 +89,7 @@ def _with_exclusion_note(display: str, missing: int, total: int) -> str:
     return f"{display} ({missing} de {total} sem dado)"
 
 
-def format_summary_lines(summary: dict) -> list[str]:
+def format_summary_lines(summary: CategorySummary) -> list[str]:
     """Formata as estatísticas de uma categoria para exibição.
 
     Args:
@@ -98,8 +99,8 @@ def format_summary_lines(summary: dict) -> list[str]:
         Uma linha para o Tamanho somado e outra para a Idade média — "N/D" quando
         a categoria está vazia ou nenhuma dependência dela teve a métrica medida.
     """
-    total = summary["Quantidade"]
-    average_age = summary["Idade Média"]
+    total = summary["count"]
+    average_age = summary["average_age"]
     if average_age is None:
         readable_age = format_age(None)
     else:
@@ -107,13 +108,13 @@ def format_summary_lines(summary: dict) -> list[str]:
 
     return [
         _with_exclusion_note(
-            f"Tamanho: {format_size(summary['Tamanho Total'])}",
-            summary["Sem Tamanho"],
+            f"Tamanho: {format_size(summary['total_size'])}",
+            summary["missing_size"],
             total,
         ),
         _with_exclusion_note(
             f"Idade média: {readable_age}",
-            summary["Sem Idade"],
+            summary["missing_age"],
             total,
         ),
     ]

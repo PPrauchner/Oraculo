@@ -74,6 +74,27 @@ class ReportRow(TypedDict):
     origin: str
 
 
+class CategorySummary(TypedDict):
+    """As agregações de uma Categoria, como `summarize_category` as produz.
+
+    Ficou de fora da renomeação da ADR-0008 por não tocar o CSV nem descrever uma
+    dependência — mas é registro que atravessa `core/report/` até a tela, e o mesmo
+    argumento do ADR-0011 vale: chave escrita errada num `dict` solto devolve o
+    default e a métrica sai vazia, sem erro e sem aviso.
+
+    `None` em `total_size`/`average_age` não é zero: significa que nenhuma
+    dependência da categoria teve a métrica medida, e somar ou mediar o
+    Indeterminado como 0 inventaria um número que o PyPI não deu (ADR-0004).
+    """
+
+    count: int
+    total_size: float | None
+    average_age: float | None
+    # Quantas ficaram de fora de cada agregação, para que a média não engane quem lê.
+    missing_size: int
+    missing_age: int
+
+
 class ExportRow(TypedDict):
     """A linha do CSV, como sai de `build_export_rows`.
 
