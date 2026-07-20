@@ -1,7 +1,7 @@
 from core.report.statistics import (
-    format_summary_lines,
     summarize_by_category,
     summarize_category,
+    summary_metrics,
 )
 from utils.constants import ORIGIN_PRODUCTION, UNKNOWN
 
@@ -137,11 +137,15 @@ def test_a_new_category_is_summarized_without_touching_the_aggregation():
     assert summaries["Categoria Inédita"]["total_size"] == 2048
 
 
-# ============ format_summary_lines (exibição das estatísticas) ============
+# ============ summary_metrics (as estatísticas descritas para exibição) ============
 
 
-def test_summary_lines_show_size_in_readable_units_and_age_in_days():
-    """Tamanho somado sai em KB/MB; Idade média, em dias."""
+def test_summary_metrics_carry_the_value_not_the_sentence():
+    """`core/` descreve a métrica; quem a redige é `utils/display.py` (ADR-0010).
+
+    Enquanto isto devolvia "Tamanho: 2.0 MB" pronto, a caption chegava à tela em
+    português sob `?lang=en` e não havia mais o que traduzir.
+    """
     summary = summarize_category(
         [
             {"package": "a", "size": 1024 * 1024, "age": 10},
@@ -149,13 +153,15 @@ def test_summary_lines_show_size_in_readable_units_and_age_in_days():
         ]
     )
 
-    lines = format_summary_lines(summary)
+    metrics = summary_metrics(summary)
 
-    assert lines == ["Tamanho: 2.0 MB", "Idade média: 15 dias"]
+    assert [metric["metric"] for metric in metrics] == ["size", "age"]
+    assert metrics[0]["value"] == 2 * 1024 * 1024  # bytes crus, não "2.0 MB"
+    assert metrics[1]["value"] == 15  # dias, não "15 dias"
 
 
-def test_summary_lines_disclose_how_many_dependencies_were_left_out():
-    """A média não engana: a linha diz sobre quantas dependências ela foi calculada."""
+def test_summary_metrics_disclose_how_many_dependencies_were_left_out():
+    """A média não engana: a contagem viaja junto do valor que ela afeta."""
     summary = summarize_category(
         [
             {"package": "a", "size": 1024, "age": 10},
@@ -163,16 +169,24 @@ def test_summary_lines_disclose_how_many_dependencies_were_left_out():
         ]
     )
 
-    lines = format_summary_lines(summary)
+    metrics = summary_metrics(summary)
 
-    assert lines == [
-        "Tamanho: 1.0 KB (1 de 2 sem dado)",
-        "Idade média: 10 dias (1 de 2 sem dado)",
-    ]
+    assert all(metric["missing"] == 1 for metric in metrics)
+    assert all(metric["total"] == 2 for metric in metrics)
 
 
-def test_summary_lines_of_an_empty_category_report_unavailable():
-    """Categoria vazia exibe o Indeterminado, sem nota — não havia o que excluir."""
-    lines = format_summary_lines(summarize_category([]))
+def test_summary_metrics_of_an_empty_category_have_no_value_and_nothing_excluded():
+    """Categoria vazia não tem valor nem exclusão — não havia o que excluir."""
+    metrics = summary_metrics(summarize_category([]))
 
-    assert lines == [f"Tamanho: {UNKNOWN}", f"Idade média: {UNKNOWN}"]
+    assert all(metric["value"] is None for metric in metrics)
+    assert all(metric["missing"] == 0 for metric in metrics)
+
+
+def test_summary_metrics_keep_the_average_unrounded():
+    """Arredondar é decisão de exibição: a média sai como foi calculada."""
+    summary = summarize_category(
+        [{"package": "a", "age": 10}, {"package": "b", "age": 11}]
+    )
+
+    assert summary_metrics(summary)[1]["value"] == 10.5

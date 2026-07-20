@@ -62,16 +62,26 @@ class Dependency(TypedDict):
 
 
 class ReportRow(TypedDict):
-    """A linha exibida na tabela do relatório, como sai de `normalize`."""
+    """A linha que alimenta a tabela do relatório, como sai de `normalize`.
+
+    Carrega dado e identidade, não texto: quem escolhe unidade, redação e língua é
+    `utils/display.py` (ADR-0010). Enquanto `normalize` devolvia "30 dias" pronto,
+    a tabela respondia em português sob `?lang=en` e não havia mais o que traduzir.
+    """
 
     package: str
     used_version: str
     pypi_version: str
+    # Identidade estável (`STATUS_*`), não rótulo — ela também é comparada.
     status: str
-    # Já formatados para leitura ("1.2 MB", "30 dias"), diferente da exportação.
-    size: str
-    age: str
+    # Crus, como na exportação: bytes e dias inteiros, ou o Indeterminado.
+    size: RawMetric
+    age: RawMetric
     origin: str
+    # Se Tamanho e Idade se referem à versão mais recente do PyPI em vez da Versão
+    # Usada — o caso do Fantasma, que não tem Declaração. A tabela explicita isso;
+    # sem a nota, ela alegaria sobre a versão que roda um número que descreve outra.
+    metrics_from_latest: bool
 
 
 class CategorySummary(TypedDict):
@@ -93,6 +103,25 @@ class CategorySummary(TypedDict):
     # Quantas ficaram de fora de cada agregação, para que a média não engane quem lê.
     missing_size: int
     missing_age: int
+
+
+class SummaryMetric(TypedDict):
+    """Uma das estatísticas de uma Categoria, antes de virar caption.
+
+    `format_summary_lines` devolvia "Tamanho: 1.2 MB (1 de 2 sem dado)" — frase
+    pronta, em português, produzida dentro de `core/`. Este é o par que a ADR-0010
+    pede no lugar: a identidade da métrica e os dados que a descrevem, com a
+    redação por conta de `utils/display.py`.
+    """
+
+    # "size" ou "age": identidade estável, não rótulo.
+    metric: str
+    # `None` quando nenhuma dependência da categoria teve a métrica medida.
+    value: float | None
+    # Quantas ficaram de fora, e de quantas — uma média calculada sobre metade dos
+    # pacotes, sem aviso, engana quem lê.
+    missing: int
+    total: int
 
 
 class ExportRow(TypedDict):

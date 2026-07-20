@@ -31,8 +31,12 @@ DEPENDENCY_FIELDS = {
     "origin",
 }
 
-# A linha exibida na tabela do relatório, como sai de `normalize`.
-REPORT_FIELDS = DEPENDENCY_FIELDS
+# A linha que alimenta a tabela do relatório, como sai de `normalize`. Carrega os
+# mesmos campos da Dependência mais a nota de que Tamanho e Idade se referem à
+# versão mais recente — o caso do Fantasma, que não tem Versão Usada. Aquilo era
+# texto colado no valor ("1.2 MB (última versão)"); virou dado, para que a tela
+# possa dizê-lo na língua dela (ADR-0010).
+REPORT_FIELDS = DEPENDENCY_FIELDS | {"metrics_from_latest"}
 
 # A ordem é o contrato: o cabeçalho do CSV sai daqui (ADR-0008), e trocar a ordem
 # desalinha exports do mesmo Projeto-Alvo feitos em datas diferentes.

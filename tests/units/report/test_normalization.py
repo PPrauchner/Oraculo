@@ -48,9 +48,11 @@ def test_normalize_with_valid_data():
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
             "status": STATUS_OUTDATED,
-            "size": "2.0 MB",
-            "age": "30 dias",
+            # Crus: quem os veste em "2.0 MB" e "30 dias" e `utils/display.py`.
+            "size": 2 * 1024 * 1024,
+            "age": 30,
             "origin": "Production",
+            "metrics_from_latest": False,
         }
     ]
 
@@ -106,26 +108,23 @@ def test_normalize_missing_origin_defaults_na():
     assert result[0]["origin"] == "N/A"
 
 
-def test_normalize_formats_tamanho_as_readable_units():
-    """Tamanho cru (bytes) vira unidade legível (KB/MB) na tabela."""
+def test_normalize_carries_tamanho_and_idade_raw():
+    """Tamanho e Idade atravessam crus: a unidade e a lingua sao decisao de tela.
+
+    Enquanto `normalize` devolvia "2.0 MB" e "30 dias", a tabela respondia em
+    portugues sob `?lang=en` — o dado ja tinha virado frase e nao havia o que
+    traduzir (ADR-0010). Quem os formata agora e `utils/display.py`.
+    """
     input_data = [
-        {"package": "big", "size": 2 * 1024 * 1024, "origin": "Production"},
-        {"package": "small", "size": 500 * 1024, "origin": "Production"},
+        {"package": "big", "size": 2 * 1024 * 1024, "age": 30, "origin": "Production"},
+        {"package": "small", "size": 500 * 1024, "age": 1, "origin": "Production"},
     ]
 
     result = normalize(input_data)
 
-    assert result[0]["size"] == "2.0 MB"
-    assert result[1]["size"] == "500.0 KB"
-
-
-def test_normalize_formats_idade_in_days():
-    """Idade crua (dias inteiros) é exibida em dias."""
-    input_data = [{"package": "pkg", "age": 30, "origin": "Production"}]
-
-    result = normalize(input_data)
-
-    assert result[0]["age"] == "30 dias"
+    assert result[0]["size"] == 2 * 1024 * 1024
+    assert result[0]["age"] == 30
+    assert result[1]["size"] == 500 * 1024
 
 
 def test_normalize_tamanho_idade_indisponivel_pass_through():
@@ -148,14 +147,17 @@ def test_normalize_missing_tamanho_idade_defaults_indisponivel():
     assert result[0]["age"] == UNKNOWN
 
 
-def test_normalize_ghost_marks_reference_as_latest_version():
-    """Fantasma (sem Origem) explicita que Tamanho/Idade são da versão mais recente."""
+def test_normalize_marks_that_a_ghost_metric_refers_to_the_latest_version():
+    """Fantasma (sem Origem) nao tem Versao Usada: a metrica e da mais recente.
+
+    A nota que a tabela exibe nasce deste booleano, e nao de texto colado no valor:
+    a redacao e a lingua sao de `utils/display.py` (ADR-0010).
+    """
     ghost = [{"package": "requests", "size": 1024 * 1024, "age": 5}]
+    declared = [{"package": "pandas", "origin": ORIGIN_PRODUCTION, "size": 1024}]
 
-    result = normalize(ghost)
-
-    assert "última versão" in result[0]["size"]
-    assert "última versão" in result[0]["age"]
+    assert normalize(ghost)[0]["metrics_from_latest"] is True
+    assert normalize(declared)[0]["metrics_from_latest"] is False
 
 
 # ============ build_export_rows (esquema de exportação US-06/US-07) ============

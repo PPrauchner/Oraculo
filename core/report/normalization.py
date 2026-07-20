@@ -12,8 +12,6 @@ Saída:
 - Estrutura de dados organizada (ex: Dicionário)
 """
 
-from typing import Callable
-
 from core.analysis.ghost_analizer import is_ghost
 from utils.constants import (
     CATEGORY_GHOST,
@@ -28,108 +26,52 @@ from utils.constants import (
 )
 from utils.types import Dependency, ExportRow, ReportRow
 
-_BYTES_PER_KB = 1024
-_BYTES_PER_MB = 1024 * 1024
-_LATEST_VERSION_NOTE = "última versão"
-
-
-def format_size(size: object) -> str:
-    """Formata o Tamanho cru (bytes) em unidade legível (KB/MB).
-
-    Args:
-        size: Bytes inteiros da Versão Usada, ou o sentinela de indisponibilidade.
-
-    Returns:
-        "X.Y MB" a partir de 1 MB, "X.Y KB" abaixo disso, ou o Indeterminado
-        quando não medido — nunca 0 para esse caso.
-    """
-    if not isinstance(size, (int, float)):
-        return UNKNOWN
-
-    if size >= _BYTES_PER_MB:
-        return f"{size / _BYTES_PER_MB:.1f} MB"
-    return f"{size / _BYTES_PER_KB:.1f} KB"
-
-
-def format_age(age: object) -> str:
-    """Formata a Idade crua (dias inteiros) em texto legível.
-
-    Args:
-        age: Dias inteiros desde a publicação da Versão Usada, ou o sentinela de
-            indisponibilidade.
-
-    Returns:
-        "N dia(s)", ou o Indeterminado quando não medido.
-    """
-    if not isinstance(age, (int, float)):
-        return UNKNOWN
-
-    days = int(age)
-    return f"{days} dia" if days == 1 else f"{days} dias"
-
-
-def _display_metric(
-    raw: object, is_fantasma: bool, formatter: Callable[[object], str]
-) -> str:
-    """Formata Tamanho/Idade e, para Fantasma, explicita que é da versão mais recente.
-
-    Args:
-        raw: Valor cru da métrica.
-        is_fantasma: Se a dependência é Fantasma (sem Declaração/Versão Usada), caso
-            em que a referência é a versão mais recente do PyPI.
-        formatter: `format_size` ou `format_age`.
-
-    Returns:
-        Texto legível, anotado com "(última versão)" quando Fantasma e disponível.
-    """
-    display = formatter(raw)
-    if is_fantasma and display != UNKNOWN:
-        display = f"{display} ({_LATEST_VERSION_NOTE})"
-    return display
-
 
 def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
-    """
-    Constrói um Dicionário consolidando os resultados das análises.
+    """Seleciona, de cada Dependência, o que a tabela do relatório exibe.
+
+    Devolve dado e identidade, nunca texto pronto: Tamanho em bytes, Idade em dias,
+    Status como identidade estável. Quem escolhe unidade, redação e língua é
+    `utils/display.py` (ADR-0010) — enquanto esta função devolvia "30 dias", a
+    tabela respondia em português sob `?lang=en`.
 
     Args:
         list_analyzed: Dependências com seus resultados de análise.
 
     Returns:
-        As linhas do relatório final, com Tamanho e Idade já formatados.
+        Uma linha por dependência, ou uma linha de Não Aplicável quando não há
+        nenhuma — a tabela precisa de forma mesmo vazia.
     """
 
     rows: list[ReportRow] = []
 
     for dep in list_analyzed:
-        # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): seu
-        # Tamanho/Idade referem-se à versão mais recente, e a tabela o explicita.
-        is_fantasma = is_ghost(dep)
         rows.append(
             {
-                "package": dep.get("package", "N/A"),
-                "used_version": dep.get("used_version", "N/A"),
-                "pypi_version": dep.get("pypi_version", "N/A"),
+                "package": dep.get("package", ORIGIN_UNAVAILABLE),
+                "used_version": dep.get("used_version", ORIGIN_UNAVAILABLE),
+                "pypi_version": dep.get("pypi_version", ORIGIN_UNAVAILABLE),
                 "status": dep.get("status", STATUS_UNKNOWN),
-                "size": _display_metric(
-                    dep.get("size", UNKNOWN), is_fantasma, format_size
-                ),
-                "age": _display_metric(
-                    dep.get("age", UNKNOWN), is_fantasma, format_age
-                ),
-                "origin": dep.get("origin", "N/A"),
+                "size": dep.get("size", UNKNOWN),
+                "age": dep.get("age", UNKNOWN),
+                "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
+                # Fantasma não tem Declaração, logo não tem Versão Usada (CONTEXT.md):
+                # seu Tamanho/Idade referem-se à versão mais recente do PyPI, e a
+                # tabela precisa poder dizer isso.
+                "metrics_from_latest": is_ghost(dep),
             }
         )
 
     if not rows:
         empty: ReportRow = {
-            "package": "N/A",
-            "used_version": "N/A",
-            "pypi_version": "N/A",
-            "status": "N/A",
-            "size": "N/A",
-            "age": "N/A",
-            "origin": "N/A",
+            "package": ORIGIN_UNAVAILABLE,
+            "used_version": ORIGIN_UNAVAILABLE,
+            "pypi_version": ORIGIN_UNAVAILABLE,
+            "status": ORIGIN_UNAVAILABLE,
+            "size": ORIGIN_UNAVAILABLE,
+            "age": ORIGIN_UNAVAILABLE,
+            "origin": ORIGIN_UNAVAILABLE,
+            "metrics_from_latest": False,
         }
         return [empty]
     return rows

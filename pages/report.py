@@ -9,13 +9,14 @@ import streamlit as st
 import plotly.express as px
 from utils.sidebar import sidebar
 from core.report.normalization import normalize, build_export_rows, filter_export_rows
-from core.report.statistics import format_summary_lines, summarize_by_category
+from core.report.statistics import summarize_by_category, summary_metrics
 from core.report.export import export_to_csv, export_to_json
 from utils.constants import (
     CATEGORY_ZOMBIE,
     CATEGORY_GHOST,
     STATUS_OUTDATED,
 )
+from utils.display import display_rows, format_summary_metric
 from utils.i18n import t
 from utils.theme import status_colors
 
@@ -115,8 +116,8 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     """
     Renderiza abas interativas com tabelas de dependências por categoria.
 
-    Cada aba contém uma tabela formatada via normalize() associada
-    a uma categoria de dependências.
+    `normalize` seleciona o dado e `display_rows` o veste na língua da tela: a
+    coluna e o valor de Status só viram texto aqui, na renderização (ADR-0010).
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
@@ -124,7 +125,7 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     tabs = st.tabs([_category_label(category) for category in report_dict])
     for tab, dependencies in zip(tabs, report_dict.values()):
         with tab:
-            st.table(normalize(dependencies))
+            st.table(display_rows(normalize(dependencies)))
 
 
 def _render_metrics(report_dict: dict[str, list]) -> None:
@@ -143,8 +144,8 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
     columns = st.columns(len(summaries))
     for col, (category, summary) in zip(columns, summaries.items()):
         col.metric(_category_label(category), summary["count"])
-        for line in format_summary_lines(summary):
-            col.caption(line)
+        for metric in summary_metrics(summary):
+            col.caption(format_summary_metric(metric))
 
 
 def _render_health_index(report_dict: dict[str, list]) -> None:
@@ -182,20 +183,27 @@ def _render_donut_chart(report_dict: dict[str, list]) -> None:
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
     """
+    # Nomes das colunas do DataFrame do Plotly — um quarto vocabulário, e um que
+    # o usuário lê: é assim que a fatia se identifica no hover. "Quantidade" ficava
+    # em português sob `?lang=en`, e "Status" nomeava categorias, não o Status da
+    # dependência — colisão com a coluna da tabela ao lado.
+    category_column = t("report.chart.category")
+    count_column = t("report.chart.count")
+
     chart_data = {
-        "Status": [_category_label(REPORT_HEALTHY)],
-        "Quantidade": [_calculate_healthy_dependencies(report_dict)],
+        category_column: [_category_label(REPORT_HEALTHY)],
+        count_column: [_calculate_healthy_dependencies(report_dict)],
     }
 
     for category in REPORT_CATEGORIES:
         if category != REPORT_ALL and category in report_dict:
-            chart_data["Status"].append(_category_label(category))
-            chart_data["Quantidade"].append(len(report_dict[category]))
+            chart_data[category_column].append(_category_label(category))
+            chart_data[count_column].append(len(report_dict[category]))
 
     figure = px.pie(
         chart_data,
-        values="Quantidade",
-        names="Status",
+        values=count_column,
+        names=category_column,
         hole=0.4,
         # A cor de cada Categoria vem da paleta do tema, então a fatia acompanha o
         # modo claro/escuro em vez de carregar um hex próprio. O mapa é rechaveado

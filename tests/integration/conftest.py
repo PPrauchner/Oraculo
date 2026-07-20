@@ -58,9 +58,31 @@ def visible_text() -> Callable[[AppTest], set[str]]:
                     if isinstance(option, str)
                 )
 
-        return found
+        return found | _table_text(app)
 
     return collect
+
+
+def _table_text(app: AppTest) -> set[str]:
+    """Cabeçalho e células das tabelas da tela.
+
+    A tabela do relatório carrega rótulo em dois lugares — o nome da coluna e o
+    valor de Status e Origem —, e nenhum deles é `label` nem `value` de widget.
+    Sem varrê-la, uma célula em português passaria pela guarda de língua sem ser
+    vista, que foi exatamente o que aconteceu enquanto `normalize` devolvia frase.
+    """
+    found: set[str] = set()
+
+    for table in getattr(app, "table", []):
+        frame = table.value
+        if frame is None:
+            continue
+
+        found.update(str(column) for column in frame.columns)
+        for column in frame.columns:
+            found.update(str(cell) for cell in frame[column])
+
+    return found
 
 
 @pytest.fixture
