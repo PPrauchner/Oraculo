@@ -3,7 +3,8 @@ Testes estruturais da página de carregamento.
 
 Garante que a função de renderização do carregamento tenha uma única
 definição — a versão duplicada é código morto que o Python descarta e
-apenas engana quem lê — e que o carregamento não encene espera.
+apenas engana quem lê — e que o carregamento não encene espera nem emita
+HTML desbalanceado.
 """
 
 import ast
@@ -56,3 +57,10 @@ def test_nenhuma_pagina_encena_espera():
     }
 
     assert offenders == {}
+
+
+def test_html_do_loader_fecha_as_divs_que_abre():
+    """O loader fecha exatamente as `<div>` que abre, sem fechamento órfão."""
+    source = LOADING_MODULE.read_text(encoding="utf-8")
+
+    assert source.count("<div") == source.count("</div>")
