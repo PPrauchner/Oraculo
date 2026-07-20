@@ -14,14 +14,17 @@ como temas, cores, fontes e outros parâmetros de estilo.
 import sys
 
 
-# Categoria (rótulo do gráfico) -> token semântico do tema. O Streamlit já adapta
-# esses tokens aos dois fundos, então a Categoria não precisa saber se a tela está
-# clara ou escura.
+# Categoria (identidade estável, como `pages/report.py` a nomeia) -> token semântico
+# do tema. O Streamlit já adapta esses tokens aos dois fundos, então a Categoria não
+# precisa saber se a tela está clara ou escura.
+#
+# A chave é a identidade, não o rótulo: o rótulo muda com a língua (ADR-0009) e a
+# cor de uma Categoria não pode depender do idioma em que a tela está aberta.
 STATUS_COLOR_TOKENS = {
-    "OK ✅": "greenColor",  # Saudável
-    "Zumbis": "violetColor",
-    "Fantasmas": "redColor",
-    "Desatualizadas": "blueColor",
+    "healthy": "greenColor",  # Saudável
+    "zombies": "violetColor",
+    "ghosts": "redColor",
+    "outdated": "blueColor",
 }
 # ============ Cores =================#
 
