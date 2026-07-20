@@ -21,6 +21,7 @@ import streamlit as st
 from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
 from utils.messages import format_error
+from utils.i18n import t
 from core.ingestion.decompressor import process_uploaded_file
 from core.ingestion.filter import get_unique_folders, validate_project_structure
 from core.ingestion.source import ProjectSource, open_directory
@@ -44,7 +45,7 @@ def visual_css():
 
 
 def principal_interface():
-    st.title("🚀 Iniciar Auditoria")
+    st.title(t("home.title"))
     st.write("Informe o Projeto-Alvo por upload de archive ou por diretório local")
 
 
