@@ -43,8 +43,8 @@ PYPI_BASE_URL = "https://pypi.org/pypi"
 # De qual Declaração — e de qual seção dela — um pacote veio. Separa Dependência
 # de Produção de Dependência de Desenvolvimento (ver CONTEXT.md e ADR-0003).
 
-ORIGIN_PRODUCTION = "Produção"
-ORIGIN_DEVELOPMENT = "Desenvolvimento"
+ORIGIN_PRODUCTION = "Production"
+ORIGIN_DEVELOPMENT = "Development"
 # Fantasma não vem de Declaração, logo não tem Origem: é assim que ele se identifica
 # no relatório e na exportação (ver `is_ghost`).
 ORIGIN_UNAVAILABLE = "N/A"
@@ -55,13 +55,13 @@ ORIGIN_UNAVAILABLE = "N/A"
 # análise (Zumbi, Fantasma) — o restante auditado é Saudável. Desatualizada NÃO é
 # Categoria: é coluna própria, pois uma dependência pode ser Zumbi e Desatualizada ao
 # mesmo tempo (ver CONTEXT.md e a issue US-06/US-07).
-CATEGORY_ZOMBIE = "Zumbi"
-CATEGORY_GHOST = "Fantasma"
-CATEGORY_HEALTHY = "Saudável"
+CATEGORY_ZOMBIE = "Zombie"
+CATEGORY_GHOST = "Ghost"
+CATEGORY_HEALTHY = "Healthy"
 
 # Marca da coluna Desatualizada na exportação (booleano legível).
-OUTDATED_YES = "Sim"
-OUTDATED_NO = "Não"
+OUTDATED_YES = "Yes"
+OUTDATED_NO = "No"
 # ============ Categoria =================#
 
 # ============ Lock =================#

@@ -34,7 +34,7 @@ def test_normalize_with_valid_data():
             "Status": "Desatualizado",
             "Tamanho": 2 * 1024 * 1024,
             "Idade": 30,
-            "Origem": "Produção",
+            "Origem": "Production",
             "Extra": "Deveria ser ignorado"
         }
     ]
@@ -47,7 +47,7 @@ def test_normalize_with_valid_data():
             "Status": "Desatualizado",
             "Tamanho": "2.0 MB",
             "Idade": "30 dias",
-            "Origem": "Produção",
+            "Origem": "Production",
         }
     ]
 
@@ -87,14 +87,14 @@ def test_normalize_multiple_items():
 def test_normalize_surfaces_origin():
     """O relatório distingue Produção de Desenvolvimento expondo a Origem."""
     input_data = [
-        {"Pacote": "requests", "Origem": "Produção"},
-        {"Pacote": "pytest", "Origem": "Desenvolvimento"},
+        {"Pacote": "requests", "Origem": "Production"},
+        {"Pacote": "pytest", "Origem": "Development"},
     ]
 
     result = normalize(input_data)
 
-    assert result[0]["Origem"] == "Produção"
-    assert result[1]["Origem"] == "Desenvolvimento"
+    assert result[0]["Origem"] == "Production"
+    assert result[1]["Origem"] == "Development"
 
 def test_normalize_missing_origin_defaults_na():
     """Sem Origem informada, o relatório mostra 'N/A' em vez de quebrar."""
@@ -106,8 +106,8 @@ def test_normalize_missing_origin_defaults_na():
 def test_normalize_formats_tamanho_as_readable_units():
     """Tamanho cru (bytes) vira unidade legível (KB/MB) na tabela."""
     input_data = [
-        {"Pacote": "big", "Tamanho": 2 * 1024 * 1024, "Origem": "Produção"},
-        {"Pacote": "small", "Tamanho": 500 * 1024, "Origem": "Produção"},
+        {"Pacote": "big", "Tamanho": 2 * 1024 * 1024, "Origem": "Production"},
+        {"Pacote": "small", "Tamanho": 500 * 1024, "Origem": "Production"},
     ]
 
     result = normalize(input_data)
@@ -118,7 +118,7 @@ def test_normalize_formats_tamanho_as_readable_units():
 
 def test_normalize_formats_idade_in_days():
     """Idade crua (dias inteiros) é exibida em dias."""
-    input_data = [{"Pacote": "pkg", "Idade": 30, "Origem": "Produção"}]
+    input_data = [{"Pacote": "pkg", "Idade": 30, "Origem": "Production"}]
 
     result = normalize(input_data)
 
@@ -128,7 +128,7 @@ def test_normalize_formats_idade_in_days():
 def test_normalize_tamanho_idade_indisponivel_pass_through():
     """Tamanho/Idade indisponíveis (N/D) permanecem N/D, nunca 0."""
     input_data = [
-        {"Pacote": "pkg", "Tamanho": "N/D", "Idade": "N/D", "Origem": "Produção"}
+        {"Pacote": "pkg", "Tamanho": "N/D", "Idade": "N/D", "Origem": "Production"}
     ]
 
     result = normalize(input_data)
@@ -139,7 +139,7 @@ def test_normalize_tamanho_idade_indisponivel_pass_through():
 
 def test_normalize_missing_tamanho_idade_defaults_indisponivel():
     """Sem Tamanho/Idade informados, exibe indisponível em vez de quebrar."""
-    result = normalize([{"Pacote": "numpy", "Origem": "Produção"}])
+    result = normalize([{"Pacote": "numpy", "Origem": "Production"}])
 
     assert result[0]["Tamanho"] == "N/D"
     assert result[0]["Idade"] == "N/D"

@@ -31,7 +31,7 @@ OUTDATED_DEPENDENCY = {
     "Status": "Desatualizado",
     "Tamanho": 100_000,
     "Idade": 400,
-    "Origem": "Produção",
+    "Origem": "Production",
 }
 
 ZOMBIE_DEPENDENCY = {
@@ -41,7 +41,7 @@ ZOMBIE_DEPENDENCY = {
     "Status": "Atualizado",
     "Tamanho": 50_000,
     "Idade": 100,
-    "Origem": "Produção",
+    "Origem": "Production",
 }
 
 CATEGORY_KEYS = (
