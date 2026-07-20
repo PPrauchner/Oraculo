@@ -2,23 +2,40 @@
 Testes das constantes de estilo da aplicação.
 
 Cobre o mapa de tokens por status (STATUS_COLOR_TOKENS), cujas chaves precisam
-casar exatamente com os rótulos que o gráfico de rosca usa em pages/report.py,
+casar exatamente com as categorias que o gráfico de rosca usa em pages/report.py,
 sem espaços parasitas, e cujos valores são tokens semânticos do tema — não hexes.
 """
 
 import re
 from pathlib import Path
 
+import pytest
+
 from utils.constants import STATUS_COLOR_TOKENS
+from utils.i18n import available_languages, load_locale
 
-# Rótulos que o gráfico de rosca realmente usa (pages/report.py):
-# "OK ✅" (saudáveis) + os valores de CATEGORY_NAMES para as categorias problemáticas.
-DONUT_STATUS_LABELS = {"OK ✅", "Zumbis", "Fantasmas", "Desatualizadas"}
+# Categorias que o gráfico de rosca realmente desenha (pages/report.py): "healthy"
+# (as sem problema apontado) mais as três categorias problemáticas. São identidades
+# estáveis, não rótulos — o rótulo muda com a língua e a cor não pode mudar junto.
+DONUT_CATEGORIES = {"healthy", "zombies", "ghosts", "outdated"}
 
 
-def test_color_map_keys_match_donut_labels():
-    """As chaves do mapa de tokens casam exatamente com os rótulos do gráfico."""
-    assert set(STATUS_COLOR_TOKENS.keys()) == DONUT_STATUS_LABELS
+def test_color_map_keys_match_donut_categories():
+    """As chaves do mapa de tokens casam exatamente com as categorias do gráfico."""
+    assert set(STATUS_COLOR_TOKENS.keys()) == DONUT_CATEGORIES
+
+
+@pytest.mark.parametrize("language", available_languages())
+def test_every_colored_category_has_a_label_to_show(language: str):
+    """A categoria colorida no donut tem rótulo em toda língua.
+
+    A chave do mapa é a identidade, e é o rótulo que o Plotly casa com a cor: uma
+    categoria sem entrada no locale desenharia a fatia com o identificador cru.
+    """
+    labels = load_locale(language)
+
+    for category in STATUS_COLOR_TOKENS:
+        assert f"report.category.{category}" in labels
 
 
 def test_color_map_keys_have_no_stray_whitespace():
