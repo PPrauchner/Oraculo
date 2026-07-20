@@ -116,7 +116,7 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[DeclarationE
     for entry in entries:
         result = parse_dependency_string(str(entry))
         if result and result["package"] != "python":
-            result["Origem"] = origin
+            result["origin"] = origin
             dependencies.append(result)
     return dependencies
 
@@ -274,7 +274,7 @@ def parse_environment_yml(content: str) -> List[DeclarationEntry]:
                 continue
             result = _clean_conda_dep(entry)
             if result:
-                result["Origem"] = ORIGIN_PRODUCTION
+                result["origin"] = ORIGIN_PRODUCTION
                 dependencies.append(result)
             continue
 
@@ -368,7 +368,7 @@ def parse_lock(content: str) -> List[DeclarationEntry]:
                 {
                     "package": name.lower(),
                     "used_version": version if version else "",
-                    "Origem": ORIGIN_PRODUCTION,
+                    "origin": ORIGIN_PRODUCTION,
                 }
             )
 

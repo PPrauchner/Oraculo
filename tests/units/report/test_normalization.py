@@ -16,7 +16,7 @@ EXPORT_SCHEMA = [
     "Projeto",
     "package",
     "Categoria",
-    "Origem",
+    "origin",
     "used_version",
     "pypi_version",
     "Desatualizada",
@@ -34,7 +34,7 @@ def test_normalize_with_valid_data():
             "status": "Desatualizado",
             "Tamanho": 2 * 1024 * 1024,
             "Idade": 30,
-            "Origem": "Production",
+            "origin": "Production",
             "Extra": "Deveria ser ignorado"
         }
     ]
@@ -47,7 +47,7 @@ def test_normalize_with_valid_data():
             "status": "Desatualizado",
             "Tamanho": "2.0 MB",
             "Idade": "30 dias",
-            "Origem": "Production",
+            "origin": "Production",
         }
     ]
 
@@ -87,27 +87,27 @@ def test_normalize_multiple_items():
 def test_normalize_surfaces_origin():
     """O relatório distingue Produção de Desenvolvimento expondo a Origem."""
     input_data = [
-        {"package": "requests", "Origem": "Production"},
-        {"package": "pytest", "Origem": "Development"},
+        {"package": "requests", "origin": "Production"},
+        {"package": "pytest", "origin": "Development"},
     ]
 
     result = normalize(input_data)
 
-    assert result[0]["Origem"] == "Production"
-    assert result[1]["Origem"] == "Development"
+    assert result[0]["origin"] == "Production"
+    assert result[1]["origin"] == "Development"
 
 def test_normalize_missing_origin_defaults_na():
     """Sem Origem informada, o relatório mostra 'N/A' em vez de quebrar."""
     result = normalize([{"package": "numpy"}])
 
-    assert result[0]["Origem"] == "N/A"
+    assert result[0]["origin"] == "N/A"
 
 
 def test_normalize_formats_tamanho_as_readable_units():
     """Tamanho cru (bytes) vira unidade legível (KB/MB) na tabela."""
     input_data = [
-        {"package": "big", "Tamanho": 2 * 1024 * 1024, "Origem": "Production"},
-        {"package": "small", "Tamanho": 500 * 1024, "Origem": "Production"},
+        {"package": "big", "Tamanho": 2 * 1024 * 1024, "origin": "Production"},
+        {"package": "small", "Tamanho": 500 * 1024, "origin": "Production"},
     ]
 
     result = normalize(input_data)
@@ -118,7 +118,7 @@ def test_normalize_formats_tamanho_as_readable_units():
 
 def test_normalize_formats_idade_in_days():
     """Idade crua (dias inteiros) é exibida em dias."""
-    input_data = [{"package": "pkg", "Idade": 30, "Origem": "Production"}]
+    input_data = [{"package": "pkg", "Idade": 30, "origin": "Production"}]
 
     result = normalize(input_data)
 
@@ -128,7 +128,7 @@ def test_normalize_formats_idade_in_days():
 def test_normalize_tamanho_idade_indisponivel_pass_through():
     """Tamanho/Idade indisponíveis (N/D) permanecem N/D, nunca 0."""
     input_data = [
-        {"package": "pkg", "Tamanho": "N/D", "Idade": "N/D", "Origem": "Production"}
+        {"package": "pkg", "Tamanho": "N/D", "Idade": "N/D", "origin": "Production"}
     ]
 
     result = normalize(input_data)
@@ -139,7 +139,7 @@ def test_normalize_tamanho_idade_indisponivel_pass_through():
 
 def test_normalize_missing_tamanho_idade_defaults_indisponivel():
     """Sem Tamanho/Idade informados, exibe indisponível em vez de quebrar."""
-    result = normalize([{"package": "numpy", "Origem": "Production"}])
+    result = normalize([{"package": "numpy", "origin": "Production"}])
 
     assert result[0]["Tamanho"] == "N/D"
     assert result[0]["Idade"] == "N/D"
@@ -163,7 +163,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
     dependencies = [
         {
             "package": "pandas",
-            "Origem": ORIGIN_PRODUCTION,
+            "origin": ORIGIN_PRODUCTION,
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
             "status": "Desatualizado",
@@ -189,7 +189,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
     """Zumbi e Desatualizada convivem: uma linha, Categoria Zumbi e Desatualizada marcada."""
     dependency = {
         "package": "altair",
-        "Origem": ORIGIN_PRODUCTION,
+        "origin": ORIGIN_PRODUCTION,
         "used_version": "4.0.0",
         "pypi_version": "5.2.0",
         "status": "Desatualizado",
@@ -212,9 +212,9 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
 
 def test_export_rows_categorize_zombie_ghost_and_healthy():
     """Categoria estratifica as três classes da auditoria."""
-    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "status": "Atualizado"}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "status": "Atualizado"}
     ghost = {"package": "requests", "status": "Atualizado"}
-    healthy = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION, "status": "Atualizado"}
+    healthy = {"package": "streamlit", "origin": ORIGIN_PRODUCTION, "status": "Atualizado"}
 
     rows = build_export_rows(
         [zombie, ghost, healthy],
@@ -235,8 +235,8 @@ def test_export_rows_categorize_zombie_ghost_and_healthy():
 
 def test_export_rows_origin_separates_production_from_development():
     """Origem distingue Produção de Desenvolvimento; Fantasma não tem Declaração."""
-    production = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION}
-    development = {"package": "ruff", "Origem": ORIGIN_DEVELOPMENT}
+    production = {"package": "streamlit", "origin": ORIGIN_PRODUCTION}
+    development = {"package": "ruff", "origin": ORIGIN_DEVELOPMENT}
     ghost = {"package": "requests"}
 
     rows = build_export_rows(
@@ -247,7 +247,7 @@ def test_export_rows_origin_separates_production_from_development():
         analysis_date="2026-07-18",
     )
 
-    origins = {row["package"]: row["Origem"] for row in rows}
+    origins = {row["package"]: row["origin"] for row in rows}
 
     assert origins["streamlit"] == ORIGIN_PRODUCTION
     assert origins["ruff"] == ORIGIN_DEVELOPMENT
@@ -277,7 +277,7 @@ def test_export_rows_do_not_duplicate_a_dependency():
     """Uma dependência classificada em mais de uma lista ainda produz uma única linha."""
     zombie_and_outdated = {
         "package": "altair",
-        "Origem": ORIGIN_PRODUCTION,
+        "origin": ORIGIN_PRODUCTION,
         "status": "Desatualizado",
     }
 
@@ -296,7 +296,7 @@ def test_export_rows_do_not_duplicate_a_dependency():
 
 def test_export_rows_distinguish_two_analyses_of_the_same_project():
     """A Data da Análise dá o eixo temporal da US-07: mesmo projeto, execuções distintas."""
-    dependencies = [{"package": "streamlit", "Origem": ORIGIN_PRODUCTION}]
+    dependencies = [{"package": "streamlit", "origin": ORIGIN_PRODUCTION}]
 
     first = build_export_rows(
         dependencies, [], [], project_name="grupo-03", analysis_date="2026-07-11"
@@ -314,9 +314,9 @@ def test_export_rows_distinguish_two_analyses_of_the_same_project():
 
 def _sample_export_rows() -> list[dict]:
     """Linhas de exportação cobrindo Zumbi+Desatualizada, Fantasma e Saudável."""
-    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "status": "Desatualizado"}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "status": "Desatualizado"}
     ghost = {"package": "requests", "status": "Atualizado"}
-    healthy = {"package": "streamlit", "Origem": ORIGIN_PRODUCTION, "status": "Atualizado"}
+    healthy = {"package": "streamlit", "origin": ORIGIN_PRODUCTION, "status": "Atualizado"}
 
     return build_export_rows(
         [zombie, ghost, healthy],

@@ -56,16 +56,16 @@ def test_development_origin_never_zombie():
     importados por ninguém, mas nenhum pode virar Zumbi.
     """
     declared = [
-        {"package": "pytest", "Origem": ORIGIN_DEVELOPMENT},
-        {"package": "ruff", "Origem": ORIGIN_DEVELOPMENT},
-        {"package": "mypy", "Origem": ORIGIN_DEVELOPMENT},
+        {"package": "pytest", "origin": ORIGIN_DEVELOPMENT},
+        {"package": "ruff", "origin": ORIGIN_DEVELOPMENT},
+        {"package": "mypy", "origin": ORIGIN_DEVELOPMENT},
     ]
     imports = []
     assert analyze_zombie_dependencies(declared, imports) == []
 
 def test_production_origin_not_imported_is_zombie():
     """Dependência de Produção não importada continua sendo Zumbi."""
-    declared = [{"package": "requests", "Origem": ORIGIN_PRODUCTION}]
+    declared = [{"package": "requests", "origin": ORIGIN_PRODUCTION}]
     imports = []
     result = analyze_zombie_dependencies(declared, imports)
     assert len(result) == 1
@@ -74,8 +74,8 @@ def test_production_origin_not_imported_is_zombie():
 def test_only_production_zombies_when_origins_mixed():
     """Com Produção e Desenvolvimento juntas, só a Produção não usada é Zumbi."""
     declared = [
-        {"package": "requests", "Origem": ORIGIN_PRODUCTION},
-        {"package": "pytest", "Origem": ORIGIN_DEVELOPMENT},
+        {"package": "requests", "origin": ORIGIN_PRODUCTION},
+        {"package": "pytest", "origin": ORIGIN_DEVELOPMENT},
     ]
     imports = []
     result = analyze_zombie_dependencies(declared, imports)

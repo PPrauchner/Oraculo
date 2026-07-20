@@ -31,7 +31,7 @@ def is_ghost(dep: Dependency) -> bool:
     Returns:
         True se a dependência for Fantasma.
     """
-    return dep.get("Origem", ORIGIN_UNAVAILABLE) == ORIGIN_UNAVAILABLE
+    return dep.get("origin", ORIGIN_UNAVAILABLE) == ORIGIN_UNAVAILABLE
 
 
 def analyze_ghost_dependencies(

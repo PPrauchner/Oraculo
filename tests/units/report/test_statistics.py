@@ -9,8 +9,8 @@ from utils.constants import ORIGIN_PRODUCTION, VERSION_UNAVAILABLE
 def test_category_sums_size_and_averages_age():
     """A categoria soma o Tamanho de suas dependências e faz a média da Idade."""
     dependencies = [
-        {"package": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
-        {"package": "plotly", "Origem": ORIGIN_PRODUCTION, "Tamanho": 3072, "Idade": 20},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "plotly", "origin": ORIGIN_PRODUCTION, "Tamanho": 3072, "Idade": 20},
     ]
 
     summary = summarize_category(dependencies)
@@ -23,10 +23,10 @@ def test_category_sums_size_and_averages_age():
 def test_unavailable_metrics_stay_out_of_the_aggregations():
     """Sem Versão Usada, Tamanho/Idade são N/D: não entram na soma nem na média."""
     dependencies = [
-        {"package": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
         {
             "package": "ruff",
-            "Origem": ORIGIN_PRODUCTION,
+            "origin": ORIGIN_PRODUCTION,
             "Tamanho": VERSION_UNAVAILABLE,
             "Idade": VERSION_UNAVAILABLE,
         },
@@ -41,10 +41,10 @@ def test_unavailable_metrics_stay_out_of_the_aggregations():
 def test_excluded_dependencies_are_counted_so_the_average_is_not_misleading():
     """Quantidade conta todas; a exclusão do N/D fica contabilizada, não escondida."""
     dependencies = [
-        {"package": "pandas", "Origem": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
+        {"package": "pandas", "origin": ORIGIN_PRODUCTION, "Tamanho": 1024, "Idade": 10},
         {
             "package": "ruff",
-            "Origem": ORIGIN_PRODUCTION,
+            "origin": ORIGIN_PRODUCTION,
             "Tamanho": VERSION_UNAVAILABLE,
             "Idade": VERSION_UNAVAILABLE,
         },
@@ -73,7 +73,7 @@ def test_category_without_any_measured_metric_reports_unavailable():
     dependencies = [
         {
             "package": "ruff",
-            "Origem": ORIGIN_PRODUCTION,
+            "origin": ORIGIN_PRODUCTION,
             "Tamanho": VERSION_UNAVAILABLE,
             "Idade": VERSION_UNAVAILABLE,
         }
@@ -92,10 +92,10 @@ def test_category_without_any_measured_metric_reports_unavailable():
 
 def test_statistics_are_stratified_per_category():
     """Cada categoria do relatório ganha suas próprias estatísticas."""
-    zombie = {"package": "altair", "Origem": ORIGIN_PRODUCTION, "Tamanho": 512, "Idade": 400}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "Tamanho": 512, "Idade": 400}
     healthy = {
         "package": "streamlit",
-        "Origem": ORIGIN_PRODUCTION,
+        "origin": ORIGIN_PRODUCTION,
         "Tamanho": 1024,
         "Idade": 10,
     }

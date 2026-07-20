@@ -117,7 +117,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
                 "Idade": _display_metric(
                     dep.get("Idade", VERSION_UNAVAILABLE), is_fantasma, format_age
                 ),
-                "Origem": dep.get("Origem", "N/A"),
+                "origin": dep.get("origin", "N/A"),
             }
         )
 
@@ -129,7 +129,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
             "status": "N/A",
             "Tamanho": "N/A",
             "Idade": "N/A",
-            "Origem": "N/A",
+            "origin": "N/A",
         }
         return [empty]
     return rows
@@ -187,7 +187,7 @@ def build_export_rows(
                 "package": package,
                 "Categoria": category,
                 # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
-                "Origem": dep.get("Origem", ORIGIN_UNAVAILABLE),
+                "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
                 "Desatualizada": outdated,

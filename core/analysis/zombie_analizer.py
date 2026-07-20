@@ -30,7 +30,7 @@ def analyze_zombie_dependencies(
     imp_names = {normalize_name(d["package"]) for d in imports}
     zombies = []
     for dep in declared:
-        if dep.get("Origem") == ORIGIN_DEVELOPMENT:
+        if dep.get("origin") == ORIGIN_DEVELOPMENT:
             continue
         if imp_names.isdisjoint(import_names_for(dep["package"])):
             zombies.append(dep)

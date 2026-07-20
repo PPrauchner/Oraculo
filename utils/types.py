@@ -36,7 +36,7 @@ DeclarationEntry = TypedDict(
         "used_version": str,
         # Preenchida pelos readers que distinguem grupo de desenvolvimento; é ela
         # que isenta a Dependência de Desenvolvimento de virar Zumbi (ADR-0003).
-        "Origem": NotRequired[str],
+        "origin": NotRequired[str],
     },
 )
 
@@ -51,7 +51,7 @@ Dependency = TypedDict(
         "Tamanho": NotRequired[RawMetric],
         "Idade": NotRequired[RawMetric],
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
-        "Origem": NotRequired[str],
+        "origin": NotRequired[str],
     },
 )
 
@@ -65,7 +65,7 @@ ReportRow = TypedDict(
         # Já formatados para leitura ("1.2 MB", "30 dias"), diferente da exportação.
         "Tamanho": str,
         "Idade": str,
-        "Origem": str,
+        "origin": str,
     },
 )
 
@@ -77,7 +77,7 @@ ExportRow = TypedDict(
         "Projeto": str,
         "package": str,
         "Categoria": str,
-        "Origem": str,
+        "origin": str,
         "used_version": str,
         "pypi_version": str,
         # Desatualizada é coluna própria, e não valor de Categoria: uma dependência

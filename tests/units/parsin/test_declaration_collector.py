@@ -66,23 +66,23 @@ def test_audited_set_is_union_of_all_declarations():
 
     audited = collect_declarations(archive, ignore_folders=[])
 
-    origins = {dep["package"]: dep["Origem"] for dep in audited}
+    origins = {dep["package"]: dep["origin"] for dep in audited}
     assert origins == {"requests": "Production", "pytest": "Development"}
 
 
 def test_duplicate_package_deduped_with_first_origin():
     """Pacote declarado duas vezes aparece uma só, com a Origem da primeira."""
     dependencies = [
-        {"package": "requests", "Origem": "Production"},
-        {"package": "requests", "Origem": "Development"},
-        {"package": "pandas", "Origem": "Production"},
+        {"package": "requests", "origin": "Production"},
+        {"package": "requests", "origin": "Development"},
+        {"package": "pandas", "origin": "Production"},
     ]
 
     merged = merge_declarations(dependencies)
 
     assert merged == [
-        {"package": "requests", "Origem": "Production"},
-        {"package": "pandas", "Origem": "Production"},
+        {"package": "requests", "origin": "Production"},
+        {"package": "pandas", "origin": "Production"},
     ]
 
 

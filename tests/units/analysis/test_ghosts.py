@@ -76,7 +76,7 @@ def test_namespace_compartilhado_nao_e_alias():
     protobuf declarado e ocioso — falso negativo na US-03, o inverso do que a
     tabela de Aliases resolve.
     """
-    declared = [{"package": "protobuf", "Origem": "Production"}]
+    declared = [{"package": "protobuf", "origin": "Production"}]
     imports = [{"package": "google"}]
 
     assert analyze_zombie_dependencies(declared, imports) == declared
@@ -90,6 +90,6 @@ def test_is_ghost_reconhece_origem_ausente_e_origem_n_a():
     dependência muda de categoria conforme a etapa do pipeline.
     """
     assert is_ghost({"package": "requests"})
-    assert is_ghost({"package": "requests", "Origem": "N/A"})
-    assert not is_ghost({"package": "requests", "Origem": "Production"})
-    assert not is_ghost({"package": "ruff", "Origem": "Development"})
+    assert is_ghost({"package": "requests", "origin": "N/A"})
+    assert not is_ghost({"package": "requests", "origin": "Production"})
+    assert not is_ghost({"package": "ruff", "origin": "Development"})

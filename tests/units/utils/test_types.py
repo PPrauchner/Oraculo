@@ -18,7 +18,7 @@ Responsabilidades:
 from utils.types import DeclarationEntry, Dependency, ExportRow, ReportRow
 
 # O que um reader extrai de uma Declaração, antes de virar Dependência.
-DECLARATION_FIELDS = {"package", "used_version", "Origem"}
+DECLARATION_FIELDS = {"package", "used_version", "origin"}
 
 # A dependência auditada, como sai de `parsin` e é enriquecida por `analysis`.
 DEPENDENCY_FIELDS = {
@@ -28,7 +28,7 @@ DEPENDENCY_FIELDS = {
     "status",
     "Tamanho",
     "Idade",
-    "Origem",
+    "origin",
 }
 
 # A linha exibida na tabela do relatório, como sai de `normalize`.
@@ -41,7 +41,7 @@ EXPORT_FIELDS_IN_ORDER = [
     "Projeto",
     "package",
     "Categoria",
-    "Origem",
+    "origin",
     "used_version",
     "pypi_version",
     "Desatualizada",
