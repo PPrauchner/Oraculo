@@ -64,6 +64,33 @@ OUTDATED_YES = "Yes"
 OUTDATED_NO = "No"
 # ============ Categoria =================#
 
+# ============ Ausência de valor =================#
+# Duas ausências que o relatório não pode confundir (CONTEXT.md): uma é limite do que
+# se sabe, a outra é propriedade do que se auditou.
+#
+# Indeterminado — o ORÁCULO não tem como saber. É a Versão Usada sem Lock e sem pin
+# e, por consequência, o Tamanho, a Idade e o Status que dependem dela. Um Lock
+# resolveria. O Não Aplicável ("N/A", `ORIGIN_UNAVAILABLE`) é a outra: nenhum arquivo
+# a mais preencheria a Origem de um Fantasma, porque ele não vem de Declaração nenhuma.
+UNKNOWN = "Unknown"
+# ============ Ausência de valor =================#
+
+# ============ Status =================#
+# Como a Versão Usada se compara à última publicada no PyPI. É identidade estável,
+# não rótulo: `build_export_rows` e `pages/report.py` *comparam* contra estes valores
+# para decidir o que é Desatualizada. Traduzi-los junto com o texto quebraria as duas
+# comparações em silêncio — a coluna Outdated sairia "No" para todo mundo e a aba
+# Desatualizadas, vazia. O rótulo exibido resolve por `t()` na renderização, mesmo par
+# que a Categoria já usa (ADR-0009/ADR-0010).
+STATUS_OUTDATED = "Outdated"
+STATUS_UP_TO_DATE = "Up to date"
+STATUS_INVALID_VERSION = "Invalid version"
+# O quarto valor é a própria ausência: não conhecer a Versão Usada, ou não obter
+# resposta do PyPI, é não ter status a afirmar. Alias, e não string repetida, para
+# que as duas leituras não possam divergir.
+STATUS_UNKNOWN = UNKNOWN
+# ============ Status =================#
+
 # ============ Lock =================#
 # Extensão dos arquivos de Lock (uv.lock, poetry.lock). O Lock resolve versões,
 # não define o conjunto auditado (ADR-0002).

@@ -8,6 +8,9 @@ from utils.constants import (
     OUTDATED_NO,
     ORIGIN_PRODUCTION,
     ORIGIN_DEVELOPMENT,
+    STATUS_OUTDATED,
+    STATUS_UNKNOWN,
+    STATUS_UP_TO_DATE,
     VERSION_UNAVAILABLE,
 )
 
@@ -31,7 +34,7 @@ def test_normalize_with_valid_data():
             "package": "pandas",
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
-            "status": "Desatualizado",
+            "status": STATUS_OUTDATED,
             "size": 2 * 1024 * 1024,
             "age": 30,
             "origin": "Production",
@@ -44,7 +47,7 @@ def test_normalize_with_valid_data():
             "package": "pandas",
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
-            "status": "Desatualizado",
+            "status": STATUS_OUTDATED,
             "size": "2.0 MB",
             "age": "30 dias",
             "origin": "Production",
@@ -62,7 +65,7 @@ def test_normalize_with_missing_keys():
     result = normalize(input_data)
     
     assert result[0]["used_version"] == "N/A"
-    assert result[0]["status"] == "Desconhecido"
+    assert result[0]["status"] == STATUS_UNKNOWN
 
 def test_normalize_empty_list():
     """Verifica o retorno padrão quando a lista de entrada está vazia."""
@@ -166,7 +169,7 @@ def test_export_rows_follow_schema_one_row_per_dependency():
             "origin": ORIGIN_PRODUCTION,
             "used_version": "1.5.0",
             "pypi_version": "2.0.0",
-            "status": "Desatualizado",
+            "status": STATUS_OUTDATED,
             "size": 2 * 1024 * 1024,
             "age": 30,
         }
@@ -192,7 +195,7 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
         "origin": ORIGIN_PRODUCTION,
         "used_version": "4.0.0",
         "pypi_version": "5.2.0",
-        "status": "Desatualizado",
+        "status": STATUS_OUTDATED,
         "size": 512 * 1024,
         "age": 400,
     }
@@ -212,9 +215,9 @@ def test_export_rows_zombie_and_outdated_share_a_single_row():
 
 def test_export_rows_categorize_zombie_ghost_and_healthy():
     """Categoria estratifica as três classes da auditoria."""
-    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "status": "Atualizado"}
-    ghost = {"package": "requests", "status": "Atualizado"}
-    healthy = {"package": "streamlit", "origin": ORIGIN_PRODUCTION, "status": "Atualizado"}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "status": STATUS_UP_TO_DATE}
+    ghost = {"package": "requests", "status": STATUS_UP_TO_DATE}
+    healthy = {"package": "streamlit", "origin": ORIGIN_PRODUCTION, "status": STATUS_UP_TO_DATE}
 
     rows = build_export_rows(
         [zombie, ghost, healthy],
@@ -278,7 +281,7 @@ def test_export_rows_do_not_duplicate_a_dependency():
     zombie_and_outdated = {
         "package": "altair",
         "origin": ORIGIN_PRODUCTION,
-        "status": "Desatualizado",
+        "status": STATUS_OUTDATED,
     }
 
     rows = build_export_rows(
@@ -314,9 +317,9 @@ def test_export_rows_distinguish_two_analyses_of_the_same_project():
 
 def _sample_export_rows() -> list[dict]:
     """Linhas de exportação cobrindo Zumbi+Desatualizada, Fantasma e Saudável."""
-    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "status": "Desatualizado"}
-    ghost = {"package": "requests", "status": "Atualizado"}
-    healthy = {"package": "streamlit", "origin": ORIGIN_PRODUCTION, "status": "Atualizado"}
+    zombie = {"package": "altair", "origin": ORIGIN_PRODUCTION, "status": STATUS_OUTDATED}
+    ghost = {"package": "requests", "status": STATUS_UP_TO_DATE}
+    healthy = {"package": "streamlit", "origin": ORIGIN_PRODUCTION, "status": STATUS_UP_TO_DATE}
 
     return build_export_rows(
         [zombie, ghost, healthy],

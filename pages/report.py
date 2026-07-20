@@ -14,6 +14,7 @@ from core.report.export import export_to_csv, export_to_json
 from utils.constants import (
     CATEGORY_ZOMBIE,
     CATEGORY_GHOST,
+    STATUS_OUTDATED,
 )
 from utils.i18n import t
 from utils.theme import status_colors
@@ -79,7 +80,7 @@ def _build_report_dictionary() -> dict[str, list]:
     zombies = st.session_state.get("zombies", [])
     ghosts = st.session_state.get("ghosts", [])
 
-    outdated = [dep for dep in all_deps if dep.get("status") == "Desatualizado"]
+    outdated = [dep for dep in all_deps if dep.get("status") == STATUS_OUTDATED]
 
     return {
         REPORT_ALL: all_deps,

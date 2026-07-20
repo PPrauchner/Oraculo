@@ -22,11 +22,11 @@ from utils.constants import (
     ORIGIN_UNAVAILABLE,
     OUTDATED_NO,
     OUTDATED_YES,
+    STATUS_OUTDATED,
+    STATUS_UNKNOWN,
     VERSION_UNAVAILABLE,
 )
 from utils.types import Dependency, ExportRow, ReportRow
-
-_OUTDATED_STATUS = "Desatualizado"
 
 _BYTES_PER_KB = 1024
 _BYTES_PER_MB = 1024 * 1024
@@ -110,7 +110,7 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
                 "package": dep.get("package", "N/A"),
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
-                "status": dep.get("status", "Desconhecido"),
+                "status": dep.get("status", STATUS_UNKNOWN),
                 "size": _display_metric(
                     dep.get("size", VERSION_UNAVAILABLE), is_fantasma, format_size
                 ),
@@ -178,7 +178,7 @@ def build_export_rows(
         else:
             category = CATEGORY_HEALTHY
 
-        outdated = OUTDATED_YES if dep.get("status") == _OUTDATED_STATUS else OUTDATED_NO
+        outdated = OUTDATED_YES if dep.get("status") == STATUS_OUTDATED else OUTDATED_NO
 
         rows.append(
             {

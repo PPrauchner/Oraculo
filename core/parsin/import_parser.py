@@ -14,7 +14,7 @@ Saída:
     "package": "nome_do_modulo",
     "used_version": "N/A",
     "Versão Pypi": "N/A",
-    "status": "Desconhecido"
+    "status": "Unknown"
   }
 """
 
@@ -22,7 +22,7 @@ import ast
 
 from core.ingestion.filter import is_path_in_ignored_folders
 from core.ingestion.source import ProjectSource, list_paths, read_text
-from utils.constants import PYTHON_STDLIB_MODULES
+from utils.constants import PYTHON_STDLIB_MODULES, STATUS_UNKNOWN
 from utils.types import Dependency
 
 # Pasta que apenas embrulha os Módulos Próprios num layout `src/`
@@ -210,7 +210,7 @@ def parse_imports(
                 "package": import_name,
                 "used_version": "N/A",
                 "pypi_version": "N/A",
-                "status": "Desconhecido",
+                "status": STATUS_UNKNOWN,
             }
         )
 

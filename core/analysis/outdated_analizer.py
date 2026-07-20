@@ -21,7 +21,13 @@ from core.pypi.pypi_client import (
     get_release_size,
 )
 from packaging.version import InvalidVersion, parse as parse_version
-from utils.constants import VERSION_UNAVAILABLE
+from utils.constants import (
+    STATUS_INVALID_VERSION,
+    STATUS_OUTDATED,
+    STATUS_UNKNOWN,
+    STATUS_UP_TO_DATE,
+    VERSION_UNAVAILABLE,
+)
 from utils.types import Dependency
 
 
@@ -96,7 +102,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         # Pacote ausente do PyPI (privado/interno), falha de rede ou resposta sem
         # versão: indisponível, sem quebrar a análise dos demais pacotes.
         dep["pypi_version"] = "N/A"
-        dep["status"]      = "Desconhecido"
+        dep["status"]      = STATUS_UNKNOWN
         if not versao_usada:
             # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
             # indisponibilidade, independente de o pacote existir no PyPI.
@@ -107,10 +113,11 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
     dep["pypi_version"] = pypi_version
 
     if not versao_usada:
-        # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma
-        # "Atualizado" nem se copia a versão do PyPI (ADR-0002).
+        # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma que o
+        # pacote está em dia nem se copia a versão do PyPI (ADR-0002). O Status é a
+        # mesma ausência da métrica — Indeterminado — e diz isso com a mesma palavra.
         dep["used_version"] = VERSION_UNAVAILABLE
-        dep["status"]       = VERSION_UNAVAILABLE
+        dep["status"]       = STATUS_UNKNOWN
         # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): usa a
         # versão mais recente como referência de Tamanho/Idade. Uma Dependência
         # Declarada sem Versão Usada não tem referência — fica indisponível.
@@ -119,11 +126,11 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         _set_size_and_age(dep, data, versao_usada)
         try:
             if parse_version(versao_usada) < parse_version(pypi_version):
-                dep["status"] = "Desatualizado"
+                dep["status"] = STATUS_OUTDATED
             else:
-                dep["status"] = "Atualizado"
+                dep["status"] = STATUS_UP_TO_DATE
         except Exception:
-            dep["status"] = "Versão Inválida"
+            dep["status"] = STATUS_INVALID_VERSION
 
     return dep
 

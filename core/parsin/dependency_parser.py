@@ -6,7 +6,7 @@ e Origem) e retorna uma lista padronizada com a estrutura completa incluindo:
 - Pacote
 - Versão Usada
 - Versão Pypi (inicialmente "N/A")
-- Status (inicialmente "Desconhecido")
+- Status (inicialmente Indeterminado — antes do PyPI não há status a afirmar)
 - Origem (Produção quando não informada)
 
 Entrada:
@@ -17,7 +17,7 @@ Saída:
 """
 
 from typing import Dict, List, Optional
-from utils.constants import ORIGIN_PRODUCTION
+from utils.constants import ORIGIN_PRODUCTION, STATUS_UNKNOWN
 from utils.types import DeclarationEntry, Dependency
 from utils.functions import READERS
 from core.ingestion.filter import is_path_in_ignored_folders
@@ -53,7 +53,7 @@ def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
         "package": pacote,
         "used_version": versao_usada,
         "pypi_version": "N/A",
-        "status": "Desconhecido",
+        "status": STATUS_UNKNOWN,
         "origin": dep.get("origin", ORIGIN_PRODUCTION),
     }
 

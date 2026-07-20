@@ -27,6 +27,8 @@ from utils.constants import (
     ORIGIN_DEVELOPMENT,
     ORIGIN_PRODUCTION,
     OUTDATED_YES,
+    STATUS_OUTDATED,
+    STATUS_UP_TO_DATE,
 )
 from utils.types import ExportRow
 
@@ -54,7 +56,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "origin": ORIGIN_PRODUCTION,
             "used_version": "4.0.0",
             "pypi_version": "5.2.0",
-            "status": "Desatualizado",
+            "status": STATUS_OUTDATED,
             "size": 524288,
             "age": 400,
         },
@@ -63,7 +65,7 @@ def _export(analysis_date: str = "2026-07-20") -> bytes:
             "origin": ORIGIN_DEVELOPMENT,
             "used_version": "8.0.0",
             "pypi_version": "8.0.0",
-            "status": "Atualizado",
+            "status": STATUS_UP_TO_DATE,
             "size": 8388608,
             "age": 10,
         },

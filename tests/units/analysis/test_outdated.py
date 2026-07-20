@@ -16,7 +16,12 @@ E o Tamanho/Idade a partir dos metadados do PyPI (ADR-0004):
 from unittest.mock import patch
 
 from core.analysis.outdated_analizer import analyze_dependency_status
-from utils.constants import VERSION_UNAVAILABLE
+from utils.constants import (
+    STATUS_OUTDATED,
+    STATUS_UNKNOWN,
+    STATUS_UP_TO_DATE,
+    VERSION_UNAVAILABLE,
+)
 
 
 def _release(packagetype, size, upload_time="2020-01-01T00:00:00"):
@@ -52,7 +57,7 @@ def test_versao_usada_n_d_nao_e_reportada_como_atualizado():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["status"] != "Atualizado"
+    assert result[0]["status"] != STATUS_UP_TO_DATE
     assert result[0]["used_version"] == VERSION_UNAVAILABLE
 
 
@@ -73,7 +78,7 @@ def test_pin_anterior_a_ultima_e_desatualizado():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["status"] == "Desatualizado"
+    assert result[0]["status"] == STATUS_OUTDATED
 
 
 def test_pin_na_ultima_versao_e_atualizado():
@@ -83,7 +88,7 @@ def test_pin_na_ultima_versao_e_atualizado():
     with _with_pypi_data(_DEFAULT):
         result = analyze_dependency_status(deps)
 
-    assert result[0]["status"] == "Atualizado"
+    assert result[0]["status"] == STATUS_UP_TO_DATE
 
 
 def test_tamanho_e_idade_sao_da_versao_usada_nao_da_mais_recente():
@@ -137,7 +142,7 @@ def test_pacote_ausente_do_pypi_nao_quebra_os_demais():
     by_name = {dep["package"]: dep for dep in result}
     assert by_name["pacote-interno"]["size"] == VERSION_UNAVAILABLE
     assert by_name["pacote-interno"]["age"] == VERSION_UNAVAILABLE
-    assert by_name["pacote-interno"]["status"] == "Desconhecido"
+    assert by_name["pacote-interno"]["status"] == STATUS_UNKNOWN
     assert by_name["pandas"]["size"] == 100  # os demais seguem analisados
 
 
@@ -156,7 +161,7 @@ def test_versao_com_sufixo_pep_440_le_a_propria_release():
         result = analyze_dependency_status(deps)
 
     assert result[0]["size"] == 111  # a pré-release, não os 999 da final
-    assert result[0]["status"] == "Desatualizado"  # 2.0.0b1 < 2.0.0
+    assert result[0]["status"] == STATUS_OUTDATED  # 2.0.0b1 < 2.0.0
 
 
 def test_versao_post_release_le_a_propria_release():
@@ -174,7 +179,7 @@ def test_versao_post_release_le_a_propria_release():
         result = analyze_dependency_status(deps)
 
     assert result[0]["size"] == 222
-    assert result[0]["status"] == "Atualizado"
+    assert result[0]["status"] == STATUS_UP_TO_DATE
 
 
 def test_versao_usada_que_nao_e_pep_440_conta_como_indisponivel():
@@ -232,7 +237,7 @@ def test_resposta_do_pypi_sem_versao_nao_quebra_a_analise():
         result = analyze_dependency_status(deps)
 
     by_name = {dep["package"]: dep for dep in result}
-    assert by_name["quebrado"]["status"] == "Desconhecido"
+    assert by_name["quebrado"]["status"] == STATUS_UNKNOWN
     assert by_name["pandas"]["size"] == 100  # os demais seguem analisados
 
 

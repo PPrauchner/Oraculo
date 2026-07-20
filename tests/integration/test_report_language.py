@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from utils.constants import STATUS_OUTDATED, STATUS_UP_TO_DATE
 from utils.i18n import available_languages, translate
 
 REPORT_PAGE = str(Path(__file__).resolve().parents[2] / "pages" / "report.py")
@@ -28,7 +29,7 @@ OUTDATED_DEPENDENCY = {
     "package": "requests",
     "used_version": "2.31.0",
     "pypi_version": "2.32.0",
-    "status": "Desatualizado",
+    "status": STATUS_OUTDATED,
     "size": 100_000,
     "age": 400,
     "origin": "Production",
@@ -38,7 +39,7 @@ ZOMBIE_DEPENDENCY = {
     "package": "rich",
     "used_version": "13.0.0",
     "pypi_version": "13.0.0",
-    "status": "Atualizado",
+    "status": STATUS_UP_TO_DATE,
     "size": 50_000,
     "age": 100,
     "origin": "Production",

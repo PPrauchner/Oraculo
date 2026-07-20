@@ -11,7 +11,13 @@ import io
 
 from core.report.export import export_to_csv
 from core.report.normalization import build_export_rows
-from utils.constants import CATEGORY_ZOMBIE, ORIGIN_PRODUCTION, OUTDATED_YES
+from utils.constants import (
+    CATEGORY_ZOMBIE,
+    ORIGIN_PRODUCTION,
+    OUTDATED_YES,
+    STATUS_OUTDATED,
+    STATUS_UP_TO_DATE,
+)
 
 # Os rótulos do cabeçalho, e não as chaves internas: desde a ADR-0008 os dois
 # vocabulários são separados, e é pelo primeiro que um consumidor lê o arquivo.
@@ -37,7 +43,7 @@ def _dependencies() -> list[dict]:
             "origin": ORIGIN_PRODUCTION,
             "used_version": "4.0.0",
             "pypi_version": "5.2.0",
-            "status": "Desatualizado",
+            "status": STATUS_OUTDATED,
             "size": 524288,
             "age": 400,
         },
@@ -46,7 +52,7 @@ def _dependencies() -> list[dict]:
             "origin": ORIGIN_PRODUCTION,
             "used_version": "1.40.0",
             "pypi_version": "1.40.0",
-            "status": "Atualizado",
+            "status": STATUS_UP_TO_DATE,
             "size": 8388608,
             "age": 10,
         },
