@@ -122,3 +122,23 @@ def test_the_download_label_counts_the_rows_it_will_export(language: str):
     assert label == translate("report.export.download", language).format(
         count=2, extension="csv"
     )
+
+
+@pytest.mark.parametrize("start, switch", [("pt", "en"), ("en", "pt")])
+def test_switching_language_with_the_report_open_keeps_the_audit(start: str, switch: str):
+    """Trocar a língua com o relatório aberto não levanta KeyError nem perde o estado.
+
+    Era o defeito da issue #41: com o rótulo de exibição na chave, `report_dict["Zumbis"]`
+    sumia no instante em que "Zumbis" virava "Zombies". Chaveado pela identidade estável
+    da categoria, a troca só retraduz as abas — o conjunto auditado em `session_state`
+    segue intacto (ADR-0009).
+    """
+    app = _run(start)
+    assert [tab.label for tab in app.tabs] == [translate(key, start) for key in CATEGORY_KEYS]
+
+    app.sidebar.selectbox[0].set_value(switch).run()
+
+    assert app.exception == []
+    assert app.session_state["all_dependencies"] == [OUTDATED_DEPENDENCY, ZOMBIE_DEPENDENCY]
+    assert app.session_state["zombies"] == [ZOMBIE_DEPENDENCY]
+    assert [tab.label for tab in app.tabs] == [translate(key, switch) for key in CATEGORY_KEYS]
