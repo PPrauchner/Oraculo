@@ -78,6 +78,30 @@ def test_the_report_titles_every_category_in_the_language_of_the_url(language: s
 
 
 @pytest.mark.parametrize("language", available_languages())
+def test_the_report_glosses_every_category(language: str, visible_text):
+    """Cada categoria diz o que é: o gloss do locale aparece na tela (issue #44).
+
+    Sem ele, "Zumbis: 3" não informa se é grave nem o que fazer. Zumbi, Fantasma,
+    Desatualizada e Saudável explicam a categoria; Indeterminado e N/A distinguem os
+    dois marcadores de ausência. O texto é curto e voltado ao usuário, deliberadamente
+    distinto da definição formal do CONTEXT.md.
+    """
+    shown = visible_text(_run(language))
+    gloss_keys = (
+        "report.gloss.zombies",
+        "report.gloss.ghosts",
+        "report.gloss.outdated",
+        "report.gloss.healthy",
+        "report.gloss.unknown",
+        "report.gloss.not_applicable",
+    )
+
+    for key in gloss_keys:
+        gloss = translate(key, language)
+        assert any(gloss in text for text in shown), key
+
+
+@pytest.mark.parametrize("language", available_languages())
 def test_the_report_shows_no_label_from_another_language(
     language: str, visible_text, foreign_labels
 ):
