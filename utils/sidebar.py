@@ -89,5 +89,3 @@ def sidebar() -> None:
         st.caption(t("sidebar.theme_hint"))
 
         st.divider()
-
-    st.sidebar.info(t("sidebar.tip"))

@@ -80,7 +80,6 @@
   "sidebar.subtitle": "Python Dependency Audit",
   "sidebar.language": "Language",
   "sidebar.theme_hint": "Light or dark theme: menu ⋮ → Settings → Theme.",
-  "sidebar.tip": "Tip: ignore virtual environment folders to speed up the analysis.",
 
   "error.empty_path": "Enter the path to the Target Project directory.",
   "error.directory_not_found": "Path not found: {path}",
