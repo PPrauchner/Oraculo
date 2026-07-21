@@ -62,6 +62,21 @@ def test_a_shared_link_arrives_already_translated():
     assert app.sidebar.markdown[1].value == translate("sidebar.subtitle", "pt")
 
 
+@pytest.mark.parametrize("language", available_languages())
+def test_the_sidebar_no_longer_teaches_ignoring_virtual_environments(language: str):
+    """A dica de excluir pastas de ambiente virtual saiu da barra lateral (issue #41).
+
+    `NON_PROJECT_FOLDERS` já exclui `.venv` sozinho, então a dica ensinava um passo
+    inútil. Ela vivia num `st.sidebar.info`; a guarda é que a barra lateral não volte
+    a instruir a ignorar ambiente virtual, em nenhuma das línguas.
+    """
+    app = _run(language)
+    sidebar_text = " ".join(element.value for element in app.sidebar.info).lower()
+
+    assert "virtual environment" not in sidebar_text
+    assert "ambiente virtual" not in sidebar_text
+
+
 def test_a_typed_garbage_lang_still_opens_the_app():
     """A URL é digitável: `?lang=klingon` abre em inglês em vez de derrubar a tela."""
     app = _run("klingon")
