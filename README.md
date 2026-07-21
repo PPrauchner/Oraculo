@@ -1,103 +1,296 @@
-# Grupo
+<div align="center">
 
-## Getting started
+# ORÁCULO
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+*[English version](README.en.md)*
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+**O**rganizador e **R**astreador **A**utomático de **C**ódigo, **U**so de **L**ibraries e **O**corrências.
 
-## Add your files
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.56-FF4B4B?logo=streamlit&logoColor=white)
+![managed by uv](https://img.shields.io/badge/managed%20by-uv-6340AC)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
-- [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+</div>
 
-```
-cd existing_repo
-git remote add origin https://gitlab.unipampa.edu.br/ales/rp-iii-2026.1/grupo-01.git
-git branch -M main
-git push -uf origin main
-```
+Ferramenta web de auditoria de dependências de projetos Python. Cruza o que um
+Projeto-Alvo **declara** depender com o que seu código **realmente importa**, e confronta
+ambos com o PyPI para reportar Zumbis, Fantasmas e Desatualizadas.
 
-## Integrate with your tools
+> **Contexto:** trabalho acadêmico (RP III, Marco I) mantido como peça de portfólio — a
+> interface tem o inglês como padrão ([ADR-0009](docs/adr/0009-locales-em-json-sem-biblioteca-de-i18n.md)),
+> e a documentação segue em português.
 
-- [Set up project integrations](https://gitlab.unipampa.edu.br/ales/rp-iii-2026.1/grupo-01/-/settings/integrations)
+![Relatório da auto-auditoria do ORÁCULO](docs/assets/report.png)
 
-## Collaborate with your team
-
-- [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+*Relatório da auto-auditoria: o ORÁCULO analisando o próprio código — 0 Zumbis, 0 Fantasmas,
+Índice de Saúde 85%.*
 
 ---
 
-# Editing this README
+## Documentação
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+O modelo de domínio não é reexplicado aqui — os termos com inicial maiúscula ao longo
+deste README (Projeto-Alvo, Declaração, Lock, Zumbi, Fantasma, Versão Usada, Tamanho,
+Idade, Origem) têm definição exata no glossário:
 
-## Suggestions for a good README
+| Documento | O que é |
+|---|---|
+| [`CONTEXT.md`](./CONTEXT.md) | Glossário do domínio — a definição exata de cada termo. |
+| [`docs/adr/`](./docs/adr/) | Registros de decisão: **por que** as escolhas não-óbvias são como são. |
+| [`docs/Enunciado.md`](./docs/Enunciado.md) | Requisitos e histórias de usuário (US-01…US-07). |
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+---
 
-## Name
+## Funcionalidades
 
-Choose a self-explaining name for your project.
+### Categorias da auditoria
 
-## Description
+- **Zumbis** — Dependências de Produção declaradas que nenhum Import Raiz do código usa.
+- **Fantasmas** — Imports Raiz do código que nenhuma Declaração menciona. Funcionam na
+  máquina do dev por virem de carona como transitivas, e quebram em outro ambiente.
+- **Desatualizadas** — dependências cuja Versão Usada é anterior à última publicada no
+  PyPI. Não é uma Categoria excludente: uma dependência pode ser Zumbi **e**
+  Desatualizada ao mesmo tempo, então sai em coluna própria.
 
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Produção vs. Desenvolvimento
 
-## Badges
+Cada pacote carrega a **Origem** — de qual Declaração, e de qual seção dela, ele veio:
 
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+| Origem | De onde vem | Vira Zumbi? |
+|---|---|---|
+| **Produção** | `[project].dependencies`, `[tool.poetry].dependencies`, `requirements.txt`, `environment.yml` | Sim |
+| **Desenvolvimento** | `[dependency-groups]`, `[project.optional-dependencies]`, `[tool.poetry.group.*]`, `requirements-dev.txt` | **Nunca** |
 
-## Visuals
+Dependência de Desenvolvimento nunca é Zumbi ([ADR-0003](./docs/adr/0003-dependencias-de-desenvolvimento-nunca-sao-zumbis.md)):
+ferramentas como `ruff` e `mypy` não são importadas por ninguém, e as demais vivem
+justamente nas Exclusões.
 
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Métricas
 
-## Installation
+- **Tamanho** — bytes do wheel (sdist como fallback) da Versão Usada, conforme publicado
+  no PyPI. **Não** é tamanho em disco e não inclui transitivas.
+- **Idade** — tempo entre a data de lançamento da Versão Usada no PyPI e hoje. Mede há
+  quanto tempo o projeto está parado naquela versão, não a idade do pacote.
+- **Índice de Saúde** — proporção de Dependências Declaradas que não são Zumbis,
+  Fantasmas nem Desatualizadas.
 
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Tamanho e Idade vêm dos metadados do PyPI, não do disco
+([ADR-0004](./docs/adr/0004-tamanho-e-idade-vem-dos-metadados-do-pypi.md)) — uma única
+requisição a `/pypi/NAME/json` por pacote traz os três dados. Sem Versão Usada resolvida,
+ambos saem como **Indeterminado**: o ORÁCULO não inventa versão.
 
-## Usage
+### Relatório
 
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- Estatísticas de Tamanho somado e Idade média **estratificadas por Categoria**, com
+  aviso de quantas dependências ficaram de fora de cada agregação.
+- Exportação em **CSV** e **JSON**.
+- Consultas ao PyPI em paralelo, para reduzir o tempo de análise.
 
-## Support
+---
 
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## Formatos Suportados
 
-## Roadmap
+O conjunto auditado vem **só das Declarações**; o Lock apenas resolve em que versão cada
+item desse conjunto está ([ADR-0002](./docs/adr/0002-declaracao-define-o-conjunto-lock-define-a-versao.md)).
 
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+| Arquivo | Gerenciador | Papel |
+|---|---|---|
+| `pyproject.toml` | PEP 621, Poetry | Declaração — define o conjunto (Produção e Desenvolvimento) |
+| `requirements.txt` | pip | Declaração — Produção |
+| `requirements-dev.txt` | pip | Declaração — Desenvolvimento |
+| `environment.yml` | Conda | Declaração — Produção |
+| `uv.lock`, `poetry.lock` (`*.lock`) | uv, Poetry | **Lock** — resolve a Versão Usada; nunca define o conjunto |
 
-## Contributing
+Um Projeto-Alvo pode ter várias Declarações, e todas valem: o conjunto é a união delas,
+deduplicada por Nome de Distribuição, preservando a Origem.
 
-State if you are open to contributions and what your requirements are for accepting them.
+> **Por que o Lock não define o conjunto:** um `uv.lock` lista centenas de transitivas que
+> nenhum código importa. Lê-lo como Declaração faria toda transitiva virar Zumbi.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Adicionar um formato = escrever a função de parsing e decorá-la com `@registrar(READERS, "<arquivo>")`
+em `core/parsin/readers.py`. Nenhum `if` novo em `pages/`.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+---
 
-## Authors and acknowledgment
+## Limitações conhecidas
 
-Show your appreciation to those who have contributed to the project.
+### Resolução de Alias de Import por tabela
 
-## License
+Quando o Nome de Import difere do Nome de Distribuição (`import yaml` ↔ `PyYAML`,
+`sklearn` ↔ `scikit-learn`, `cv2` ↔ `opencv-python`, `PIL` ↔ `Pillow`), a correspondência
+usa uma tabela fixa de aliases (`IMPORT_ALIASES` em `utils/constants.py`). A tabela cobre
+os mismatches mais comuns do ecossistema, mas **não é exaustiva**: um pacote com nomes
+divergentes que não esteja na tabela ainda gera **dois falsos positivos** — vira Fantasma
+(o import não casa com nenhuma declaração) **e** Zumbi (a declaração não casa com nenhum
+import) ao mesmo tempo. Mitigação consciente, não solução completa; ampliar a tabela
+resolve caso a caso.
 
-For open source projects, say how it is licensed.
+### Ingestão apenas por upload
 
-## Project status
+O [ADR-0001](./docs/adr/0001-ingestao-por-upload-e-por-diretorio.md) decide suportar
+ingestão por upload **e** por diretório local. Hoje só o upload está implementado.
 
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+---
+
+## Estrutura do Projeto
+
+```
+.
+├── core/                            # Lógica principal — nada aqui importa streamlit
+│   ├── ingestion/
+│   │   ├── decompressor.py          # Leitura de .zip, .tar e .tar.gz em memória
+│   │   ├── archive_walker.py        # Percorre o archive e lê os arquivos que interessam
+│   │   └── filter.py                # Exclusões, validação do archive e pastas ignoradas
+│   │
+│   ├── parsin/
+│   │   ├── readers.py               # Parsers registrados por arquivo (READERS)
+│   │   ├── declaration_collector.py # Une todas as Declarações no conjunto auditado
+│   │   ├── lock_resolver.py         # Resolve a Versão Usada a partir do Lock
+│   │   ├── dependency_parser.py     # Normaliza e padroniza a lista de declaradas
+│   │   └── import_parser.py         # Extrai Imports Raiz via AST
+│   │
+│   ├── analysis/
+│   │   ├── zombie_analizer.py       # Declaradas de Produção não importadas
+│   │   ├── ghost_analizer.py        # Imports Raiz não declarados
+│   │   ├── outdated_analizer.py     # Compara Versão Usada com a versão do PyPI
+│   │   └── name_matching.py         # Alias de Import: Distribuição ↔ Nome de Import
+│   │
+│   ├── pypi/
+│   │   └── pypi_client.py           # API pública do PyPI: versão, Tamanho e Idade
+│   │
+│   └── report/
+│       ├── normalization.py         # Estruturação final dos dados para exibição
+│       ├── statistics.py            # Tamanho somado e Idade média por Categoria
+│       └── export.py                # Exportação para CSV e JSON
+│
+├── pages/                           # Interface Streamlit
+│   ├── home.py                      # Upload do Projeto-Alvo e escolha das Exclusões
+│   ├── loading.py                   # Orquestra o pipeline com feedback por etapa
+│   └── report.py                    # Relatório, métricas e gráficos
+│
+├── utils/
+│   ├── constants.py                 # Cores, URL do PyPI, stdlib, IMPORT_ALIASES
+│   ├── functions.py                 # Registries READERS e EXTRATORES (decorador)
+│   └── sidebar.py                   # Sidebar reutilizável
+│
+├── tests/units/                     # Testes unitários espelhando core/, pages/ e utils/
+│   ├── analysis/
+│   ├── ingestion/
+│   ├── pages/
+│   ├── parsin/
+│   ├── pypi/
+│   ├── report/
+│   └── utils/
+│
+├── docs/
+│   ├── Enunciado.md                 # Requisitos e histórias de usuário
+│   ├── adr/                         # Registros de decisão de arquitetura
+│   └── grills_logs/                 # Logs das sessões de grill
+│
+├── CONTEXT.md                       # Glossário do domínio
+├── main.py                          # Ponto de entrada — navegação Streamlit
+├── pyproject.toml                   # Dependências do próprio ORÁCULO
+└── uv.lock                          # Lock gerado pelo uv
+```
+
+---
+
+## Pipeline de Análise
+
+```
+Arquivo .zip / .tar / .tar.gz
+        │
+        ▼
+  decompressor.py          — abre o archive em memória (sem extrair para disco)
+        │
+        ▼
+  filter.py                — valida o archive e aplica as Exclusões
+        │
+        ▼
+  loading.py               — orquestra as etapas com feedback visual
+        │
+        ├──▶ declaration_collector.py → readers.py   — une as Declarações (o conjunto)
+        │
+        ├──▶ lock_resolver.py                        — Lock resolve a Versão Usada
+        │
+        ├──▶ import_parser.py                        — extrai Imports Raiz via AST
+        │
+        ├──▶ zombie_analizer.py / ghost_analizer.py  — cruza declaradas × importadas
+        │
+        └──▶ outdated_analizer.py + pypi_client.py   — PyPI: versão, Tamanho e Idade
+                    │
+                    ▼
+              normalization.py → statistics.py   — consolida e estratifica por Categoria
+                    │
+                    ▼
+              report.py → export.py              — exibe e exporta CSV / JSON
+```
+
+---
+
+## Instalação e Execução
+
+**Pré-requisitos:** Python 3.11+
+
+### Com uv (recomendado)
+
+```bash
+uv sync                        # instalar dependências
+uv run streamlit run main.py   # executar a aplicação
+uv run pytest                  # rodar os testes
+```
+
+### Com pip
+
+```bash
+python -m venv .venv
+source .venv/bin/activate       # Linux/Mac
+.venv\Scripts\activate          # Windows
+
+pip install streamlit plotly requests packaging pyyaml
+streamlit run main.py
+```
+
+---
+
+## Dependências da Aplicação
+
+| Pacote | Uso |
+|---|---|
+| `streamlit` | Interface web e navegação entre páginas |
+| `plotly` | Gráficos do relatório |
+| `requests` | Requisições à API do PyPI |
+| `packaging` | Comparação semântica de versões no `outdated_analizer` |
+| `pyyaml` | Leitura de `environment.yml` (Conda) no `readers` |
+
+---
+
+## Uso
+
+1. Acesse `http://localhost:8501` após iniciar a aplicação.
+2. Faça o upload do `.zip`, `.tar` ou `.tar.gz` do Projeto-Alvo.
+3. Opcionalmente, marque as pastas que ficam de fora da auditoria (Exclusões — ex.:
+   `tests`, `docs`).
+4. Clique em **Executar Análise Completa** e acompanhe o progresso.
+5. Leia o relatório: métricas gerais, tabelas por Categoria (Todas, Zumbis, Fantasmas,
+   Desatualizadas), Tamanho e Idade estratificados, e os gráficos.
+6. Exporte o resultado em CSV ou JSON.
+
+> O próprio ORÁCULO é um Projeto-Alvo válido — auditá-lo é a forma mais rápida de testar.
+
+---
+
+## Licença
+
+Distribuído sob a licença [MIT](LICENSE) — © 2026 Pietro Prauchner, Rafael Lopes, Lorenzo
+Ficher e Inaurrara.
+
+## Autores
+
+Trabalho do grupo-03 (RP III, Marco I):
+
+- **Pietro Prauchner** — [@PPrauchner](https://github.com/PPrauchner)
+- **Rafael Lopes** — [@rjnlopes03](https://github.com/rjnlopes03)
+- **Lorenzo Ficher** — [@lorenzoficher](https://github.com/lorenzoficher)
+- **Inaurrara** — [@Inaurrara](https://github.com/Inaurrara)

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Tooling de IA (ADR-0012): versiona so o que documenta o projeto.
+# .claude/rules/ entra (convencoes referenciadas pelo CLAUDE.md); o resto
+# — skills/commands/hooks/scripts genericos, settings.local.json e o estado
+# efemero current-issue — fica de fora por construcao.
+.claude/*
+!.claude/rules/
