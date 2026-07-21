@@ -41,7 +41,7 @@ def _used_version(dep: Dependency) -> str:
     of a Ghost and the Indeterminate count as unavailable.
 
     Args:
-        dep: Dependency with the 'Used Version' key.
+        dep: Dependency with the 'used_version' key.
 
     Returns:
         The exact version, or "" when there is no known Used Version.
@@ -80,22 +80,22 @@ def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
     dep["age"] = age if age is not None else UNKNOWN
 
 
-def _checar_dependencia(dep: Dependency) -> Dependency:
+def _check_dependency(dep: Dependency) -> Dependency:
     """
     Queries PyPI for a single dependency (one request) and fills in
-    'PyPI Version', 'Status', 'Size' and 'Age' directly into the dictionary.
+    'pypi_version', 'status', 'size' and 'age' directly into the dictionary.
 
     Called in parallel by the ThreadPoolExecutor.
 
     Args:
-        dep: Dictionary with at least 'Package' and 'Used Version'.
+        dep: Dictionary with at least 'package' and 'used_version'.
 
     Returns:
-        The same dictionary with 'PyPI Version', 'Status', 'Size' and 'Age'
+        The same dictionary with 'pypi_version', 'status', 'size' and 'age'
         filled in.
     """
     data = fetch_package_data(dep["package"])
-    versao_usada = _used_version(dep)
+    used_version = _used_version(dep)
     pypi_version = get_latest_version(data) if data else ""
 
     if not pypi_version:
@@ -103,7 +103,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         # no version: unavailable, without breaking the analysis of the other packages.
         dep["pypi_version"] = "N/A"
         dep["status"]      = STATUS_UNKNOWN
-        if not versao_usada:
+        if not used_version:
             # Same sentinel as the path with PyPI: not knowing the Used Version is
             # unavailability, regardless of whether the package exists on PyPI.
             dep["used_version"] = UNKNOWN
@@ -112,7 +112,7 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
 
     dep["pypi_version"] = pypi_version
 
-    if not versao_usada:
+    if not used_version:
         # Without Lock and without pin, the Used Version is unknown: we neither claim the
         # package is up to date nor copy the version from PyPI (ADR-0002). The Status is the
         # same absence as the metric — Indeterminate — and says so with the same word.
@@ -123,9 +123,9 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
         # Dependency without a Used Version has no reference — it stays unavailable.
         _set_size_and_age(dep, data, pypi_version if is_ghost(dep) else None)
     else:
-        _set_size_and_age(dep, data, versao_usada)
+        _set_size_and_age(dep, data, used_version)
         try:
-            if parse_version(versao_usada) < parse_version(pypi_version):
+            if parse_version(used_version) < parse_version(pypi_version):
                 dep["status"] = STATUS_OUTDATED
             else:
                 dep["status"] = STATUS_UP_TO_DATE
@@ -144,17 +144,17 @@ def analyze_dependency_status(dependencies: list[Dependency]) -> list[Dependency
     relative to the number of dependencies.
 
     Args:
-        dependencies: List of dicts with 'Package' and 'Used Version'.
+        dependencies: List of dicts with 'package' and 'used_version'.
 
     Returns:
-        The same list with 'PyPI Version', 'Status', 'Size' and 'Age'
+        The same list with 'pypi_version', 'status', 'size' and 'age'
         filled in on each item.
     """
     if not dependencies:
         return []
 
     with ThreadPoolExecutor(max_workers=32) as executor:
-        futures = {executor.submit(_checar_dependencia, dep): dep for dep in dependencies}
+        futures = {executor.submit(_check_dependency, dep): dep for dep in dependencies}
 
         for future in as_completed(futures):
             future.result()

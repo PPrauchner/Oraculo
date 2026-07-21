@@ -43,15 +43,15 @@ def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
         return None
 
     # Validate required fields
-    pacote = dep.get("package", "").strip()
-    versao_usada = dep.get("used_version", "").strip()
+    package = dep.get("package", "").strip()
+    used_version = dep.get("used_version", "").strip()
 
-    if not pacote:
+    if not package:
         return None
 
     return {
-        "package": pacote,
-        "used_version": versao_usada,
+        "package": package,
+        "used_version": used_version,
         "pypi_version": "N/A",
         "status": STATUS_UNKNOWN,
         "origin": dep.get("origin", ORIGIN_PRODUCTION),
