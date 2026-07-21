@@ -25,6 +25,32 @@ grayColor = "#8B94A3"    # neutro legível nos dois fundos
 # A ordem segue a do donut: Saudável, Zumbi, Fantasma, Desatualizada.
 chartCategoricalColors = ["#2B8A3E", "#845EF7", "#E03131", "#1C7ED6"]
 
+# ── Polimento de componentes (issue #43) ────────────────────────────────────
+# Tudo abaixo é token nativo do Streamlit 1.56 — nenhum CSS. Cada `!important`
+# evitado é uma quebra a menos no próximo upgrade. São valores estéticos: ajuste
+# fino é bem-vindo; mexer na paleta acima é outra história (issue #39).
+
+# Cantos arredondados: suaves, sem virar pílula. `baseRadius` arredonda inputs,
+# caixas e cartões; o botão ganha um pouco mais para ler como affordance.
+baseRadius = "0.5rem"
+buttonRadius = "0.625rem"
+
+# Bordas dão estrutura ao tema chapado usando o `borderColor` de cada modo —
+# sem sombra e sem CSS acoplado a `data-testid`. A borda fica onde o usuário lê
+# dados (o corpo) e some no trilho de navegação (ver [theme.sidebar] no fim).
+showWidgetBorder = true
+showSidebarBorder = true
+
+# Títulos ficam na fonte do sistema (sem web-font: o app roda offline); o que
+# muda é a escala e o peso, para um H1 parecer título e não só texto grande.
+headingFontSizes = ["2.25rem", "1.75rem", "1.375rem", "1.125rem", "1rem", "0.875rem"]
+headingFontWeights = [700, 700, 600, 600, 600, 600]
+
+# Métricas do relatório (US-06): o número é a informação, então ele domina o
+# cartão — maior que o default (2.25rem) e em negrito.
+metricValueFontSize = "2.5rem"
+metricValueFontWeight = 700
+
 [theme.light]
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F4F6F8"
@@ -36,3 +62,9 @@ backgroundColor = "#0E1117"
 secondaryBackgroundColor = "#1A1F2B"
 textColor = "#E6EAF1"
 borderColor = "#2A3040"
+
+# A sidebar é o trilho de marca e configuração, não conteúdo — daí tratamento
+# próprio: sem borda nos widgets, para a navegação ficar calma enquanto o corpo
+# (onde estão os dados) ganha as bordas que dão estrutura à leitura.
+[theme.sidebar]
+showWidgetBorder = false
