@@ -116,8 +116,10 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     """
     Renderiza abas interativas com tabelas de dependências por categoria.
 
-    `normalize` seleciona o dado e `display_rows` o veste na língua da tela: a
-    coluna e o valor de Status só viram texto aqui, na renderização (ADR-0010).
+    Cada aba abre com o gloss da categoria (`report.gloss.*`), explicando ao usuário
+    o que ela reúne antes da tabela. `normalize` seleciona o dado e `display_rows` o
+    veste na língua da tela: a coluna e o valor de Status só viram texto aqui, na
+    renderização (ADR-0010).
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
@@ -135,8 +137,9 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
 
     Exibe, em colunas paralelas (uma por categoria), a quantidade de dependências,
     o Tamanho somado e a Idade média (US-06) — anotando quantas ficaram de fora das
-    agregações por terem Tamanho/Idade indisponíveis. Extensível: novas categorias
-    são automaticamente incluídas sem alteração desta função.
+    agregações por terem Tamanho/Idade indisponíveis. Cada cartão traz o gloss da
+    categoria (`report.gloss.*`) em `help=`, como dica ao passar o mouse. Extensível:
+    novas categorias são automaticamente incluídas sem alteração desta função.
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
