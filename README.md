@@ -106,15 +106,6 @@ divergentes que não esteja na tabela ainda gera **dois falsos positivos** — v
 import) ao mesmo tempo. Mitigação consciente, não solução completa; ampliar a tabela
 resolve caso a caso.
 
-### PyYAML é exigido mesmo sem `environment.yml`
-
-`core/parsin/readers.py` importa `yaml` no topo do módulo, e `declaration_collector`
-importa `readers` para popular o registry — então o `PyYAML` entra em toda análise, mesmo
-quando o Projeto-Alvo não tem `environment.yml`. Por isso ele é Dependência de Produção
-declarada: sem ele a aplicação não sobe, em vez de apenas perder o suporte a Conda. A
-leitura de `environment.yml` não degrada mais em silêncio para uma lista vazia — ou o
-formato é lido, ou a instalação está incompleta.
-
 ### Ingestão apenas por upload
 
 O [ADR-0001](./docs/adr/0001-ingestao-por-upload-e-por-diretorio.md) decide suportar

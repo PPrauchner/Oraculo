@@ -1,15 +1,15 @@
 """
-Módulo responsável por identificar dependências fantasmas.
+Identifies Ghost dependencies.
 
-Dependências fantasmas são aquelas que são utilizadas no código (imports),
-mas não estão declaradas nos arquivos de dependências do projeto.
+Ghost dependencies are those that are used in the code (imports),
+but are not declared in the project's dependency files.
 
-Entrada:
-- Conjunto de dependências declaradas
-- Conjunto de imports utilizados no código
+Input:
+- Set of declared dependencies
+- Set of imports used in the code
 
-Saída:
-- Conjunto de dependências fantasmas
+Output:
+- Set of Ghost dependencies
 """
 
 from core.analysis.name_matching import import_names_for, normalize_name
@@ -18,18 +18,18 @@ from utils.types import Dependency
 
 
 def is_ghost(dep: Dependency) -> bool:
-    """Indica se uma dependência é Fantasma, pela ausência de Origem.
+    """Indicates whether a dependency is a Ghost, by the absence of Origin.
 
-    Fantasma não vem de Declaração, logo não tem Origem (CONTEXT.md) — é esse o
-    sinal. Aceita tanto a chave ausente (saída dos analisadores) quanto o "N/A"
-    que as camadas de exibição e exportação preenchem, de modo que a resposta seja
-    a mesma nos dois lados do pipeline.
+    A Ghost does not come from a Declaration, so it has no Origin (CONTEXT.md) — that is
+    the signal. It accepts both the missing key (the analyzers' output) and the "N/A"
+    that the display and export layers fill in, so that the answer is
+    the same on both sides of the pipeline.
 
     Args:
-        dep: Dependência em qualquer etapa do pipeline.
+        dep: Dependency at any stage of the pipeline.
 
     Returns:
-        True se a dependência for Fantasma.
+        True if the dependency is a Ghost.
     """
     return dep.get("origin", ORIGIN_UNAVAILABLE) == ORIGIN_UNAVAILABLE
 
@@ -37,7 +37,7 @@ def is_ghost(dep: Dependency) -> bool:
 def analyze_ghost_dependencies(
     declared: list[Dependency], imports: list[Dependency]
 ) -> list[Dependency]:
-    """Identifica dependências fantasmas comparando imports com dependências declaradas."""
+    """Identifies Ghost dependencies by comparing imports with declared dependencies."""
     declared_names: set[str] = set()
     for dep in declared:
         declared_names |= import_names_for(dep["package"])

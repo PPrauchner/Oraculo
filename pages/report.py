@@ -116,15 +116,18 @@ def _render_tabs_with_tables(report_dict: dict[str, list]) -> None:
     """
     Renderiza abas interativas com tabelas de dependências por categoria.
 
-    `normalize` seleciona o dado e `display_rows` o veste na língua da tela: a
-    coluna e o valor de Status só viram texto aqui, na renderização (ADR-0010).
+    Cada aba abre com o gloss da categoria (`report.gloss.*`), explicando ao usuário
+    o que ela reúne antes da tabela. `normalize` seleciona o dado e `display_rows` o
+    veste na língua da tela: a coluna e o valor de Status só viram texto aqui, na
+    renderização (ADR-0010).
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
     """
     tabs = st.tabs([_category_label(category) for category in report_dict])
-    for tab, dependencies in zip(tabs, report_dict.values()):
+    for tab, (category, dependencies) in zip(tabs, report_dict.items()):
         with tab:
+            st.caption(t(f"report.gloss.{category}"))
             st.table(display_rows(normalize(dependencies)))
 
 
@@ -134,8 +137,9 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
 
     Exibe, em colunas paralelas (uma por categoria), a quantidade de dependências,
     o Tamanho somado e a Idade média (US-06) — anotando quantas ficaram de fora das
-    agregações por terem Tamanho/Idade indisponíveis. Extensível: novas categorias
-    são automaticamente incluídas sem alteração desta função.
+    agregações por terem Tamanho/Idade indisponíveis. Cada cartão traz o gloss da
+    categoria (`report.gloss.*`) em `help=`, como dica ao passar o mouse. Extensível:
+    novas categorias são automaticamente incluídas sem alteração desta função.
 
     Args:
         report_dict: Estrutura de relatório com categorias e listas.
@@ -143,7 +147,11 @@ def _render_metrics(report_dict: dict[str, list]) -> None:
     summaries = summarize_by_category(report_dict)
     columns = st.columns(len(summaries))
     for col, (category, summary) in zip(columns, summaries.items()):
-        col.metric(_category_label(category), summary["count"])
+        col.metric(
+            _category_label(category),
+            summary["count"],
+            help=t(f"report.gloss.{category}"),
+        )
         for metric in summary_metrics(summary):
             col.caption(format_summary_metric(metric))
 
@@ -217,6 +225,10 @@ def _render_donut_chart(report_dict: dict[str, list]) -> None:
 
     figure.update_layout(width=310, height=310, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(figure, use_container_width=False)
+
+    # Saudável não tem aba nem métrica — só a fatia "OK" do donut —, então o gloss
+    # dela mora aqui, ao lado de onde ela aparece.
+    st.caption(f"**{_category_label(REPORT_HEALTHY)}** — {t('report.gloss.healthy')}")
 
 
 @st.dialog(t("report.export.title"))
@@ -355,6 +367,14 @@ def _main() -> None:
 
     st.write(f"#### {t('report.tables.header')}")
     _render_tabs_with_tables(report_dict)
+
+    # Os dois marcadores de ausência aparecem como valor nas células, não como
+    # categoria — o gloss deles fica junto das tabelas, distinguindo "não sabemos"
+    # (Indeterminado) de "não se aplica" (N/A).
+    st.caption(f"**{t('report.value.unknown')}** — {t('report.gloss.unknown')}")
+    st.caption(
+        f"**{t('report.value.not_applicable')}** — {t('report.gloss.not_applicable')}"
+    )
 
     col1, col2, col3 = st.columns([2, 1, 2])
     with col2:

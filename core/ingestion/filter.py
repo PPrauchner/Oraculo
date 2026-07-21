@@ -1,14 +1,14 @@
 """
-Aplica as Exclusões e confere os requisitos mínimos do Projeto-Alvo.
+Applies the Exclusions and checks the Target Project's minimum requirements.
 
-Responsabilidades:
-- Oferecer as pastas do Projeto-Alvo que podem virar Exclusão.
-- Decidir se um caminho está dentro de uma Exclusão.
-- Validar que o Projeto-Alvo tem código Python e ao menos uma Declaração.
+Responsibilities:
+- Offer the Target Project folders that can become an Exclusion.
+- Decide whether a path is inside an Exclusion.
+- Validate that the Target Project has Python code and at least one Declaration.
 
-Trabalha sobre caminhos vindos de `core.ingestion.source`, e por isso vale igual
-para archive e para diretório (ADR-0001). Uma Exclusão é o **nome de uma pasta**, e
-casa em qualquer profundidade: marcar `tests` exclui `tests/` e `src/tests/`.
+Works over paths coming from `core.ingestion.source`, and for that reason applies
+equally to archive and to directory (ADR-0001). An Exclusion is a **folder name**, and
+matches at any depth: marking `tests` excludes `tests/` and `src/tests/`.
 """
 
 from core.ingestion.source import (
@@ -20,45 +20,45 @@ from core.ingestion.source import (
 
 
 def _folder_name(folder: str) -> str:
-    """Reduz uma Exclusão ao nome da pasta, tolerando `./tests/` e `.\\tests`."""
+    """Reduces an Exclusion to the folder name, tolerating `./tests/` and `.\\tests`."""
     return folder.replace("\\", "/").strip("/").removeprefix("./").strip()
 
 
 def get_unique_folders(source: ProjectSource) -> list[str]:
-    """Lista as pastas do Projeto-Alvo que podem virar Exclusão.
+    """Lists the Target Project folders that can become an Exclusion.
 
-    Toda pasta devolvida aqui é excluível por `is_path_in_ignored_folders`: as duas
-    funções falam da mesma coisa — nome de pasta em qualquer profundidade. Foi a
-    divergência entre elas que fazia a UI oferecer Exclusões sem efeito (issue #26).
+    Every folder returned here is excludable by `is_path_in_ignored_folders`: the two
+    functions speak of the same thing — folder name at any depth. It was the
+    divergence between them that made the UI offer Exclusions with no effect (issue #26).
 
     Args:
-        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
+        source: Target Project source (ZipFile, TarFile, Path or dict).
 
     Returns:
-        Nomes de pasta, sem repetição, em ordem alfabética.
+        Folder names, without repetition, in alphabetical order.
     """
     folders = set()
 
     for path in list_paths(source):
-        # O último segmento é o arquivo, não uma pasta
+        # The last segment is the file, not a folder
         folders.update(path.split("/")[:-1])
 
     return sorted(folders)
 
 
 def is_path_in_ignored_folders(file_path: str, ignore_folders: list[str]) -> bool:
-    """Indica se um caminho está dentro de alguma Exclusão.
+    """Indicates whether a path is inside some Exclusion.
 
-    Casa por segmento, em qualquer profundidade: marcar `tests` exclui tanto
-    `tests/test_x.py` quanto `src/tests/test_x.py`. Um arquivo cujo nome coincide
-    com a Exclusão não é excluído — Exclusão é pasta.
+    Matches by segment, at any depth: marking `tests` excludes both
+    `tests/test_x.py` and `src/tests/test_x.py`. A file whose name matches
+    the Exclusion is not excluded — an Exclusion is a folder.
 
     Args:
-        file_path: Caminho do arquivo, relativo à raiz do Projeto-Alvo.
-        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
+        file_path: File path, relative to the Target Project root.
+        ignore_folders: Folders in Exclusion (e.g.: ["tests", "docs"]).
 
     Returns:
-        True se o arquivo está em uma Exclusão, False caso contrário.
+        True if the file is in an Exclusion, False otherwise.
     """
     if not ignore_folders or not file_path:
         return False
@@ -71,14 +71,14 @@ def is_path_in_ignored_folders(file_path: str, ignore_folders: list[str]) -> boo
 
 def should_skip_file(file_path: str, ignore_folders: list[str]) -> bool:
     """
-    Verifica se um arquivo deve ser ignorado.
+    Checks whether a file should be ignored.
 
     Args:
-        file_path: Caminho do arquivo
-        ignore_folders: Lista de pastas a ignorar
+        file_path: File path
+        ignore_folders: List of folders to ignore
 
     Returns:
-        True se arquivo deve ser ignorado, False caso contrário
+        True if the file should be ignored, False otherwise
     """
     return is_path_in_ignored_folders(file_path, ignore_folders)
 
@@ -86,26 +86,26 @@ def should_skip_file(file_path: str, ignore_folders: list[str]) -> bool:
 def validate_project_structure(
     source: ProjectSource, ignore_folders: list[str] | None = None
 ) -> tuple[bool, IngestionError | None]:
-    """Valida se o Projeto-Alvo tem os requisitos mínimos para a auditoria.
+    """Validates whether the Target Project has the minimum requirements for the audit.
 
-    Exige, fora das Exclusões, pelo menos um arquivo `.py` e pelo menos uma
-    Declaração (ou Lock). Vale igual para archive e para diretório, então os
-    códigos de erro não citam formato de arquivo.
+    Requires, outside the Exclusions, at least one `.py` file and at least one
+    Declaration (or Lock). Applies equally to archive and to directory, so the
+    error codes do not mention file format.
 
     Args:
-        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
-        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
+        source: Target Project source (ZipFile, TarFile, Path or dict).
+        ignore_folders: Folders in Exclusion (e.g.: ["tests", "docs"]).
 
     Returns:
-        Par (é_válido, erro). Com sucesso, (True, None); em falha, o
-        `IngestionError` que descreve o que falta (ADR-0010).
+        Pair (is_valid, error). On success, (True, None); on failure, the
+        `IngestionError` that describes what is missing (ADR-0010).
     """
     if source is None:
         return False, ("source_missing", {})
 
-    # Fonte que o despacho não abre produz lista de caminhos vazia, indistinguível
-    # de um Projeto-Alvo sem código. Sem esta saída, o usuário ouviria que faltam
-    # arquivos .py num Projeto-Alvo que sequer chegou a ser lido.
+    # A source the dispatch cannot open produces an empty path list, indistinguishable
+    # from a Target Project without code. Without this early return, the user would hear
+    # that .py files are missing from a Target Project that was never even read.
     if not is_supported(source):
         return False, ("unsupported_source", {})
 

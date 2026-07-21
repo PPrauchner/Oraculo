@@ -1,16 +1,16 @@
 """
-Módulo responsável pela leitura de arquivos compactados (.zip).
+Reading of compressed archive files (.zip).
 
-Fornece funções para abrir, listar e acessar arquivos dentro de um
-arquivo ZIP, sem necessidade de extração para o disco.
+Provides functions to open, list and access files inside a
+ZIP archive, without needing to extract them to disk.
 
-Entrada:
-- Arquivo ZIP em formato de bytes
+Input:
+- ZIP archive as bytes
 
-Saída:
-- Objeto manipulável do ZIP (zip_ref)
-- Lista de arquivos contidos no ZIP
-- Conteúdo de arquivos específicos
+Output:
+- Manipulable ZIP object (zip_ref)
+- List of files contained in the ZIP
+- Contents of specific files
 """
 
 import io
@@ -22,72 +22,72 @@ from utils.functions import registrar, EXTRATORES
 @registrar(EXTRATORES, "zip")
 def read_zip_file(file_bytes: bytes) -> zipfile.ZipFile:
     """
-    Lê um arquivo ZIP a partir de bytes e retorna um objeto manipulável.
+    Reads a ZIP archive from bytes and returns a manipulable object.
 
     Args:
-        file_bytes (bytes): O conteúdo do arquivo ZIP em formato de bytes.
+        file_bytes (bytes): The ZIP archive contents as bytes.
 
     Returns:
-        zipfile.ZipFile: Um objeto que representa o arquivo ZIP, permitindo
-                         acesso aos arquivos contidos nele.
+        zipfile.ZipFile: An object representing the ZIP archive, allowing
+                         access to the files contained in it.
     """
 
     try:
         zip_ref = zipfile.ZipFile(io.BytesIO(file_bytes))
         return zip_ref
     except zipfile.BadZipFile:
-        print("O arquivo enviado não é um ZIP válido.")
+        print("The uploaded file is not a valid ZIP.")
         return None
 
 
 @registrar(EXTRATORES, "tar")
 def tar_file(file_bytes: bytes) -> tarfile.TarFile:
     """
-    Lê um arquivo TAR a partir de bytes e retorna um objeto manipulável.
+    Reads a TAR archive from bytes and returns a manipulable object.
 
     Args:
-        file_bytes (bytes): O conteúdo do arquivo TAR em formato de bytes.
+        file_bytes (bytes): The TAR archive contents as bytes.
 
     Returns:
-        tarfile.TarFile: Um objeto que representa o arquivo TAR, permitindo
-                         acesso aos arquivos contidos nele.
+        tarfile.TarFile: An object representing the TAR archive, allowing
+                         access to the files contained in it.
     """
 
     try:
         tar_ref = tarfile.open(fileobj=io.BytesIO(file_bytes))
         return tar_ref
     except tarfile.TarError:
-        print("O arquivo enviado não é um TAR válido.")
+        print("The uploaded file is not a valid TAR.")
         return None
 
 
 @registrar(EXTRATORES, "tar.gz")
 def tar_gz_file(file_bytes: bytes) -> tarfile.TarFile:
     """
-    Lê um arquivo TAR.GZ a partir de bytes e retorna um objeto manipulável.
+    Reads a TAR.GZ archive from bytes and returns a manipulable object.
 
     Args:
-        file_bytes (bytes): O conteúdo do arquivo TAR.GZ em formato de bytes.
+        file_bytes (bytes): The TAR.GZ archive contents as bytes.
 
     Returns:
-        tarfile.TarFile: Um objeto que representa o arquivo TAR.GZ, permitindo
-                         acesso aos arquivos contidos nele.
+        tarfile.TarFile: An object representing the TAR.GZ archive, allowing
+                         access to the files contained in it.
     """
 
     try:
         tar_ref = tarfile.open(fileobj=io.BytesIO(file_bytes), mode="r:gz")
         return tar_ref
     except tarfile.TarError:
-        print("O arquivo enviado não é um TAR.GZ válido.")
+        print("The uploaded file is not a valid TAR.GZ.")
         return None
 
 
 def get_archive_files(archive: zipfile.ZipFile) -> list:
-    """Obtém a lista de arquivos contidos em um arquivo ZIP ou TAR.
+    """Gets the list of files contained in a ZIP or TAR archive.
     Args:
-        archive (zipfile.ZipFile or tarfile.TarFile): O objeto do arquivo compactado.
+        archive (zipfile.ZipFile or tarfile.TarFile): The compressed archive object.
     Returns:
-        list: Uma lista de arquivos contidos no arquivo compactado.
+        list: A list of files contained in the compressed archive.
     """
     if isinstance(archive, zipfile.ZipFile):
         return archive.filelist
@@ -97,8 +97,8 @@ def get_archive_files(archive: zipfile.ZipFile) -> list:
 
 
 def process_uploaded_file(uploaded_file):
-    """Função responsável por 
-    
+    """Function responsible for
+
     """
     if not uploaded_file:
         return None

@@ -1,5 +1,5 @@
 """
-Módulo responsável por armazenar diconários de funções
+Stores function dictionaries (registries).
 
 """
 

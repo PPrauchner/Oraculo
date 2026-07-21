@@ -101,7 +101,7 @@ def test_dependencia_declarada_sem_versao_usada_e_indeterminada():
 
 
 def test_a_analise_so_emite_status_do_vocabulario():
-    """Nenhum caminho de `_checar_dependencia` inventa um quinto valor."""
+    """Nenhum caminho de `_check_dependency` inventa um quinto valor."""
     emitted = {
         _analyze("1.5.0"),
         _analyze("3.0.1"),

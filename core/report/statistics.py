@@ -1,46 +1,46 @@
 """
-Estatísticas de Tamanho e Idade estratificadas por Categoria (US-06).
+Size and Age statistics stratified by Category (US-06).
 
-Responsabilidades:
-- Agregar Quantidade, Tamanho somado e Idade média das dependências de uma categoria.
-- Contar as dependências deixadas de fora por terem Tamanho/Idade indisponíveis.
-- Descrever essas agregações para exibição, explicitando quantas ficaram de fora.
+Responsibilities:
+- Aggregate Count, summed Size and average Age of the dependencies of a category.
+- Count the dependencies left out for having unavailable Size/Age.
+- Describe these aggregations for display, making explicit how many were left out.
 
-Descrever, e não redigir: a caption sai daqui como identidade e dado, e o texto
-nasce em `utils/display.py`, na língua da tela (ADR-0010).
+Describe, not word: the caption leaves here as identity and data, and the text
+is born in `utils/display.py`, in the screen language (ADR-0010).
 """
 
 from utils.types import CategorySummary, SummaryMetric
 
 
 def _available(dependencies: list[dict], metric: str) -> list[float]:
-    """Valores numéricos de uma métrica, descartando os indisponíveis.
+    """Numeric values of a metric, discarding the unavailable ones.
 
-    Sem Versão Usada resolvida, Tamanho e Idade saem como o sentinela de
-    indisponibilidade (ADR-0002/ADR-0004). Somar ou mediar esse sentinela como 0
-    inventaria um número que o PyPI não deu.
+    Without a resolved Used Version, Size and Age come out as the unavailability
+    sentinel (ADR-0002/ADR-0004). Summing or averaging that sentinel as 0
+    would invent a number that PyPI did not give.
 
     Args:
-        dependencies: Dependências da categoria.
-        metric: "size" ou "age".
+        dependencies: Dependencies of the category.
+        metric: "size" or "age".
 
     Returns:
-        Somente os valores efetivamente medidos.
+        Only the values actually measured.
     """
     values = [dep.get(metric) for dep in dependencies]
     return [value for value in values if isinstance(value, (int, float))]
 
 
 def summarize_category(dependencies: list[dict]) -> CategorySummary:
-    """Agrega Quantidade, Tamanho e Idade das dependências de uma categoria.
+    """Aggregates Count, Size and Age of the dependencies of a category.
 
     Args:
-        dependencies: Dependências da categoria.
+        dependencies: Dependencies of the category.
 
     Returns:
-        `count` (todas as dependências da categoria), `total_size` e `average_age`
-        (só as efetivamente medidas, ou ``None`` quando nenhuma foi), e
-        `missing_size`/`missing_age` com quantas ficaram de fora de cada agregação.
+        `count` (all the dependencies of the category), `total_size` and `average_age`
+        (only those actually measured, or ``None`` when none were), and
+        `missing_size`/`missing_age` with how many were left out of each aggregation.
     """
     sizes = _available(dependencies, "size")
     ages = _available(dependencies, "age")
@@ -55,16 +55,16 @@ def summarize_category(dependencies: list[dict]) -> CategorySummary:
 
 
 def summarize_by_category(report: dict[str, list[dict]]) -> dict[str, CategorySummary]:
-    """Estratifica as estatísticas por Categoria (US-06).
+    """Stratifies the statistics by Category (US-06).
 
-    Percorre as categorias que o relatório trouxer, sem lista fixa: acrescentar
-    uma categoria nova ao relatório basta para que ela apareça nas estatísticas.
+    Walks the categories the report brings, with no fixed list: adding
+    a new category to the report is enough for it to appear in the statistics.
 
     Args:
-        report: Categoria (rótulo) para as dependências que a compõem.
+        report: Category (label) to the dependencies that compose it.
 
     Returns:
-        Uma agregação de `summarize_category` por categoria, na mesma ordem.
+        One `summarize_category` aggregation per category, in the same order.
     """
     return {
         category_label: summarize_category(dependencies)
@@ -73,21 +73,21 @@ def summarize_by_category(report: dict[str, list[dict]]) -> dict[str, CategorySu
 
 
 def summary_metrics(summary: CategorySummary) -> list[SummaryMetric]:
-    """Descreve as estatísticas de uma categoria para quem for exibi-las.
+    """Describes the statistics of a category for whoever will display them.
 
-    Devolve a identidade da métrica e os dados que a descrevem, não a frase
-    (ADR-0010). A anterior — "Tamanho: 1.2 MB (1 de 2 sem dado)" — nascia pronta e
-    em português aqui dentro, e sob `?lang=en` chegava à tela sem nada a traduzir.
+    Returns the metric's identity and the data that describe it, not the sentence
+    (ADR-0010). The previous one — "Tamanho: 1.2 MB (1 de 2 sem dado)" — was born ready and
+    in Portuguese in here, and under `?lang=en` reached the screen with nothing to translate.
 
-    A contagem de quantas ficaram de fora viaja junto do valor de propósito: uma
-    Idade média calculada sobre metade dos pacotes, sem aviso, engana quem lê.
+    The count of how many were left out travels alongside the value on purpose: an
+    average Age computed over half the packages, without warning, misleads the reader.
 
     Args:
-        summary: Agregação produzida por `summarize_category`.
+        summary: Aggregation produced by `summarize_category`.
 
     Returns:
-        O Tamanho somado e a Idade média, nesta ordem, cada um com quantas
-        dependências ficaram fora da agregação e de quantas.
+        The summed Size and the average Age, in this order, each with how many
+        dependencies were left out of the aggregation and out of how many.
     """
     total = summary["count"]
 

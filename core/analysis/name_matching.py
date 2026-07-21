@@ -1,41 +1,41 @@
 """
-Resolução de nomes entre Declaração e código para os analisadores.
+Name resolution between Declaration and code for the analyzers.
 
-Responsabilidades:
-- Normalizar Nome de Distribuição e Nome de Import para uma forma comparável.
-- Expandir uma Distribuição para todos os Nomes de Import que ela satisfaz,
-  aplicando a tabela de Alias de Import (ex.: PyYAML -> yaml).
+Responsibilities:
+- Normalize Distribution Name and Import Name into a comparable form.
+- Expand a Distribution into all the Import Names it satisfies,
+  applying the Import Alias table (e.g.: PyYAML -> yaml).
 """
 
 from utils.constants import IMPORT_ALIASES
 
 
 def normalize_name(name: str) -> str:
-    """Normaliza um nome de pacote/import para comparação.
+    """Normalizes a package/import name for comparison.
 
-    Aplica minúsculas e troca "-" por "_", de modo que `scikit-learn` e
-    `scikit_learn` casem.
+    Lowercases and swaps "-" for "_", so that `scikit-learn` and
+    `scikit_learn` match.
 
     Args:
-        name: Nome de Distribuição ou Nome de Import.
+        name: Distribution Name or Import Name.
 
     Returns:
-        O nome normalizado.
+        The normalized name.
     """
     return name.lower().replace("-", "_")
 
 
 def import_names_for(distribution: str) -> set[str]:
-    """Retorna os Nomes de Import normalizados que uma Distribuição satisfaz.
+    """Returns the normalized Import Names that a Distribution satisfies.
 
-    Além do próprio nome normalizado, inclui os Aliases de Import conhecidos
-    (ex.: `PyYAML` também satisfaz `yaml`).
+    Beyond its own normalized name, it includes the known Import Aliases
+    (e.g.: `PyYAML` also satisfies `yaml`).
 
     Args:
-        distribution: Nome de Distribuição declarado (ex.: "PyYAML").
+        distribution: Declared Distribution Name (e.g.: "PyYAML").
 
     Returns:
-        Conjunto de Nomes de Import normalizados equivalentes à Distribuição.
+        Set of normalized Import Names equivalent to the Distribution.
     """
     normalized = normalize_name(distribution)
     names = {normalized}

@@ -1,14 +1,14 @@
 """
-Percorre o Projeto-Alvo entregando o conteúdo dos arquivos que interessam.
+Walks the Target Project delivering the contents of the files that matter.
 
-Responsabilidades:
-- Iterar os caminhos do Projeto-Alvo, seja ele archive ou diretório.
-- Descartar o que está em Exclusão e o que o chamador não pediu.
-- Ler como texto apenas os arquivos que passaram pelo filtro.
+Responsibilities:
+- Iterate the Target Project paths, whether it is an archive or a directory.
+- Discard what is in an Exclusion and what the caller did not ask for.
+- Read as text only the files that passed the filter.
 
-Deriva das duas primitivas de `core.ingestion.source` (ADR-0006) em vez de
-reimplementá-las: quem lê Declarações e Lock pede caminho + conteúdo e não conhece
-a espécie da fonte.
+Derives from the two primitives of `core.ingestion.source` (ADR-0006) instead of
+reimplementing them: whoever reads Declarations and the Lock asks for path + content
+and does not know the kind of source.
 """
 
 from typing import Callable, Iterator
@@ -20,19 +20,19 @@ from core.ingestion.source import ProjectSource, list_paths, read_text
 def iter_archive_texts(
     source: ProjectSource, ignore_folders: list[str], keep: Callable[[str], bool]
 ) -> Iterator[tuple[str, str]]:
-    """Percorre o Projeto-Alvo e devolve (caminho, conteúdo) dos arquivos pedidos.
+    """Walks the Target Project and yields (path, content) of the requested files.
 
-    Só os arquivos aprovados por `keep` são lidos: percorrer o índice da fonte é
-    barato, decodificar cada arquivo não.
+    Only the files approved by `keep` are read: walking the source index is
+    cheap, decoding each file is not.
 
     Args:
-        source: Fonte do Projeto-Alvo (ZipFile, TarFile, Path ou dict).
-        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
-        keep: Decide, pelo caminho, se o arquivo interessa ao chamador.
+        source: Target Project source (ZipFile, TarFile, Path or dict).
+        ignore_folders: Folders in Exclusion (e.g.: ["tests", "docs"]).
+        keep: Decides, by the path, whether the file matters to the caller.
 
     Yields:
-        Pares (caminho, conteúdo) dos arquivos fora das Exclusões que `keep`
-        aprovou e que puderam ser lidos como texto.
+        (path, content) pairs of the files outside the Exclusions that `keep`
+        approved and that could be read as text.
     """
     for file_path in list_paths(source):
         if is_path_in_ignored_folders(file_path, ignore_folders):

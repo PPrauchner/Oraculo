@@ -1,15 +1,15 @@
 """
-Resolve o rótulo que o usuário lê na língua escolhida.
+Resolves the label the user reads in the chosen language.
 
-Responsabilidades:
-- Carregar os rótulos de `locales/<língua>.json`.
-- Traduzir uma chave, caindo para o inglês quando ela falta na língua pedida.
-- Ler da URL (`?lang=`) a língua da requisição atual.
+Responsibilities:
+- Load the labels from `locales/<language>.json`.
+- Translate a key, falling back to English when it is missing in the requested language.
+- Read from the URL (`?lang=`) the language of the current request.
 
-A língua vive no query param, e não em `st.session_state`, por dois motivos: ela
-sobrevive ao refresh e o link sai compartilhável já traduzido. Pelo mesmo motivo
-nenhum rótulo traduzido é guardado no estado — `t` resolve na renderização, senão
-trocar a língua mostraria rótulo velho até reexecutar a análise.
+The language lives in the query param, and not in `st.session_state`, for two reasons: it
+survives the refresh and the link comes out shareable already translated. For the same reason
+no translated label is stored in state — `t` resolves at render time, otherwise
+changing the language would show a stale label until the analysis is re-run.
 """
 
 import json
@@ -19,35 +19,35 @@ import streamlit as st
 
 LOCALES_DIR = Path(__file__).resolve().parents[1] / "locales"
 
-# Inglês é o padrão: o trabalho já foi avaliado e o projeto agora serve de
-# portfólio, então a banca deixou de ser o público default (ADR-0009).
+# English is the default: the work has already been graded and the project now serves as a
+# portfolio, so the examining board is no longer the default audience (ADR-0009).
 DEFAULT_LANGUAGE = "en"
 
-# Nome do query param que carrega a língua.
+# Name of the query param that carries the language.
 LANGUAGE_PARAM = "lang"
 
 
 def available_languages() -> list[str]:
-    """Línguas que a interface oferece, em ordem alfabética.
+    """Languages the interface offers, in alphabetical order.
 
     Returns:
-        Um código por arquivo em `locales/`. Suportar uma língua nova é acrescentar
-        o arquivo — nenhum código muda (ADR-0009).
+        One code per file in `locales/`. Supporting a new language is adding
+        the file — no code changes (ADR-0009).
     """
     return sorted(locale_file.stem for locale_file in LOCALES_DIR.glob("*.json"))
 
 
 def resolve_language(requested: str | None) -> str:
-    """Decide em que língua a interface fala.
+    """Decides which language the interface speaks.
 
     Args:
-        requested: Língua pedida — na prática, o que veio em `?lang=`. `None` quando
-            o parâmetro não está na URL.
+        requested: Requested language — in practice, what came in `?lang=`. `None` when
+            the parameter is not in the URL.
 
     Returns:
-        A língua pedida, se houver arquivo para ela; inglês em qualquer outro caso.
-        A URL é digitável, então valor desconhecido abre em inglês em vez de derrubar
-        a tela.
+        The requested language, if there is a file for it; English in any other case.
+        The URL is typable, so an unknown value opens in English instead of taking down
+        the screen.
     """
     if requested is not None and requested in available_languages():
         return requested
@@ -56,13 +56,13 @@ def resolve_language(requested: str | None) -> str:
 
 
 def load_locale(language: str) -> dict[str, str]:
-    """Lê os rótulos de uma língua.
+    """Reads the labels of a language.
 
     Args:
-        language: Código da língua, o nome do arquivo em `locales/` sem extensão.
+        language: Language code, the file name in `locales/` without extension.
 
     Returns:
-        Os rótulos daquela língua, ou vazio se ela não tem arquivo.
+        The labels of that language, or empty if it has no file.
     """
     locale_file = LOCALES_DIR / f"{language}.json"
 
@@ -73,17 +73,17 @@ def load_locale(language: str) -> dict[str, str]:
 
 
 def translate(key: str, language: str) -> str:
-    """Devolve o rótulo de uma chave na língua pedida.
+    """Returns the label of a key in the requested language.
 
     Args:
-        key: Identificador do rótulo, como está em `locales/*.json`.
-        language: Código da língua desejada.
+        key: Label identifier, as it is in `locales/*.json`.
+        language: Code of the desired language.
 
     Returns:
-        O rótulo na língua pedida; o inglês quando a chave falta nela. Chave que
-        falta também no inglês volta crua: é bug de quem chamou, e esconder isso
-        deixaria a tela vazia sem dizer por quê. O teste de paridade impede que a
-        primeira queda vire rotina, e o inglês completo, que a segunda aconteça.
+        The label in the requested language; English when the key is missing in it. A key
+        missing in English too comes back raw: it is a bug of the caller, and hiding that
+        would leave the screen empty without saying why. The parity test prevents the
+        first fallback from becoming routine, and the complete English, the second from happening.
     """
     translated = load_locale(language).get(key)
 
@@ -94,19 +94,19 @@ def translate(key: str, language: str) -> str:
 
 
 def current_language() -> str:
-    """Língua da requisição atual, lida de `?lang=` na URL."""
+    """Language of the current request, read from `?lang=` in the URL."""
     return resolve_language(st.query_params.get(LANGUAGE_PARAM))
 
 
 def t(key: str) -> str:
-    """Traduz uma chave na língua da requisição atual.
+    """Translates a key in the language of the current request.
 
     Args:
-        key: Identificador do rótulo, como está em `locales/*.json`.
+        key: Label identifier, as it is in `locales/*.json`.
 
     Returns:
-        O rótulo pronto para a tela. Chamar na hora de renderizar, nunca guardar o
-        resultado em `st.session_state`: o rótulo guardado envelhece quando o
-        usuário troca de língua.
+        The label ready for the screen. Call it at render time, never store the
+        result in `st.session_state`: the stored label ages when the
+        user changes language.
     """
     return translate(key, current_language())

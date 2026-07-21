@@ -1,14 +1,14 @@
 """
-Reúne o conjunto auditado a partir da união de todas as Declarações.
+Gathers the audited set from the union of all Declarations.
 
-Responsabilidades:
-- Percorrer o Projeto-Alvo e ler cada Declaração fora das Exclusões.
-- Unir os pacotes declarados deduplicando por Nome de Distribuição.
-- Excluir o Lock do conjunto: ele resolve versões, não o define (ADR-0002).
+Responsibilities:
+- Walk the Target Project and read each Declaration outside the Exclusions.
+- Merge the declared packages, deduplicating by Distribution Name.
+- Leave the Lock out of the set: it resolves versions, it does not define it (ADR-0002).
 
-O Lock (uv.lock, poetry.lock) lista centenas de transitivas que ninguém importa;
-lê-lo como Declaração faria toda transitiva virar Zumbi. Por isso o conjunto vem
-só das Declarações; o Lock entra depois, para resolver a Versão Usada.
+The Lock (uv.lock, poetry.lock) lists hundreds of transitive packages that nobody imports;
+reading it as a Declaration would make every transitive one a Zombie. That is why the set
+comes only from the Declarations; the Lock enters later, to resolve the Used Version.
 """
 
 from typing import Callable, Dict, List
@@ -19,37 +19,37 @@ from utils.types import Dependency
 from core.ingestion.archive_walker import iter_archive_texts
 from core.parsin.dependency_parser import parse_dependencies
 
-# Popular o registry de READERS: o decorador `registrar` só roda quando o módulo
-# é importado (ver utils/functions.py).
+# Populate the READERS registry: the `registrar` decorator only runs when the module
+# is imported (see utils/functions.py).
 import core.parsin.readers  # noqa: F401
 
 
 def is_lock_filename(file_name: str) -> bool:
-    """Indica se um arquivo é um Lock (uv.lock, poetry.lock).
+    """Indicates whether a file is a Lock (uv.lock, poetry.lock).
 
-    O Lock resolve versões, não define o conjunto auditado (ADR-0002), então é
-    ignorado ao montar o conjunto.
+    The Lock resolves versions, it does not define the audited set (ADR-0002), so it is
+    ignored when building the set.
 
     Args:
-        file_name: Nome ou caminho do arquivo.
+        file_name: File name or path.
 
     Returns:
-        True se o arquivo for um Lock, False caso contrário.
+        True if the file is a Lock, False otherwise.
     """
     return file_name.lower().endswith(LOCK_EXTENSION)
 
 
 def _match_declaration_reader(file_name: str) -> Callable[[str], list] | None:
-    """Devolve o reader de uma Declaração, ou None se o arquivo não for uma.
+    """Returns the reader of a Declaration, or None if the file is not one.
 
-    O Lock casa com o reader `.lock`, mas nunca define o conjunto (ADR-0002), então
-    é descartado antes de consultar o registry.
+    The Lock matches the `.lock` reader, but it never defines the set (ADR-0002), so it
+    is discarded before consulting the registry.
 
     Args:
-        file_name: Nome ou caminho do arquivo.
+        file_name: File name or path.
 
     Returns:
-        A função de leitura registrada para a Declaração, ou None.
+        The reading function registered for the Declaration, or None.
     """
     lower = file_name.lower()
     if is_lock_filename(lower):
@@ -62,21 +62,21 @@ def _match_declaration_reader(file_name: str) -> Callable[[str], list] | None:
 
 
 def _is_declaration(file_name: str) -> bool:
-    """Indica se um arquivo é uma Declaração que algum reader sabe ler."""
+    """Indicates whether a file is a Declaration that some reader knows how to read."""
     return _match_declaration_reader(file_name) is not None
 
 
 def merge_declarations(dependencies: List[Dependency]) -> List[Dependency]:
-    """Une Declarações deduplicando por Nome de Distribuição.
+    """Merges Declarations, deduplicating by Distribution Name.
 
-    Um pacote declarado em mais de uma Declaração aparece uma única vez, com a
-    Origem da primeira ocorrência preservada (ADR-0002).
+    A package declared in more than one Declaration appears a single time, with the
+    Origin of the first occurrence preserved (ADR-0002).
 
     Args:
-        dependencies: Dependências normalizadas, possivelmente com repetições.
+        dependencies: Normalized dependencies, possibly with repetitions.
 
     Returns:
-        Lista sem duplicatas, na ordem da primeira ocorrência de cada pacote.
+        List without duplicates, in the order of the first occurrence of each package.
     """
     seen = set()
     merged = []
@@ -90,19 +90,19 @@ def merge_declarations(dependencies: List[Dependency]) -> List[Dependency]:
 
 
 def collect_declarations(archive, ignore_folders: List[str]) -> List[Dependency]:
-    """Monta o conjunto auditado como a união de todas as Declarações.
+    """Builds the audited set as the union of all Declarations.
 
-    Para cada Declaração fora das Exclusões, acumula seus pacotes. O Lock é ignorado
-    (ADR-0002). O resultado é deduplicado por Nome de Distribuição, preservando a
-    Origem de cada pacote.
+    For each Declaration outside the Exclusions, accumulates its packages. The Lock is
+    ignored (ADR-0002). The result is deduplicated by Distribution Name, preserving the
+    Origin of each package.
 
     Args:
-        archive: Objeto zipfile.ZipFile ou tarfile.TarFile do Projeto-Alvo.
-        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
+        archive: zipfile.ZipFile or tarfile.TarFile object of the Target Project.
+        ignore_folders: Folders in Exclusion (e.g.: ["tests", "docs"]).
 
     Returns:
-        Conjunto auditado como lista de dependências normalizadas. Vazio se o
-        Projeto-Alvo não tiver nenhuma Declaração fora das Exclusões.
+        The audited set as a list of normalized dependencies. Empty if the
+        Target Project has no Declaration outside the Exclusions.
     """
     declared: List[Dependency] = []
 

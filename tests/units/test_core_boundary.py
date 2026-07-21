@@ -3,7 +3,7 @@ Guarda a fronteira entre `core/` e a apresentação.
 
 O invariante "`core/` não conhece Streamlit" era respeitado ao pé da letra e violado
 na prática: nenhum módulo importava `streamlit`, mas `core/ingestion/` escolhia o
-ícone (`❌`) e a língua (português) das mensagens de erro. O acoplamento não estava
+ícone e a língua (português) das mensagens de erro. O acoplamento não estava
 no import; estava na string (ADR-0010).
 
 Responsabilidades:
@@ -20,20 +20,23 @@ import pytest
 
 CORE_DIR = Path(__file__).resolve().parents[2] / "core"
 
-# Blocos Unicode de emoji e pictogramas. Um deles em `core/` significa que a camada
-# de domínio voltou a decidir como o erro aparece na tela.
+# Faixas Unicode de emoji e pictogramas, como pares de codepoint. Ficam em inteiros (e a
+# classe de regex nasce de `chr()`) para que este próprio arquivo, que proíbe emoji em
+# `core/`, não contenha nenhum. Um deles em `core/` significa que a camada de domínio
+# voltou a decidir como o erro aparece na tela.
+EMOJI_RANGES = [
+    (0x2600, 0x26FF),    # símbolos diversos
+    (0x2700, 0x27BF),    # dingbats
+    (0x2B00, 0x2BFF),    # setas e formas
+    (0xFE0F, 0xFE0F),    # seletor de variação (emoji presentation)
+    (0x1F300, 0x1F5FF),  # símbolos e pictogramas
+    (0x1F600, 0x1F64F),  # emoticons
+    (0x1F680, 0x1F6FF),  # transporte e mapas
+    (0x1F900, 0x1F9FF),  # símbolos suplementares
+    (0x1FA70, 0x1FAFF),  # pictogramas estendidos
+]
 EMOJI = re.compile(
-    "["
-    "☀-⛿"  # símbolos diversos (⚠, ⛔)
-    "✀-➿"  # dingbats (❌, ✅)
-    "⬀-⯿"  # setas e formas
-    "️"  # seletor de variação (emoji presentation)
-    "\U0001f300-\U0001f5ff"  # símbolos e pictogramas
-    "\U0001f600-\U0001f64f"  # emoticons
-    "\U0001f680-\U0001f6ff"  # transporte e mapas
-    "\U0001f900-\U0001f9ff"  # símbolos suplementares
-    "\U0001fa70-\U0001faff"  # pictogramas estendidos
-    "]"
+    "[" + "".join(f"{chr(lo)}-{chr(hi)}" for lo, hi in EMOJI_RANGES) + "]"
 )
 
 CORE_MODULES = sorted(CORE_DIR.rglob("*.py"))
@@ -87,7 +90,7 @@ def test_core_does_not_import_streamlit(module: Path):
 
 @pytest.mark.parametrize("module", CORE_MODULES, ids=lambda path: path.name)
 def test_core_does_not_choose_an_icon(module: Path):
-    """Ícone é decisão de apresentação: `core/` devolve código, não `❌` (ADR-0010)."""
+    """Ícone é decisão de apresentação: `core/` devolve código, não ícone (ADR-0010)."""
     found = EMOJI.findall(module.read_text(encoding="utf-8"))
 
     assert found == []

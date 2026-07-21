@@ -1,15 +1,15 @@
 """
-Resolve a Versão Usada de cada pacote do conjunto a partir do Lock.
+Resolves the Used Version of each package in the set from the Lock.
 
-Responsabilidades:
-- Ler o Lock (uv.lock, poetry.lock) do Projeto-Alvo, quando existir, e mapear cada
-  Nome de Distribuição normalizado à sua versão exata.
-- Sobrescrever a Versão Usada dos pacotes que já estão no conjunto auditado com a
-  versão do Lock, casando por Nome de Distribuição normalizado.
+Responsibilities:
+- Read the Target Project's Lock (uv.lock, poetry.lock), when present, and map each
+  normalized Distribution Name to its exact version.
+- Overwrite the Used Version of the packages already in the audited set with the
+  Lock version, matching by normalized Distribution Name.
 
-O Lock resolve versões, não define o conjunto (ADR-0002): pacotes que só existem no
-Lock (transitivas) não entram no conjunto — apenas emprestam versão aos que já estão
-nele. Por isso a resolução percorre o conjunto, nunca o Lock.
+The Lock resolves versions, it does not define the set (ADR-0002): packages that exist only
+in the Lock (transitive ones) do not enter the set — they only lend their version to those already
+in it. That is why the resolution walks the set, never the Lock.
 """
 
 from core.analysis.name_matching import normalize_name
@@ -21,19 +21,19 @@ from core.parsin.readers import parse_lock
 from utils.types import Dependency
 
 def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]:
-    """Mapeia Nome de Distribuição normalizado à versão exata registrada no Lock.
+    """Maps normalized Distribution Name to the exact version recorded in the Lock.
 
-    Lê cada Lock fora das Exclusões e acumula suas versões. O mapa inclui também as
-    transitivas do Lock; filtrar o que pertence ao conjunto é responsabilidade de
+    Reads each Lock outside the Exclusions and accumulates its versions. The map also includes
+    the transitive packages from the Lock; filtering what belongs to the set is the responsibility of
     `resolve_used_versions`.
 
     Args:
-        archive: Objeto zipfile.ZipFile ou tarfile.TarFile do Projeto-Alvo.
-        ignore_folders: Pastas em Exclusão (ex.: ["tests", "docs"]).
+        archive: zipfile.ZipFile or tarfile.TarFile object of the Target Project.
+        ignore_folders: Folders in Exclusion (e.g.: ["tests", "docs"]).
 
     Returns:
-        Mapa Nome de Distribuição normalizado -> versão exata. Vazio se não houver
-        Lock fora das Exclusões.
+        Map of normalized Distribution Name -> exact version. Empty if there is no
+        Lock outside the Exclusions.
     """
     version_map: dict[str, str] = {}
 
@@ -49,19 +49,19 @@ def build_lock_version_map(archive, ignore_folders: list[str]) -> dict[str, str]
 def resolve_used_versions(
     declared: list[Dependency], lock_version_map: dict[str, str]
 ) -> list[Dependency]:
-    """Resolve a Versão Usada de cada pacote do conjunto com a versão do Lock.
+    """Resolves the Used Version of each package in the set with the Lock version.
 
-    Para cada pacote já no conjunto, se o Lock registra sua versão (casando por Nome
-    de Distribuição normalizado), essa versão passa a ser a Versão Usada, ainda que a
-    Declaração trouxesse um pin. Pacotes ausentes do Lock mantêm o que a Declaração
-    resolveu (pin ou indefinido). Nenhum pacote é acrescentado ao conjunto (ADR-0002).
+    For each package already in the set, if the Lock records its version (matching by
+    normalized Distribution Name), that version becomes the Used Version, even if the
+    Declaration carried a pin. Packages absent from the Lock keep what the Declaration
+    resolved (pin or undefined). No package is added to the set (ADR-0002).
 
     Args:
-        declared: Conjunto auditado (união das Declarações), normalizado.
-        lock_version_map: Mapa Nome de Distribuição normalizado -> versão do Lock.
+        declared: Audited set (union of the Declarations), normalized.
+        lock_version_map: Map of normalized Distribution Name -> Lock version.
 
     Returns:
-        O mesmo conjunto, com a Versão Usada resolvida onde o Lock a conhece.
+        The same set, with the Used Version resolved where the Lock knows it.
     """
     for dep in declared:
         version = lock_version_map.get(normalize_name(dep["package"]))

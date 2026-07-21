@@ -9,6 +9,7 @@ from datetime import datetime
 import streamlit as st
 from utils.sidebar import sidebar
 from utils.i18n import t
+from utils.icons import SVG_CHECK
 from utils.messages import format_error
 from utils.theme import theme_color
 from core.parsin.declaration_collector import collect_declarations
@@ -69,7 +70,8 @@ def _render_progress_steps(step_labels: list[str], current_step: int) -> str:
     html = f'<div class="main-loader"><div class="loader-ring"></div><div style="font-size:2.0rem; font-weight:bold; margin-bottom:15px;">{t("loading.in_progress")}</div><div class="step-list">'
     for j, label in enumerate(step_labels):
         if j < current_step:
-            color, opacity, cursor = done_color, "1", " ✅"
+            # O SVG herda `currentColor`, então o check sai na cor do passo (verde).
+            color, opacity, cursor = done_color, "1", f" {SVG_CHECK}"
         elif j == current_step:
             color, opacity, cursor = current_color, "1", " ▌"
         else:

@@ -1,14 +1,14 @@
 """
-Módulo responsável pela exportação de relatórios em formato CSV.
+CSV report exporting.
 
-Converte estruturas de dados (ex: DataFrame) em arquivos CSV
-para download ou armazenamento.
+Converts data structures (e.g.: DataFrame) into CSV files
+for download or storage.
 
-Entrada:
-- Estrutura de dados tabular (dicionário)
+Input:
+- Tabular data structure (dictionary)
 
-Saída:
-- Dados em formato CSV (bytes ou string)
+Output:
+- Data in CSV format (bytes or string)
 """
 
 import csv
@@ -17,16 +17,16 @@ import json
 
 from utils.types import ExportRow
 
-# Chave interna → rótulo da coluna no arquivo baixado.
+# Internal key → column label in the downloaded file.
 #
-# O cabeçalho era efeito colateral do dicionário: `export_to_csv` o derivava de
-# `report_data[0].keys()`, então renomear uma chave por razão de código reescrevia
-# o arquivo exportado sem que ninguém percebesse. A ADR-0008 tornou o cabeçalho
-# escolha explícita, e é isto: os dois vocabulários ficam separados de propósito,
-# para que mexer num não alcance o outro por acidente.
+# The header used to be a side effect of the dictionary: `export_to_csv` derived it from
+# `report_data[0].keys()`, so renaming a key for a code reason rewrote
+# the exported file without anyone noticing. ADR-0008 made the header an
+# explicit choice, and this is it: the two vocabularies stay separated on purpose,
+# so that touching one does not reach the other by accident.
 #
-# A ordem é a ordem das colunas, e ela é contrato — a US-07 depende de que dois
-# exports do mesmo Projeto-Alvo se concatenem numa série temporal.
+# The order is the order of the columns, and it is a contract — US-07 depends on two
+# exports of the same Target Project concatenating into a time series.
 CSV_HEADER = {
     "analysis_date": "Analysis Date",
     "project": "Project",
@@ -42,17 +42,17 @@ CSV_HEADER = {
 
 
 def _as_csv_row(row: ExportRow) -> dict[str, object]:
-    """Traduz uma linha interna para os rótulos do cabeçalho.
+    """Translates an internal row to the header labels.
 
-    A travessia passa por um `dict` comum de propósito: num `TypedDict` a chave
-    precisa ser literal, e aqui ela vem do mapeamento. É também onde os dois
-    vocabulários se encontram — o único ponto do código em que isso acontece.
+    The traversal goes through a plain `dict` on purpose: in a `TypedDict` the key
+    must be a literal, and here it comes from the mapping. It is also where the two
+    vocabularies meet — the only point in the code where that happens.
 
     Args:
-        row: Linha da exportação, com as chaves internas.
+        row: Export row, with the internal keys.
 
     Returns:
-        A mesma linha, com os rótulos que o usuário lê no arquivo.
+        The same row, with the labels the user reads in the file.
     """
     values: dict[str, object] = dict(row)
 
@@ -61,13 +61,13 @@ def _as_csv_row(row: ExportRow) -> dict[str, object]:
 
 def export_to_csv(report_data: list[ExportRow]) -> bytes:
     """
-    Converte uma lista de dicionários em um arquivo CSV.
+    Converts a list of dictionaries into a CSV file.
 
     Args:
-        report_data: Linhas da exportação, na ordem das colunas do esquema.
+        report_data: Export rows, in the order of the schema columns.
 
     Returns:
-        bytes: Conteúdo do arquivo CSV em formato de bytes.
+        bytes: CSV file content as bytes.
     """
 
     if not report_data:
@@ -83,13 +83,13 @@ def export_to_csv(report_data: list[ExportRow]) -> bytes:
 
 def export_to_json(report_data: list[ExportRow]) -> bytes:
     """
-    Converte uma lista de dicionários em um arquivo JSON.
+    Converts a list of dictionaries into a JSON file.
 
     Args:
-        report_data: Linhas da exportação, na ordem das colunas do esquema.
+        report_data: Export rows, in the order of the schema columns.
 
     Returns:
-        bytes: Conteúdo do arquivo JSON em formato de bytes.
+        bytes: JSON file content as bytes.
     """
 
     return json.dumps(report_data, indent=4).encode("utf-8")

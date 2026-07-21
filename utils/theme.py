@@ -1,14 +1,14 @@
 """
-Leitura da paleta única do tema.
+Reading of the theme's single palette.
 
-A paleta é declarada em `.streamlit/config.toml` e o Streamlit já a aplica sozinho
-aos componentes nativos. Este módulo existe para os poucos lugares que precisam da
-cor como valor — o donut do Plotly, que recebe um mapa de cores explícito, e o
-HTML do carregamento.
+The palette is declared in `.streamlit/config.toml` and Streamlit already applies it on its own
+to the native components. This module exists for the few places that need the
+color as a value — the Plotly donut, which receives an explicit color map, and the
+loading HTML.
 
-Responsabilidades:
-- Resolver um token semântico do tema (`blueColor`, `violetColor`, …) na cor da paleta.
-- Traduzir as Categorias do relatório em cores prontas para o gráfico.
+Responsibilities:
+- Resolve a semantic theme token (`blueColor`, `violetColor`, …) into the palette color.
+- Translate the report Categories into colors ready for the chart.
 """
 
 import streamlit as st
@@ -17,31 +17,31 @@ from utils.constants import STATUS_COLOR_TOKENS
 
 
 def theme_color(token: str) -> str:
-    """Resolve um token semântico do tema na cor declarada na paleta.
+    """Resolves a semantic theme token into the color declared in the palette.
 
     Args:
-        token: Nome do token do Streamlit, sem o prefixo `theme.` (ex.: "blueColor").
+        token: Name of the Streamlit token, without the `theme.` prefix (e.g.: "blueColor").
 
     Returns:
-        A cor do token, como declarada em `.streamlit/config.toml`.
+        The token's color, as declared in `.streamlit/config.toml`.
 
     Raises:
-        KeyError: Se o token não estiver na paleta. Falhar aqui é proposital: uma
-            cor ausente viraria `None`, o Plotly cairia no default dele e a
-            divergência de paleta voltaria sem ninguém perceber.
+        KeyError: If the token is not in the palette. Failing here is intentional: a
+            missing color would become `None`, Plotly would fall back to its default and the
+            palette divergence would return without anyone noticing.
     """
     color = st.get_option(f"theme.{token}")
 
     if color is None:
-        raise KeyError(f"token '{token}' não está na paleta de .streamlit/config.toml")
+        raise KeyError(f"token '{token}' is not in the palette of .streamlit/config.toml")
 
     return color
 
 
 def status_colors() -> dict[str, str]:
-    """Mapeia cada Categoria do relatório na cor da paleta.
+    """Maps each report Category to the palette color.
 
     Returns:
-        Rótulo da Categoria (como o donut o exibe) -> cor.
+        Category label (as the donut displays it) -> color.
     """
     return {label: theme_color(token) for label, token in STATUS_COLOR_TOKENS.items()}

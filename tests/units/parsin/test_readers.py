@@ -151,6 +151,23 @@ dependencies:
     assert parse_environment_yml(content) == []
 
 
+@pytest.mark.parametrize(
+    "content",
+    [
+        "name: alvo\ndependencies: numpy\n",
+        "name: alvo\ndependencies:\n  foo: bar\n",
+    ],
+)
+def test_environment_yml_com_dependencies_nao_lista_e_tratado_como_vazio(content):
+    """Um `dependencies:` que não é lista vira vazio, sem gerar pacotes de um caractere.
+
+    Um escalar faria o `for` percorrer a string caractere a caractere (n, u, m, p, y) e
+    um mapa iteraria as chaves — cada letra/chave viraria Zumbi. O reader do Conda passa
+    a exigir uma lista, como os demais readers já fazem.
+    """
+    assert parse_environment_yml(content) == []
+
+
 def test_lock_tem_origem():
     """O Lock resolve versões; seus pacotes recebem Origem de Produção."""
     content = """
