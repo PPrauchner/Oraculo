@@ -28,15 +28,6 @@ STATUS_COLOR_TOKENS = {
 }
 # ============ Colors =================#
 
-# The magnifying glass inherits the color of its container (`stroke="currentColor"`), so it follows the
-# theme without carrying its own color.
-SVG_LUPA = """
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="scale(-1, 1)" transform-origin="center" style="margin-right: 10px; vertical-align: middle;">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-    </svg>
-    """
-
 PYPI_BASE_URL = "https://pypi.org/pypi"
 
 # ============ Origin =================#

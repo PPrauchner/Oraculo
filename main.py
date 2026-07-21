@@ -5,10 +5,13 @@ This is the main entry point for the application.
 import streamlit as st
 
 from utils.i18n import t
+from utils.icons import SVG_LUPA
 from utils.layout import apply_layout
 
 # 1. Configurações iniciais da página (opcional, mas recomendado)
-st.set_page_config(page_title="ORÁCULO", page_icon="🔍", layout="wide")
+# O ícone da aba é a mesma lupa SVG do título da sidebar (issue #45): um só desenho, sem
+# emoji. `set_page_config` aceita string SVG e a rasteriza como favicon.
+st.set_page_config(page_title="ORÁCULO", page_icon=SVG_LUPA, layout="wide")
 
 # Ponto único do CSS de layout: daqui a folha vale para todas as páginas, então
 # nenhuma delas precisa (nem pode) declarar a sua. Depois do `set_page_config`, que

@@ -11,7 +11,7 @@ Output:
 - Reusable visual component
 """
 
-from utils.constants import SVG_LUPA
+from utils.icons import SVG_LUPA
 from utils.i18n import LANGUAGE_PARAM, available_languages, current_language, t, translate
 from utils.theme import theme_color
 import streamlit as st
