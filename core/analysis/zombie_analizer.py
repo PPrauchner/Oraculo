@@ -1,15 +1,15 @@
 """
-Módulo responsável por identificar dependências zumbis.
+Identifies Zombie dependencies.
 
-Dependências zumbis são aquelas que estão declaradas no projeto,
-mas não são utilizadas no código (não aparecem nos imports).
+Zombie dependencies are those that are declared in the project,
+but are not used in the code (they do not appear in the imports).
 
-Entrada:
-- Conjunto de dependências declaradas
-- Conjunto de imports utilizados no código
+Input:
+- Set of declared dependencies
+- Set of imports used in the code
 
-Saída:
-- Conjunto de dependências zumbis
+Output:
+- Set of Zombie dependencies
 """
 
 from core.analysis.name_matching import import_names_for, normalize_name
@@ -20,12 +20,12 @@ from utils.types import Dependency
 def analyze_zombie_dependencies(
     declared: list[Dependency], imports: list[Dependency]
 ) -> list[Dependency]:
-    """Identifica dependências zumbis comparando dependências declaradas com imports.
+    """Identifies Zombie dependencies by comparing declared dependencies with imports.
 
-    Dependência de Desenvolvimento nunca é Zumbi (ADR-0003): sua Origem é um
-    grupo de desenvolvimento, então é isenta mesmo quando nenhum Import Raiz
-    corresponde a ela. Continua no Total e recebe Tamanho, Idade e status de
-    Desatualizada — apenas não é cobrada por não ser importada.
+    A Development Dependency is never a Zombie (ADR-0003): its Origin is a
+    development group, so it is exempt even when no Root Import
+    corresponds to it. It stays in the Total and receives Size, Age and Outdated
+    status — it is simply not held to account for not being imported.
     """
     imp_names = {normalize_name(d["package"]) for d in imports}
     zombies = []

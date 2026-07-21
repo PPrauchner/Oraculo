@@ -1,35 +1,35 @@
 """
-Ritmo vertical e largura de leitura da aplicação, num único ponto.
+Vertical rhythm and reading width of the application, in a single place.
 
-O Streamlit não expõe o espaçamento do contêiner de bloco de forma declarativa —
-`st.set_page_config(layout=...)` escolhe entre estreito e largo, e nada mais. Por
-isso aqui existe uma folha de estilo, que a issue #39 baniu das páginas. A diferença
-é estrutural, e não de intenção:
+Streamlit does not expose the block container spacing declaratively —
+`st.set_page_config(layout=...)` chooses between narrow and wide, and nothing more. That
+is why there is a stylesheet here, which issue #39 banned from the pages. The difference
+is structural, not one of intent:
 
-- **Ponto único**: declarada aqui e aplicada uma vez em `main.py`, para a aplicação
-  inteira — não um bloco por página, que foi o defeito removido.
-- **Somente layout**: espaçamento, largura e centragem. Nenhuma cor, nenhum hex,
-  nenhuma família tipográfica; a cor continua saindo inteira de
-  `.streamlit/config.toml`, que segue sendo a fonte da verdade.
-- **Sem seletor frágil**: `.block-container` é classe pública do Streamlit;
-  `data-testid` é detalhe interno, que muda de versão para versão sem aviso.
+- **Single place**: declared here and applied once in `main.py`, for the whole
+  application — not one block per page, which was the removed defect.
+- **Layout only**: spacing, width and centering. No color, no hex,
+  no typeface family; the color still comes entirely from
+  `.streamlit/config.toml`, which remains the source of truth.
+- **No fragile selector**: `.block-container` is a public Streamlit class;
+  `data-testid` is an internal detail, which changes from version to version without warning.
 
-Responsabilidades:
-- Declarar a folha de estilo de layout da aplicação.
-- Aplicá-la uma vez por execução de página.
+Responsibilities:
+- Declare the application's layout stylesheet.
+- Apply it once per page execution.
 """
 
 import streamlit as st
 
-# O padrão do Streamlit reserva ~6rem acima do primeiro elemento, espaço pensado para
-# a barra de ferramentas flutuante. Numa tela de notebook isso empurra os controles
-# para fora da primeira dobra antes de o usuário ter feito qualquer coisa.
+# The Streamlit default reserves ~6rem above the first element, space meant for
+# the floating toolbar. On a laptop screen that pushes the controls
+# below the fold before the user has done anything.
 CONTENT_TOP_PADDING = "3rem"
 
-# `layout="wide"` tira o teto de largura, e sem teto o corpo acompanha o monitor: num
-# ultrawide as duas colunas da tela inicial se afastam a ponto de o olho perder a
-# linha entre o rótulo e o campo. O valor é fixo de propósito — em porcentagem ele
-# voltaria a crescer junto com a tela, que é o defeito, não a correção.
+# `layout="wide"` removes the width cap, and without a cap the body follows the monitor: on an
+# ultrawide the two columns of the initial screen drift apart to the point where the eye loses the
+# line between the label and the field. The value is fixed on purpose — as a percentage it
+# would grow again with the screen, which is the defect, not the fix.
 READING_MAX_WIDTH = "1100px"
 
 LAYOUT_STYLESHEET = f"""<style>
@@ -43,10 +43,10 @@ LAYOUT_STYLESHEET = f"""<style>
 
 
 def apply_layout() -> None:
-    """Aplica o ritmo vertical e a largura de leitura da aplicação.
+    """Applies the application's vertical rhythm and reading width.
 
-    Chamar uma vez, no ponto de entrada, antes de a página rodar: a folha vale para
-    todas as páginas de uma vez, e repetir a chamada página a página seria justamente
-    o CSS espalhado que a issue #39 removeu.
+    Call once, at the entry point, before the page runs: the stylesheet applies to
+    all pages at once, and repeating the call page by page would be exactly
+    the scattered CSS that issue #39 removed.
     """
     st.html(LAYOUT_STYLESHEET)

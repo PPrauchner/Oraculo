@@ -1,17 +1,17 @@
 """
-Módulo responsável pela leitura e parsing de arquivos de configuração de dependências.
+Reading and parsing of dependency configuration files.
 
-Realiza o carregamento e a extração de dados brutos de arquivos como:
-- requirements.txt (padrão pip)
-- pyproject.toml  (PEP 621 e Poetry)
+Loads and extracts raw data from files such as:
+- requirements.txt (pip standard)
+- pyproject.toml  (PEP 621 and Poetry)
 - environment.yml (Conda)
-- *.lock          (uv.lock, poetry.lock — formato TOML)
+- *.lock          (uv.lock, poetry.lock — TOML format)
 
-Entrada:
-- Conteúdo do arquivo de configuração (string)
+Input:
+- Configuration file content (string)
 
-Saída:
-- Lista de dicionários contendo 'Pacote', 'Versão Usada' e 'Origem'
+Output:
+- List of dictionaries containing 'Package', 'Used Version' and 'Origin'
 """
 
 import re
@@ -27,25 +27,25 @@ from utils.functions import READERS, registrar
 
 def parse_dependency_string(line: str) -> Optional[DeclarationEntry]:
     """
-    Analisa uma linha de texto e retorna nome e Versão Usada da dependência.
+    Parses a line of text and returns the dependency's name and Used Version.
 
-    Só um pin exato determina a Versão Usada; um especificador de faixa não fixa
-    versão nenhuma e devolve "" (ADR-0002). Sem isso, `!=1.25.0,>=1.21.1` cairia
-    na armadilha de reportar a versão *excluída* como usada.
+    Only an exact pin determines the Used Version; a range specifier fixes
+    no version at all and returns "" (ADR-0002). Without this, `!=1.25.0,>=1.21.1` would
+    fall into the trap of reporting the *excluded* version as used.
 
-    Trata os seguintes casos do PEP 508 e formatos comuns:
-    - Pin exato:                 requests==2.31.0                  → requests | 2.31.0
-    - Marcadores de ambiente: numpy>=1.26; python_version < '3.14'  → numpy | ""
-    - Extras entre colchetes: requests[security]>=2.28              → requests | ""
-    - Múltiplos especificadores: urllib3!=1.25.0,>=1.21.1           → urllib3 | ""
-    - Apenas nome sem versão:    Pillow                             → pillow | ""
-    - Dependência condicional sem versão: tzdata; sys_platform==... → tzdata | ""
+    Handles the following PEP 508 cases and common formats:
+    - Exact pin:                 requests==2.31.0                  → requests | 2.31.0
+    - Environment markers: numpy>=1.26; python_version < '3.14'     → numpy | ""
+    - Extras in brackets: requests[security]>=2.28                  → requests | ""
+    - Multiple specifiers:       urllib3!=1.25.0,>=1.21.1          → urllib3 | ""
+    - Name only, no version:     Pillow                            → pillow | ""
+    - Conditional dependency, no version: tzdata; sys_platform==... → tzdata | ""
 
     Args:
-        line: Linha de texto com a declaração da dependência.
+        line: Line of text with the dependency declaration.
 
     Returns:
-        Dict com 'Pacote' e 'Versão Usada', ou None se a linha for inválida.
+        Dict with 'Package' and 'Used Version', or None if the line is invalid.
     """
     line = line.split("#")[0].strip()
     if not line:
@@ -65,8 +65,8 @@ def parse_dependency_string(line: str) -> Optional[DeclarationEntry]:
     name = match.group(1).strip().lower()
     version_raw = match.group(2).strip()
 
-    # Só um pin exato (== do PEP 508, === do PEP 440) fixa a Versão Usada; um
-    # especificador de faixa (>=, <, !=, ^, ~=) não determina versão (ADR-0002).
+    # Only an exact pin (== from PEP 508, === from PEP 440) fixes the Used Version; a
+    # range specifier (>=, <, !=, ^, ~=) does not determine a version (ADR-0002).
     pin_match = re.match(r"={2,3}\s*(\d[^\s,;]*)", version_raw)
     version = pin_match.group(1) if pin_match else ""
 
@@ -75,16 +75,16 @@ def parse_dependency_string(line: str) -> Optional[DeclarationEntry]:
 
 def _clean_conda_dep(dep_string: str) -> Optional[DeclarationEntry]:
     """
-    Analisa uma entrada de dependência do Conda (environment.yml).
+    Parses a Conda dependency entry (environment.yml).
 
-    Conda usa formatos como: 'numpy', 'numpy=1.24', 'numpy>=1.24'.
-    Ignora entradas com ':' (canal específico como 'conda-forge::numpy').
+    Conda uses formats such as: 'numpy', 'numpy=1.24', 'numpy>=1.24'.
+    Ignores entries with ':' (specific channel like 'conda-forge::numpy').
 
     Args:
-        dep_string: String da dependência conda.
+        dep_string: Conda dependency string.
 
     Returns:
-        Dict com 'Pacote' e 'Versão Usada', ou None se inválida.
+        Dict with 'Package' and 'Used Version', or None if invalid.
     """
     dep_string = str(dep_string).strip()
 
@@ -98,16 +98,16 @@ def _clean_conda_dep(dep_string: str) -> Optional[DeclarationEntry]:
 
 def _parse_dependency_list(entries: List[str], origin: str) -> List[DeclarationEntry]:
     """
-    Analisa uma lista de declarações PEP 508 e carimba a Origem de cada uma.
+    Parses a list of PEP 508 declarations and stamps the Origin of each one.
 
-    Ignora 'python', que é o interpretador e não um pacote do PyPI.
+    Ignores 'python', which is the interpreter and not a PyPI package.
 
     Args:
-        entries: Linhas de declaração (ex: ["requests>=2.33.0"]).
-        origin: Origem a atribuir a cada pacote da lista.
+        entries: Declaration lines (e.g.: ["requests>=2.33.0"]).
+        origin: Origin to assign to each package in the list.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     if not isinstance(entries, list):
         return []
@@ -122,35 +122,35 @@ def _parse_dependency_list(entries: List[str], origin: str) -> List[DeclarationE
 
 
 def _as_dict(value: object) -> Dict[str, object]:
-    """Retorna value se for uma tabela; caso contrário, uma tabela vazia.
+    """Returns value if it is a table; otherwise, an empty table.
 
-    Um pyproject.toml de Projeto-Alvo arbitrário pode ser malformado (ex.:
-    [tool.poetry.group] declarado como string). Normalizar cada seção para
-    dict antes de varrer evita AttributeError e degrada de forma limpa.
+    A pyproject.toml of an arbitrary Target Project may be malformed (e.g.:
+    [tool.poetry.group] declared as a string). Normalizing each section to a
+    dict before sweeping avoids AttributeError and degrades cleanly.
 
     Args:
-        value: Valor lido do TOML, de tipo desconhecido.
+        value: Value read from the TOML, of unknown type.
 
     Returns:
-        O próprio value quando for dict; senão, um dict vazio.
+        The value itself when it is a dict; otherwise, an empty dict.
     """
     return value if isinstance(value, dict) else {}
 
 
 def _as_pep_508_specifier(spec: object) -> str:
-    """Converte um especificador do Poetry para a forma que o PEP 508 escreve.
+    """Converts a Poetry specifier to the form PEP 508 writes.
 
-    O Poetry aceita pin exato sem operador (`requests = "2.33.0"`), que em PEP 508
-    se escreve `requests==2.33.0`. Sem a conversão o número gruda no nome
-    ("requests2.33.0") e o pin se perde — e ele é a única fonte de Versão Usada
-    fora do Lock (ADR-0002). Faixas (`^`, `~`, `>=`) e o curinga `*` passam
-    intactos: não fixam versão.
+    Poetry accepts an exact pin with no operator (`requests = "2.33.0"`), which in PEP 508
+    is written `requests==2.33.0`. Without the conversion the number sticks to the name
+    ("requests2.33.0") and the pin is lost — and it is the only source of Used Version
+    outside the Lock (ADR-0002). Ranges (`^`, `~`, `>=`) and the `*` wildcard pass
+    through intact: they do not fix a version.
 
     Args:
-        spec: Especificador lido do TOML.
+        spec: Specifier read from the TOML.
 
     Returns:
-        O especificador pronto para concatenar ao Nome de Distribuição.
+        The specifier ready to concatenate to the Distribution Name.
     """
     text = str(spec).strip()
 
@@ -162,18 +162,18 @@ def _as_pep_508_specifier(spec: object) -> str:
 
 def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[DeclarationEntry]:
     """
-    Analisa uma tabela de dependências do Poetry e carimba a Origem de cada uma.
+    Parses a Poetry dependency table and stamps the Origin of each one.
 
-    O Poetry declara dependências como pares nome/especificador, onde o
-    especificador pode ser uma string ("^2.33.0") ou uma tabela com a versão
-    e opções extras ({version = "^2.33.0", extras = ["security"]}).
+    Poetry declares dependencies as name/specifier pairs, where the
+    specifier can be a string ("^2.33.0") or a table with the version
+    and extra options ({version = "^2.33.0", extras = ["security"]}).
 
     Args:
-        table: Tabela nome → especificador de versão.
-        origin: Origem a atribuir a cada pacote da tabela.
+        table: Table of name → version specifier.
+        origin: Origin to assign to each package in the table.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     if not isinstance(table, dict):
         return []
@@ -188,17 +188,17 @@ def _parse_dependency_table(table: Dict[str, object], origin: str) -> List[Decla
 
 def _parse_requirements_content(content: str, origin: str) -> List[DeclarationEntry]:
     """
-    Lê o conteúdo de um requirements e carimba a Origem de cada dependência.
+    Reads the content of a requirements file and stamps the Origin of each dependency.
 
-    Suporta linhas com e sem versão, ignora comentários e linhas
-    de opções do pip (ex: -r, --index-url).
+    Supports lines with and without a version, ignores comments and pip
+    option lines (e.g.: -r, --index-url).
 
     Args:
-        content: Conteúdo completo do arquivo como string.
-        origin: Origem a atribuir a cada pacote declarado.
+        content: Full file content as a string.
+        origin: Origin to assign to each declared package.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     lines = [line.strip() for line in content.split("\n")]
     return _parse_dependency_list(
@@ -209,13 +209,13 @@ def _parse_requirements_content(content: str, origin: str) -> List[DeclarationEn
 @registrar(READERS, "requirements.txt")
 def parse_requirements(content: str) -> List[DeclarationEntry]:
     """
-    Lê um requirements.txt, cujas dependências são de Produção.
+    Reads a requirements.txt, whose dependencies are Production.
 
     Args:
-        content: Conteúdo completo do arquivo como string.
+        content: Full file content as a string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     return _parse_requirements_content(content, ORIGIN_PRODUCTION)
 
@@ -223,16 +223,16 @@ def parse_requirements(content: str) -> List[DeclarationEntry]:
 @registrar(READERS, "requirements-dev.txt")
 def parse_requirements_dev(content: str) -> List[DeclarationEntry]:
     """
-    Lê um requirements-dev.txt, cujas dependências são de Desenvolvimento.
+    Reads a requirements-dev.txt, whose dependencies are Development.
 
-    Precisa de registro próprio: 'requirements-dev.txt' não termina em
-    'requirements.txt', então nunca casaria com o reader de Produção.
+    Needs its own registration: 'requirements-dev.txt' does not end in
+    'requirements.txt', so it would never match the Production reader.
 
     Args:
-        content: Conteúdo completo do arquivo como string.
+        content: Full file content as a string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     return _parse_requirements_content(content, ORIGIN_DEVELOPMENT)
 
@@ -240,22 +240,22 @@ def parse_requirements_dev(content: str) -> List[DeclarationEntry]:
 @registrar(READERS, "environment.yml")
 def parse_environment_yml(content: str) -> List[DeclarationEntry]:
     """
-    Lê um environment.yml (Conda) e extrai suas dependências.
+    Reads an environment.yml (Conda) and extracts its dependencies.
 
-    Suporta dois tipos de entrada na lista 'dependencies':
-    - String simples: "numpy=1.24.0" ou "numpy>=1.24"
-    - Dict com 'pip': lista de pacotes pip dentro do ambiente conda
+    Supports two kinds of entry in the 'dependencies' list:
+    - Plain string: "numpy=1.24.0" or "numpy>=1.24"
+    - Dict with 'pip': list of pip packages inside the conda environment
 
-    Ignora entradas que não são pacotes Python (ex: "python=3.11").
+    Ignores entries that are not Python packages (e.g.: "python=3.11").
 
-    O environment.yml descreve o ambiente de execução do Projeto-Alvo, então
-    seus pacotes são Dependências de Produção.
+    The environment.yml describes the Target Project's runtime environment, so
+    its packages are Production Dependencies.
 
     Args:
-        content: Conteúdo completo do arquivo como string.
+        content: Full file content as a string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     dependencies: List[DeclarationEntry] = []
 
@@ -289,19 +289,19 @@ def parse_environment_yml(content: str) -> List[DeclarationEntry]:
 @registrar(READERS, "pyproject.toml")
 def parse_pyproject(content: str) -> List[DeclarationEntry]:
     """
-    Lê um pyproject.toml (PEP 621 e Poetry) e extrai suas dependências.
+    Reads a pyproject.toml (PEP 621 and Poetry) and extracts its dependencies.
 
-    Preserva a Origem de cada pacote:
-    - [project].dependencies e [tool.poetry].dependencies → Produção
-    - [dependency-groups] e [project.optional-dependencies] → Desenvolvimento
-    - [tool.poetry.group.<nome>.dependencies] → Desenvolvimento, qualquer que
-      seja o nome do grupo
+    Preserves the Origin of each package:
+    - [project].dependencies and [tool.poetry].dependencies → Production
+    - [dependency-groups] and [project.optional-dependencies] → Development
+    - [tool.poetry.group.<name>.dependencies] → Development, whatever
+      the group name is
 
     Args:
-        content: Conteúdo completo do arquivo como string.
+        content: Full file content as a string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     try:
         data = tomllib.loads(content)
@@ -339,19 +339,19 @@ def parse_pyproject(content: str) -> List[DeclarationEntry]:
 @registrar(READERS, ".lock")
 def parse_lock(content: str) -> List[DeclarationEntry]:
     """
-    Lê arquivos *.lock no formato TOML (uv.lock, poetry.lock).
+    Reads *.lock files in TOML format (uv.lock, poetry.lock).
 
-    Ambos os gerenciadores armazenam pacotes em uma lista 'package'
-    com os campos 'name' e 'version'.
+    Both managers store packages in a 'package' list
+    with the fields 'name' and 'version'.
 
-    O Lock resolve versões, não define o conjunto auditado (ADR-0002): ele não
-    separa produção de desenvolvimento, então seus pacotes ficam como Produção.
+    The Lock resolves versions, it does not define the audited set (ADR-0002): it does not
+    separate production from development, so its packages are set as Production.
 
     Args:
-        content: Conteúdo completo do arquivo como string.
+        content: Full file content as a string.
 
     Returns:
-        Lista de dicts com 'Pacote', 'Versão Usada' e 'Origem'.
+        List of dicts with 'Package', 'Used Version' and 'Origin'.
     """
     dependencies: List[DeclarationEntry] = []
 

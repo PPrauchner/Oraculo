@@ -1,14 +1,14 @@
 """
-Módulo responsável pela sidebar da aplicação.
+Application sidebar.
 
-Define e renderiza a barra lateral utilizada em todas as páginas,
-incluindo navegação e opções de configuração.
+Defines and renders the sidebar used on all pages,
+including navigation and configuration options.
 
-Entrada:
-- Estado da aplicação
+Input:
+- Application state
 
-Saída:
-- Componente visual reutilizável
+Output:
+- Reusable visual component
 """
 
 from utils.constants import SVG_LUPA
@@ -18,12 +18,12 @@ import streamlit as st
 
 
 def language_selector() -> None:
-    """Oferece as línguas disponíveis e guarda a escolha na URL.
+    """Offers the available languages and stores the choice in the URL.
 
-    Cada opção aparece na própria língua (`language.name`), então acrescentar um
-    arquivo em `locales/` basta para a língua entrar aqui — sem `if` novo (ADR-0009).
-    O widget não usa `key`: a língua mora em `?lang=`, e ter os dois guardando a
-    mesma coisa criaria duas fontes da verdade que discordam no refresh.
+    Each option appears in its own language (`language.name`), so adding a
+    file in `locales/` is enough for the language to appear here — with no new `if` (ADR-0009).
+    The widget does not use `key`: the language lives in `?lang=`, and having both storing the
+    same thing would create two sources of truth that disagree on refresh.
     """
     languages = available_languages()
     current = current_language()
@@ -38,30 +38,30 @@ def language_selector() -> None:
     if chosen != current:
         st.query_params[LANGUAGE_PARAM] = chosen
 
-        # A barra lateral roda antes do corpo da página, então o `st.rerun()` abaixo
-        # aborta o script antes de a página registrar seus widgets — e o Streamlit
-        # descarta o estado de todo widget que não foi registrado na execução. Sem
-        # reafirmar as chaves, trocar de idioma apagaria o Projeto-Alvo carregado e
-        # as Exclusões marcadas: um seletor de aparência não pode custar o trabalho
-        # já feito. Reatribuir marca a chave como posta pelo usuário, que é o que a
-        # faz sobreviver.
+        # The sidebar runs before the page body, so the `st.rerun()` below
+        # aborts the script before the page registers its widgets — and Streamlit
+        # discards the state of every widget that was not registered in the run. Without
+        # reasserting the keys, changing the language would erase the loaded Target Project and
+        # the marked Exclusions: an appearance selector cannot cost the work
+        # already done. Reassigning marks the key as set by the user, which is what
+        # makes it survive.
         for key in list(st.session_state.keys()):
             st.session_state[key] = st.session_state[key]
 
-        # Sem o rerun a tela sai metade em cada língua: o que já foi renderizado
-        # acima leu o parâmetro antigo. Não há laço — depois do rerun a escolha e a
-        # URL concordam, e a condição fica falsa.
+        # Without the rerun the screen comes out half in each language: what was already rendered
+        # above read the old parameter. There is no loop — after the rerun the choice and the
+        # URL agree, and the condition becomes false.
         st.rerun()
 
 
 def sidebar() -> None:
     """
-    Função responsável por renderizar a barra lateral da aplicação.
-    Ela exibe o título, uma descrição e uma seção de configurações onde o usuário pode selecionar pastas a serem ignoradas durante a análise de dependências.
-    A função também desabilita a seleção de pastas quando o usuário está fora da página inicial.
+    Renders the application sidebar.
+    It displays the title, a description and a settings section where the user can select folders to be ignored during the dependency analysis.
+    The function also disables folder selection when the user is outside the home page.
 
     Args:
-        pagina_atual (str, optional): Identificador da página atual para controle de estado. Defaults to "home".
+        pagina_atual (str, optional): Identifier of the current page for state control. Defaults to "home".
 
     Returns:
         None
@@ -69,8 +69,8 @@ def sidebar() -> None:
     """
     with st.sidebar:
 
-        # A lupa herda esta cor via `currentColor`, então título e ícone saem da
-        # mesma fonte — a cor primária da paleta.
+        # The magnifying glass inherits this color via `currentColor`, so title and icon come from the
+        # same source — the palette's primary color.
         st.markdown(
             f'<h1 style="display: flex; align-items: center; color: {theme_color("primaryColor")}">{SVG_LUPA} ORÁCULO</h1>',
             unsafe_allow_html=True,
@@ -80,12 +80,12 @@ def sidebar() -> None:
 
         language_selector()
 
-        # Legenda, e não controle: o tema é do mecanismo nativo do Streamlit, que já
-        # guarda a escolha por sessão no navegador do visitante. `theme.base` é
-        # `scriptable = False`, então não há alternador próprio a oferecer aqui — o que
-        # falta é dizer onde fica o que já existe. O caminho do menu (`Settings →
-        # Theme`) fica em inglês nos dois locales de propósito: é o rótulo literal que
-        # o Streamlit desenha na tela, e traduzi-lo apontaria para algo inexistente.
+        # Caption, not control: the theme belongs to Streamlit's native mechanism, which already
+        # stores the choice per session in the visitor's browser. `theme.base` is
+        # `scriptable = False`, so there is no toggle of our own to offer here — what
+        # is missing is saying where what already exists lives. The menu path (`Settings →
+        # Theme`) stays in English in both locales on purpose: it is the literal label that
+        # Streamlit draws on the screen, and translating it would point to something nonexistent.
         st.caption(t("sidebar.theme_hint"))
 
         st.divider()

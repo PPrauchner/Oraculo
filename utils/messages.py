@@ -1,55 +1,55 @@
 """
-Traduz o código de erro que `core/` devolve para a frase que o usuário lê.
+Translates the error code `core/` returns into the sentence the user reads.
 
-Responsabilidades:
-- Nomear a chave de locale de um código de erro (`error_key`).
-- Compor a frase final com os parâmetros do erro (`format_error`).
+Responsibilities:
+- Name the locale key of an error code (`error_key`).
+- Compose the final sentence with the error's parameters (`format_error`).
 
-`core/` detecta o problema e o nomeia em inglês; a redação, a língua e o ícone são
-decisão de quem renderiza (ADR-0010). O texto mora em `locales/*.json`, junto com o
-resto da tela (ADR-0009): existe um caminho de tradução só, então o seletor de língua
-alcança o erro como alcança qualquer outro rótulo. Fica em `utils/` — e não dentro de
-uma página — porque `home.py` e `loading.py` exibem os mesmos erros.
+`core/` detects the problem and names it in English; the wording, the language and the icon are
+a decision of whoever renders (ADR-0010). The text lives in `locales/*.json`, together with the
+rest of the screen (ADR-0009): there is a single translation path, so the language selector
+reaches the error as it reaches any other label. It stays in `utils/` — and not inside
+a page — because `home.py` and `loading.py` display the same errors.
 """
 
 from core.ingestion.source import IngestionError
 from utils.i18n import t
 
-# Namespace dos códigos de erro dentro do locale. Sem ele, um código vindo de `core/`
-# poderia colidir com a chave de um rótulo de tela.
+# Namespace of the error codes within the locale. Without it, a code coming from `core/`
+# could collide with the key of a screen label.
 ERROR_KEY_PREFIX = "error."
 
 
 def error_key(code: str) -> str:
-    """Chave de locale correspondente a um código de erro de `core/`.
+    """Locale key corresponding to an error code from `core/`.
 
     Args:
-        code: Código estável em inglês, como `core/ingestion/` o devolve.
+        code: Stable English code, as `core/ingestion/` returns it.
 
     Returns:
-        A chave a procurar em `locales/*.json`.
+        The key to look up in `locales/*.json`.
     """
     return f"{ERROR_KEY_PREFIX}{code}"
 
 
 def format_error(error: IngestionError) -> str:
-    """Compõe a frase de um erro devolvido por `core/`, na língua da tela.
+    """Composes the sentence of an error returned by `core/`, in the screen language.
 
     Args:
-        error: Par (código, parâmetros) como `core/ingestion/` o devolve.
+        error: (code, parameters) pair as `core/ingestion/` returns it.
 
     Returns:
-        A frase a exibir. Código desconhecido volta cru e parâmetro faltando deixa
-        o placeholder intacto: um erro de tradução não pode esconder o erro que o
-        usuário precisa ver.
+        The sentence to display. An unknown code comes back raw and a missing parameter leaves
+        the placeholder intact: a translation error cannot hide the error the
+        user needs to see.
     """
     code, params = error
     key = error_key(code)
     template = t(key)
 
-    # `t` devolve a própria chave quando ela falta em todas as línguas. Aqui isso
-    # significa código sem tradução — e o que o usuário vê então é o código, que ao
-    # menos é pesquisável, nunca o identificador de locale, que não diz nada.
+    # `t` returns the key itself when it is missing in all languages. Here that
+    # means a code with no translation — and what the user then sees is the code, which at
+    # least is searchable, never the locale identifier, which says nothing.
     if template == key:
         return code
 

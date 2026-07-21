@@ -1,19 +1,19 @@
 """
-Módulo responsável por normalizar e estruturar dependências declaradas.
+Normalizes and structures declared dependencies.
 
-Recebe a saída processada de readers.py (lista de dicts com Pacote, Versão Usada
-e Origem) e retorna uma lista padronizada com a estrutura completa incluindo:
-- Pacote
-- Versão Usada
-- Versão Pypi (inicialmente "N/A")
-- Status (inicialmente Indeterminado — antes do PyPI não há status a afirmar)
-- Origem (Produção quando não informada)
+Receives the processed output of readers.py (a list of dicts with Package, Used Version
+and Origin) and returns a standardized list with the complete structure including:
+- Package
+- Used Version
+- PyPI Version (initially "N/A")
+- Status (initially Indeterminate — before PyPI there is no status to assert)
+- Origin (Production when not informed)
 
-Entrada:
-- Lista de dicionários processada por readers.py
+Input:
+- List of dictionaries processed by readers.py
 
-Saída:
-- Lista de dicionários padronizada com estrutura completa
+Output:
+- Standardized list of dictionaries with the complete structure
 """
 
 from typing import Dict, List, Optional
@@ -24,25 +24,25 @@ from core.ingestion.filter import is_path_in_ignored_folders
 
 def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
     """
-    Normaliza um dicionário de dependência individual.
+    Normalizes an individual dependency dictionary.
 
-    Recebe um dict com 'Pacote' e 'Versão Usada' e retorna um dict
-    padronizado com todos os campos obrigatórios.
+    Receives a dict with 'Package' and 'Used Version' and returns a
+    standardized dict with all the required fields.
 
-    A Origem é preservada: é ela que permite isentar Dependências de
-    Desenvolvimento da classificação Zumbi (ADR-0003). Na ausência dela,
-    assume-se Produção — o recorte conservador.
+    The Origin is preserved: it is what allows exempting Development
+    Dependencies from the Zombie classification (ADR-0003). In its absence,
+    Production is assumed — the conservative choice.
 
     Args:
-        dep: Dicionário com 'Pacote', 'Versão Usada' e, opcionalmente, 'Origem'
+        dep: Dictionary with 'Package', 'Used Version' and, optionally, 'Origin'
 
     Returns:
-        Dicionário padronizado ou None se inválido
+        Standardized dictionary or None if invalid
     """
     if not isinstance(dep, dict):
         return None
 
-    # Validar campos obrigatórios
+    # Validate required fields
     pacote = dep.get("package", "").strip()
     versao_usada = dep.get("used_version", "").strip()
 
@@ -60,16 +60,16 @@ def normalize_dependency(dep: DeclarationEntry) -> Optional[Dependency]:
 
 def parse_dependencies(dependencies: List[DeclarationEntry]) -> List[Dependency]:
     """
-    Processa uma lista de dependências e retorna lista padronizada.
+    Processes a list of dependencies and returns a standardized list.
 
-    Recebe a saída de readers.py (parse_requirements ou parse_uv_lock)
-    e retorna uma lista de dependências com estrutura padronizada.
+    Receives the output of readers.py (parse_requirements or parse_uv_lock)
+    and returns a list of dependencies with a standardized structure.
 
     Args:
-        dependencies: Lista de dicients com 'Pacote' e 'Versão Usada'
+        dependencies: List of dicts with 'Package' and 'Used Version'
 
     Returns:
-        Lista de dicionários padronizada com campos: Pacote, Versão Usada, Versão Pypi, Status
+        Standardized list of dictionaries with fields: Package, Used Version, PyPI Version, Status
     """
     if not dependencies:
         return []
@@ -90,18 +90,18 @@ def parse_dependencies_with_filter(
     dependencies: List[DeclarationEntry], file_path: str, ignore_folders: List[str]
 ) -> List[Dependency]:
     """
-    Processa dependências com filtro por pasta ignorada.
+    Processes dependencies with a filter by ignored folder.
 
-    Se o arquivo de origem está em uma pasta ignorada, retorna lista vazia.
-    Caso contrário, processa e retorna as dependências normalizadas.
+    If the source file is in an ignored folder, returns an empty list.
+    Otherwise, processes and returns the normalized dependencies.
 
     Args:
-        dependencies: Lista de dicts com 'Pacote' e 'Versão Usada'
-        file_path: Caminho do arquivo de origem (ex: "tests/requirements.txt")
-        ignore_folders: Lista de pastas a ignorar (ex: ["tests", "docs"])
+        dependencies: List of dicts with 'Package' and 'Used Version'
+        file_path: Path of the source file (e.g.: "tests/requirements.txt")
+        ignore_folders: List of folders to ignore (e.g.: ["tests", "docs"])
 
     Returns:
-        Lista vazia se arquivo está em pasta ignorada, senão lista normalizada
+        Empty list if the file is in an ignored folder, otherwise the normalized list
     """
     
 

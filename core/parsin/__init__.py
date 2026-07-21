@@ -1,12 +1,12 @@
 """
-Módulo parsin - Leitura, parsing e normalização de dependências.
+parsin module - Reading, parsing and normalization of dependencies.
 
-Combina:
-- readers.py: Extrai dados brutos de requirements.txt e arquivos .lock
-- dependency_parser.py: Normaliza e estrutura as dependências
-- declaration_collector.py: Une as Declarações no conjunto auditado (Lock fora)
-- import_parser.py: Identifica imports usados no código-fonte
-- normalization.py: Resolve diferenças entre nomes de pacote e import
+Combines:
+- readers.py: Extracts raw data from requirements.txt and .lock files
+- dependency_parser.py: Normalizes and structures the dependencies
+- declaration_collector.py: Merges the Declarations into the audited set (Lock left out)
+- import_parser.py: Identifies imports used in the source code
+- normalization.py: Resolves differences between package and import names
 """
 
 from .readers import parse_requirements, parse_lock, parse_environment_yml

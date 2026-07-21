@@ -1,15 +1,15 @@
 """
-Módulo responsável por identificar dependências desatualizadas.
+Identifies Outdated dependencies.
 
-Realiza a comparação entre a versão utilizada no projeto e a versão
-mais recente disponível no PyPI.
+Compares the version used in the project against the most
+recent version available on PyPI.
 
-Entrada:
-- Lista de dependências com versões atuais
-- Dados obtidos da API do PyPI
+Input:
+- List of dependencies with their current versions
+- Data obtained from the PyPI API
 
-Saída:
-- Lista de dependências desatualizadas com suas versões
+Output:
+- List of Outdated dependencies with their versions
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -32,19 +32,19 @@ from utils.types import Dependency
 
 
 def _used_version(dep: Dependency) -> str:
-    """Devolve a Versão Usada exatamente como o PyPI a publica, ou "" se indisponível.
+    """Returns the Used Version exactly as PyPI publishes it, or "" if unavailable.
 
-    A Versão Usada já chega resolvida (Lock ou pin exato), então não há
-    especificador a extrair — e extrair mutilaria versão válida: truncar o sufixo
-    PEP 440 faria `2.0.0b1` virar a chave `2.0.0` e ler a release *errada* em
-    `releases[]` (ADR-0004). O valor só é aceito se for uma versão PEP 440; o "N/A"
-    do Fantasma e o Indeterminado contam como indisponível.
+    The Used Version already arrives resolved (Lock or exact pin), so there is no
+    specifier to extract — and extracting would mangle a valid version: truncating the
+    PEP 440 suffix would turn `2.0.0b1` into the key `2.0.0` and read the *wrong* release in
+    `releases[]` (ADR-0004). The value is only accepted if it is a PEP 440 version; the "N/A"
+    of a Ghost and the Indeterminate count as unavailable.
 
     Args:
-        dep: Dependência com a chave 'Versão Usada'.
+        dep: Dependency with the 'Used Version' key.
 
     Returns:
-        A versão exata, ou "" quando não há Versão Usada conhecida.
+        The exact version, or "" when there is no known Used Version.
     """
     raw = (dep.get("used_version") or "").strip()
 
@@ -57,17 +57,17 @@ def _used_version(dep: Dependency) -> str:
 
 
 def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
-    """Preenche 'Tamanho' e 'Idade' da versão de referência a partir dos metadados.
+    """Fills in 'Size' and 'Age' of the reference version from the metadata.
 
-    Guarda os valores crus (bytes e dias inteiros) ou o sentinela de
-    indisponibilidade; a formatação legível fica a cargo da camada de exibição.
+    Stores the raw values (bytes and whole days) or the unavailability
+    sentinel; the human-readable formatting is left to the display layer.
 
     Args:
-        dep: Dependência a preencher.
-        data: Metadados já buscados no PyPI.
-        version: Versão de referência (Versão Usada, ou a mais recente para
-            Fantasmas). ``None`` quando não há referência (Versão Usada Indeterminada
-            de uma Dependência Declarada): Tamanho e Idade ficam assim, nunca 0.
+        dep: Dependency to fill in.
+        data: Metadata already fetched from PyPI.
+        version: Reference version (Used Version, or the most recent one for
+            Ghosts). ``None`` when there is no reference (Indeterminate Used Version
+            of a Declared Dependency): Size and Age stay that way, never 0.
     """
     if version is None:
         dep["size"] = UNKNOWN
@@ -82,30 +82,30 @@ def _set_size_and_age(dep: Dependency, data: dict, version: str | None) -> None:
 
 def _checar_dependencia(dep: Dependency) -> Dependency:
     """
-    Consulta o PyPI para uma única dependência (um request) e preenche
-    'Versão PyPI', 'Status', 'Tamanho' e 'Idade' diretamente no dicionário.
+    Queries PyPI for a single dependency (one request) and fills in
+    'PyPI Version', 'Status', 'Size' and 'Age' directly into the dictionary.
 
-    Chamada em paralelo pelo ThreadPoolExecutor.
+    Called in parallel by the ThreadPoolExecutor.
 
     Args:
-        dep: Dicionário com pelo menos 'Pacote' e 'Versão Usada'.
+        dep: Dictionary with at least 'Package' and 'Used Version'.
 
     Returns:
-        O mesmo dicionário com 'Versão PyPI', 'Status', 'Tamanho' e 'Idade'
-        preenchidos.
+        The same dictionary with 'PyPI Version', 'Status', 'Size' and 'Age'
+        filled in.
     """
     data = fetch_package_data(dep["package"])
     versao_usada = _used_version(dep)
     pypi_version = get_latest_version(data) if data else ""
 
     if not pypi_version:
-        # Pacote ausente do PyPI (privado/interno), falha de rede ou resposta sem
-        # versão: indisponível, sem quebrar a análise dos demais pacotes.
+        # Package absent from PyPI (private/internal), network failure or a response with
+        # no version: unavailable, without breaking the analysis of the other packages.
         dep["pypi_version"] = "N/A"
         dep["status"]      = STATUS_UNKNOWN
         if not versao_usada:
-            # Mesmo sentinela do caminho com PyPI: não conhecer a Versão Usada é
-            # indisponibilidade, independente de o pacote existir no PyPI.
+            # Same sentinel as the path with PyPI: not knowing the Used Version is
+            # unavailability, regardless of whether the package exists on PyPI.
             dep["used_version"] = UNKNOWN
         _set_size_and_age(dep, data={}, version=None)
         return dep
@@ -113,14 +113,14 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
     dep["pypi_version"] = pypi_version
 
     if not versao_usada:
-        # Sem Lock e sem pin, a Versão Usada é desconhecida: não se afirma que o
-        # pacote está em dia nem se copia a versão do PyPI (ADR-0002). O Status é a
-        # mesma ausência da métrica — Indeterminado — e diz isso com a mesma palavra.
+        # Without Lock and without pin, the Used Version is unknown: we neither claim the
+        # package is up to date nor copy the version from PyPI (ADR-0002). The Status is the
+        # same absence as the metric — Indeterminate — and says so with the same word.
         dep["used_version"] = UNKNOWN
         dep["status"]       = STATUS_UNKNOWN
-        # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md): usa a
-        # versão mais recente como referência de Tamanho/Idade. Uma Dependência
-        # Declarada sem Versão Usada não tem referência — fica indisponível.
+        # A Ghost has no Declaration, so it has no Origin (CONTEXT.md): it uses the
+        # most recent version as the reference for Size/Age. A Declared
+        # Dependency without a Used Version has no reference — it stays unavailable.
         _set_size_and_age(dep, data, pypi_version if is_ghost(dep) else None)
     else:
         _set_size_and_age(dep, data, versao_usada)
@@ -137,18 +137,18 @@ def _checar_dependencia(dep: Dependency) -> Dependency:
 
 def analyze_dependency_status(dependencies: list[Dependency]) -> list[Dependency]:
     """
-    Analisa o status de cada dependência comparando com o PyPI.
+    Analyzes the status of each dependency by comparing against PyPI.
 
-    Utiliza ThreadPoolExecutor para disparar as requisições em paralelo,
-    reduzindo o tempo de execução de O(n) sequencial para próximo de O(1)
-    em relação ao número de dependências.
+    Uses a ThreadPoolExecutor to fire the requests in parallel,
+    reducing the execution time from sequential O(n) to near O(1)
+    relative to the number of dependencies.
 
     Args:
-        dependencies: Lista de dicts com 'Pacote' e 'Versão Usada'.
+        dependencies: List of dicts with 'Package' and 'Used Version'.
 
     Returns:
-        A mesma lista com 'Versão PyPI', 'Status', 'Tamanho' e 'Idade'
-        preenchidos em cada item.
+        The same list with 'PyPI Version', 'Status', 'Size' and 'Age'
+        filled in on each item.
     """
     if not dependencies:
         return []

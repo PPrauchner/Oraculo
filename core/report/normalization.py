@@ -1,15 +1,15 @@
 """
-Módulo responsável pela construção do relatório final.
+Building of the final report.
 
-Organiza os dados provenientes da análise em uma estrutura adequada
-para visualização e exportação (ex: DataFrame).
+Organizes the data coming from the analysis into a structure suitable
+for display and export (e.g.: DataFrame).
 
-Entrada:
-- Lista com todas as dependências
-- Resultados das análises (zumbis, fantasmas, desatualizados)
+Input:
+- List with all the dependencies
+- Analysis results (Zombies, Ghosts, Outdated)
 
-Saída:
-- Estrutura de dados organizada (ex: Dicionário)
+Output:
+- Organized data structure (e.g.: Dictionary)
 """
 
 from core.analysis.ghost_analizer import is_ghost
@@ -28,19 +28,19 @@ from utils.types import Dependency, ExportRow, ReportRow
 
 
 def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
-    """Seleciona, de cada Dependência, o que a tabela do relatório exibe.
+    """Selects, from each Dependency, what the report table displays.
 
-    Devolve dado e identidade, nunca texto pronto: Tamanho em bytes, Idade em dias,
-    Status como identidade estável. Quem escolhe unidade, redação e língua é
-    `utils/display.py` (ADR-0010) — enquanto esta função devolvia "30 dias", a
-    tabela respondia em português sob `?lang=en`.
+    Returns data and identity, never ready-made text: Size in bytes, Age in days,
+    Status as stable identity. Whoever chooses unit, wording and language is
+    `utils/display.py` (ADR-0010) — while this function returned "30 dias", the
+    table answered in Portuguese under `?lang=en`.
 
     Args:
-        list_analyzed: Dependências com seus resultados de análise.
+        list_analyzed: Dependencies with their analysis results.
 
     Returns:
-        Uma linha por dependência, ou uma linha de Não Aplicável quando não há
-        nenhuma — a tabela precisa de forma mesmo vazia.
+        One row per dependency, or a Not Applicable row when there is
+        none — the table needs a shape even when empty.
     """
 
     rows: list[ReportRow] = []
@@ -55,9 +55,9 @@ def normalize(list_analyzed: list[Dependency]) -> list[ReportRow]:
                 "size": dep.get("size", UNKNOWN),
                 "age": dep.get("age", UNKNOWN),
                 "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
-                # Fantasma não tem Declaração, logo não tem Versão Usada (CONTEXT.md):
-                # seu Tamanho/Idade referem-se à versão mais recente do PyPI, e a
-                # tabela precisa poder dizer isso.
+                # A Ghost has no Declaration, so it has no Used Version (CONTEXT.md):
+                # its Size/Age refer to the most recent version on PyPI, and the
+                # table needs to be able to say so.
                 "metrics_from_latest": is_ghost(dep),
             }
         )
@@ -84,27 +84,27 @@ def build_export_rows(
     project_name: str,
     analysis_date: str,
 ) -> list[ExportRow]:
-    """Monta as linhas da exportação (US-06/US-07), uma por dependência.
+    """Builds the export rows (US-06/US-07), one per dependency.
 
-    O esquema acrescenta um eixo temporal (Data da Análise) e de identidade
-    (Projeto), e estratifica por Categoria (Zumbi, Fantasma, Saudável). Desatualizada
-    é coluna própria — uma dependência pode ser Zumbi *e* Desatualizada ao mesmo
-    tempo, o que um único campo Categoria perderia.
+    The schema adds a temporal axis (Analysis Date) and an identity axis
+    (Project), and stratifies by Category (Zombie, Ghost, Healthy). Outdated
+    is its own column — a dependency can be a Zombie *and* Outdated at the same
+    time, which a single Category field would lose.
 
-    Tamanho e Idade saem crus (bytes e dias inteiros) ou como o sentinela de
-    indisponibilidade, nunca formatados nem 0: o CSV é para diffing/concatenação ao
-    longo do tempo, não para leitura humana direta (essa é a `normalize`).
+    Size and Age come out raw (bytes and whole days) or as the unavailability
+    sentinel, never formatted nor 0: the CSV is for diffing/concatenation over
+    time, not for direct human reading (that is `normalize`).
 
     Args:
-        dependencies: Todas as dependências auditadas (Declaradas + Fantasmas),
-            já deduplicadas.
-        zombies: Dependências Zumbi identificadas pela análise.
-        ghosts: Dependências Fantasma identificadas pela análise.
-        project_name: Identificador do Projeto-Alvo (mesmo valor em toda linha).
-        analysis_date: Data da Análise (mesmo valor em toda linha da exportação).
+        dependencies: All the audited dependencies (Declared + Ghosts),
+            already deduplicated.
+        zombies: Zombie dependencies identified by the analysis.
+        ghosts: Ghost dependencies identified by the analysis.
+        project_name: Target Project identifier (same value on every row).
+        analysis_date: Analysis Date (same value on every export row).
 
     Returns:
-        Uma linha por dependência, na ordem das colunas do esquema.
+        One row per dependency, in the order of the schema columns.
     """
     zombie_names = {dep["package"] for dep in zombies}
     ghost_names = {dep["package"] for dep in ghosts}
@@ -128,7 +128,7 @@ def build_export_rows(
                 "project": project_name,
                 "package": package,
                 "category": category,
-                # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
+                # A Ghost has no Declaration, so it has no Origin (CONTEXT.md).
                 "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
                 "used_version": dep.get("used_version", "N/A"),
                 "pypi_version": dep.get("pypi_version", "N/A"),
@@ -146,19 +146,19 @@ def filter_export_rows(
     categories: set[str],
     include_outdated: bool,
 ) -> list[ExportRow]:
-    """Seleciona as linhas de exportação pedidas, sem repetir nenhuma dependência.
+    """Selects the requested export rows, without repeating any dependency.
 
-    Desatualizada não é Categoria, então entra como critério à parte. Uma linha que
-    satisfaz os dois critérios (ex.: Zumbi *e* Desatualizada) sai uma única vez —
-    filtrar preserva a regra de uma linha por dependência.
+    Outdated is not a Category, so it enters as a separate criterion. A row that
+    satisfies both criteria (e.g.: Zombie *and* Outdated) comes out a single time —
+    filtering preserves the one-row-per-dependency rule.
 
     Args:
-        rows: Linhas produzidas por `build_export_rows`.
-        categories: Categorias selecionadas (Zumbi, Fantasma, Saudável).
-        include_outdated: Se as Dependências Desatualizadas também entram.
+        rows: Rows produced by `build_export_rows`.
+        categories: Selected Categories (Zombie, Ghost, Healthy).
+        include_outdated: Whether the Outdated Dependencies also enter.
 
     Returns:
-        As linhas selecionadas, na ordem original.
+        The selected rows, in the original order.
     """
     return [
         row

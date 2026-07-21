@@ -1,134 +1,134 @@
 """
-Formato dos registros que atravessam o pipeline de auditoria.
+Format of the records that flow through the audit pipeline.
 
-Responsabilidades:
-- Descrever a Dependência auditada, como `parsin` a produz e `analysis` a enriquece.
-- Descrever a linha exibida no relatório e a linha da exportação, que dela derivam.
+Responsibilities:
+- Describe the audited Dependency, as `parsin` produces it and `analysis` enriches it.
+- Describe the row displayed in the report and the export row, which derive from it.
 
-A ADR-0011 introduz estes `TypedDict` como rede para a renomeação das chaves para
-inglês (ADR-0008): num `dict` sem esquema, uma chave escrita errada não falha na
-hora — o `.get()` devolve o default e o relatório sai vazio, sem erro e sem aviso.
-Declarado o formato, o verificador cobra cada ponto de leitura.
+ADR-0011 introduces these `TypedDict`s as a safety net for the renaming of the keys to
+English (ADR-0008): in a schemaless `dict`, a mistyped key does not fail at the
+moment — `.get()` returns the default and the report comes out empty, with no error and no warning.
+Once the format is declared, the type checker demands each read point.
 
-Em tempo de execução isto continua sendo `dict` comum: sem instanciação, sem `self`,
-sem método. Nenhuma regra de negócio mora aqui — quem classifica Zumbi é
-`zombie_analizer`, quem calcula Idade é `pypi_client`. A Regra 01 (paradigma
-procedural) proíbe modelar o domínio em objetos com estado e comportamento, e
-`TypedDict` usa `class` como sintaxe de declaração de tipo, não como construtor:
-é apagado em runtime e existe só para o verificador.
+At runtime this remains a plain `dict`: no instantiation, no `self`,
+no method. No business rule lives here — the one that classifies Zombie is
+`zombie_analizer`, the one that computes Age is `pypi_client`. Rule 01 (procedural
+paradigm) forbids modeling the domain in objects with state and behavior, and
+`TypedDict` uses `class` as type-declaration syntax, not as a constructor:
+it is erased at runtime and exists only for the type checker.
 
-O glossário do `CONTEXT.md` faz a ponte entre o termo de domínio em português e o
-identificador aqui — Pacote é `package`, Versão Usada é `used_version`. O rótulo
-que o usuário lê no CSV é um terceiro vocabulário, e mora em `CSV_HEADER`.
+The `CONTEXT.md` glossary bridges the domain term in Portuguese and the
+identifier here — Pacote is `package`, Versão Usada is `used_version`. The label
+the user reads in the CSV is a third vocabulary, and lives in `CSV_HEADER`.
 """
 
 from typing import NotRequired, TypedDict
 
-# Tamanho e Idade saem crus (bytes, dias) do PyPI, ou como o sentinela de
-# indisponibilidade quando a Versão Usada não foi resolvida (ADR-0002/ADR-0004).
+# Size and Age come out raw (bytes, days) from PyPI, or as the unavailability
+# sentinel when the Used Version was not resolved (ADR-0002/ADR-0004).
 RawMetric = int | str
 
 
 class DeclarationEntry(TypedDict):
-    """O que um reader extrai de uma Declaração, antes de virar Dependência.
+    """What a reader extracts from a Declaration, before it becomes a Dependency.
 
-    Menor que a Dependência de propósito: a Declaração diz o Pacote e, quando
-    fixa versão, a Versão Usada. `pypi_version` e `status` só existem depois de
-    consultar o PyPI, e declará-los aqui seria prometer campo que o reader nunca
-    preenche.
+    Smaller than the Dependency on purpose: the Declaration says the Package and, when
+    it fixes a version, the Used Version. `pypi_version` and `status` only exist after
+    querying PyPI, and declaring them here would promise a field that the reader never
+    fills.
     """
 
     package: str
-    # Vazia quando a Declaração não fixa versão — pin exato é o único que define
-    # Versão Usada (ADR-0002), e o Lock resolve o resto depois.
+    # Empty when the Declaration does not fix a version — an exact pin is the only one that
+    # defines the Used Version (ADR-0002), and the Lock resolves the rest afterwards.
     used_version: str
-    # Preenchida pelos readers que distinguem grupo de desenvolvimento; é ela que
-    # isenta a Dependência de Desenvolvimento de virar Zumbi (ADR-0003).
+    # Filled by the readers that distinguish a development group; it is what
+    # exempts the Development Dependency from becoming a Zombie (ADR-0003).
     origin: NotRequired[str]
 
 
 class Dependency(TypedDict):
-    """A Dependência auditada, como circula de `parsin` até o relatório."""
+    """The audited Dependency, as it flows from `parsin` to the report."""
 
     package: str
     used_version: str
     pypi_version: str
     status: str
-    # Preenchidos por `analysis` a partir do PyPI, ausentes até lá.
+    # Filled by `analysis` from PyPI, absent until then.
     size: NotRequired[RawMetric]
     age: NotRequired[RawMetric]
-    # Fantasma não tem Declaração, logo não tem Origem (CONTEXT.md).
+    # A Ghost has no Declaration, so it has no Origin (CONTEXT.md).
     origin: NotRequired[str]
 
 
 class ReportRow(TypedDict):
-    """A linha que alimenta a tabela do relatório, como sai de `normalize`.
+    """The row that feeds the report table, as it leaves `normalize`.
 
-    Carrega dado e identidade, não texto: quem escolhe unidade, redação e língua é
-    `utils/display.py` (ADR-0010). Enquanto `normalize` devolvia "30 dias" pronto,
-    a tabela respondia em português sob `?lang=en` e não havia mais o que traduzir.
+    It carries data and identity, not text: the one who chooses unit, wording and language is
+    `utils/display.py` (ADR-0010). While `normalize` returned "30 dias" ready-made,
+    the table answered in Portuguese under `?lang=en` and there was nothing left to translate.
     """
 
     package: str
     used_version: str
     pypi_version: str
-    # Identidade estável (`STATUS_*`), não rótulo — ela também é comparada.
+    # Stable identity (`STATUS_*`), not label — it is also compared.
     status: str
-    # Crus, como na exportação: bytes e dias inteiros, ou o Indeterminado.
+    # Raw, as in the export: bytes and whole days, or the Indeterminate.
     size: RawMetric
     age: RawMetric
     origin: str
-    # Se Tamanho e Idade se referem à versão mais recente do PyPI em vez da Versão
-    # Usada — o caso do Fantasma, que não tem Declaração. A tabela explicita isso;
-    # sem a nota, ela alegaria sobre a versão que roda um número que descreve outra.
+    # Whether Size and Age refer to the most recent version on PyPI instead of the Used
+    # Version — the case of the Ghost, which has no Declaration. The table makes this explicit;
+    # without the note, it would claim about the running version a number that describes another.
     metrics_from_latest: bool
 
 
 class CategorySummary(TypedDict):
-    """As agregações de uma Categoria, como `summarize_category` as produz.
+    """The aggregations of a Category, as `summarize_category` produces them.
 
-    Ficou de fora da renomeação da ADR-0008 por não tocar o CSV nem descrever uma
-    dependência — mas é registro que atravessa `core/report/` até a tela, e o mesmo
-    argumento do ADR-0011 vale: chave escrita errada num `dict` solto devolve o
-    default e a métrica sai vazia, sem erro e sem aviso.
+    It was left out of the ADR-0008 renaming because it does not touch the CSV nor describe a
+    dependency — but it is a record that flows through `core/report/` to the screen, and the same
+    argument of ADR-0011 applies: a mistyped key in a loose `dict` returns the
+    default and the metric comes out empty, with no error and no warning.
 
-    `None` em `total_size`/`average_age` não é zero: significa que nenhuma
-    dependência da categoria teve a métrica medida, e somar ou mediar o
-    Indeterminado como 0 inventaria um número que o PyPI não deu (ADR-0004).
+    `None` in `total_size`/`average_age` is not zero: it means that no
+    dependency of the category had the metric measured, and summing or averaging the
+    Indeterminate as 0 would invent a number that PyPI did not give (ADR-0004).
     """
 
     count: int
     total_size: float | None
     average_age: float | None
-    # Quantas ficaram de fora de cada agregação, para que a média não engane quem lê.
+    # How many were left out of each aggregation, so the average does not mislead the reader.
     missing_size: int
     missing_age: int
 
 
 class SummaryMetric(TypedDict):
-    """Uma das estatísticas de uma Categoria, antes de virar caption.
+    """One of the statistics of a Category, before it becomes a caption.
 
-    `format_summary_lines` devolvia "Tamanho: 1.2 MB (1 de 2 sem dado)" — frase
-    pronta, em português, produzida dentro de `core/`. Este é o par que a ADR-0010
-    pede no lugar: a identidade da métrica e os dados que a descrevem, com a
-    redação por conta de `utils/display.py`.
+    `format_summary_lines` used to return "Tamanho: 1.2 MB (1 de 2 sem dado)" — a
+    ready-made phrase, in Portuguese, produced inside `core/`. This is the pair that ADR-0010
+    asks for instead: the metric's identity and the data that describe it, with the
+    wording left to `utils/display.py`.
     """
 
-    # "size" ou "age": identidade estável, não rótulo.
+    # "size" or "age": stable identity, not label.
     metric: str
-    # `None` quando nenhuma dependência da categoria teve a métrica medida.
+    # `None` when no dependency of the category had the metric measured.
     value: float | None
-    # Quantas ficaram de fora, e de quantas — uma média calculada sobre metade dos
-    # pacotes, sem aviso, engana quem lê.
+    # How many were left out, and out of how many — an average computed over half the
+    # packages, without warning, misleads the reader.
     missing: int
     total: int
 
 
 class ExportRow(TypedDict):
-    """A linha do CSV, como sai de `build_export_rows`.
+    """The CSV row, as it leaves `build_export_rows`.
 
-    A ordem de declaração é a ordem das colunas do arquivo (ADR-0008), e os
-    rótulos que o usuário lê saem de `CSV_HEADER` — nunca destas chaves.
+    The declaration order is the order of the file's columns (ADR-0008), and the
+    labels the user reads come from `CSV_HEADER` — never from these keys.
     """
 
     analysis_date: str
@@ -138,10 +138,10 @@ class ExportRow(TypedDict):
     origin: str
     used_version: str
     pypi_version: str
-    # Desatualizada é coluna própria, e não valor de Categoria: uma dependência
-    # pode ser Zumbi *e* Desatualizada, e um campo só perderia uma das leituras.
+    # Outdated is its own column, and not a Category value: a dependency
+    # can be a Zombie *and* Outdated, and a single field would lose one of the readings.
     outdated: str
-    # Crus, nunca formatados: o CSV é para diffing e concatenação ao longo do
-    # tempo, não para leitura humana direta — essa é a `normalize`.
+    # Raw, never formatted: the CSV is for diffing and concatenation over
+    # time, not for direct human reading — that is `normalize`.
     size: RawMetric
     age: RawMetric

@@ -1,24 +1,24 @@
 """
-Traduz o dado que `core/report/` devolve para o texto que o relatório mostra.
+Translates the data `core/report/` returns into the text the report shows.
 
-Responsabilidades:
-- Formatar Tamanho e Idade crus na unidade e na língua da tela.
-- Rotular Status e Origem a partir da identidade estável que `core/` devolve.
-- Montar as linhas da tabela já com as colunas rotuladas.
+Responsibilities:
+- Format raw Size and Age in the unit and the language of the screen.
+- Label Status and Origin from the stable identity that `core/` returns.
+- Assemble the table rows already with the columns labeled.
 
-É o mesmo papel que `utils/messages.py` cumpre para os códigos de erro de
-`core/ingestion/`: `core/` devolve identidade e dado, e a redação, a unidade e a
-língua são decisão de quem renderiza (ADR-0010). Antes disso `normalize` devolvia
-"30 dias" e "(última versão)" prontos — com `?lang=en` a tabela respondia em
-português, e não havia mais o que traduzir porque o dado já tinha virado frase.
+It is the same role that `utils/messages.py` plays for the error codes of
+`core/ingestion/`: `core/` returns identity and data, and the wording, the unit and the
+language are a decision of whoever renders (ADR-0010). Before this `normalize` returned
+"30 dias" and "(última versão)" ready-made — with `?lang=en` the table answered in
+Portuguese, and there was nothing left to translate because the data had already become a phrase.
 
-Mora em `utils/` e não dentro de `pages/report.py` por dois motivos: a página
-executa Streamlit já na importação, e nada que só ela possa importar é testável
-como módulo; e o mesmo dado sai na tabela e nas métricas.
+It lives in `utils/` and not inside `pages/report.py` for two reasons: the page
+runs Streamlit on import, and nothing that only it can import is testable
+as a module; and the same data goes out in the table and in the metrics.
 
-Este é o terceiro vocabulário do projeto, ao lado das chaves internas (snake_case)
-e do cabeçalho do CSV (`CSV_HEADER`, Title Case fixo em inglês). São separados de
-propósito: traduzir a tela não pode alcançar o arquivo exportado (ADR-0008).
+This is the project's third vocabulary, alongside the internal keys (snake_case)
+and the CSV header (`CSV_HEADER`, Title Case fixed in English). They are separated on
+purpose: translating the screen cannot reach the exported file (ADR-0008).
 """
 
 from typing import Callable
@@ -38,9 +38,9 @@ from utils.types import RawMetric, ReportRow, SummaryMetric
 _BYTES_PER_KB = 1024
 _BYTES_PER_MB = 1024 * 1024
 
-# Chave interna da linha → chave de locale da coluna. A ordem é a ordem em que as
-# colunas aparecem na tabela; a chave interna nunca chega à tela, porque ela é
-# contrato do CSV e mudá-la por razão de tela reescreveria o arquivo (ADR-0008).
+# Internal row key → column locale key. The order is the order in which the
+# columns appear in the table; the internal key never reaches the screen, because it is
+# the CSV contract and changing it for a screen reason would rewrite the file (ADR-0008).
 REPORT_COLUMNS = {
     "package": "report.column.package",
     "used_version": "report.column.used_version",
@@ -51,8 +51,8 @@ REPORT_COLUMNS = {
     "origin": "report.column.origin",
 }
 
-# O Indeterminado não aparece aqui: ele é a ausência, e `_value_label` já o resolve.
-# Registrá-lo de novo criaria duas chaves de locale para o mesmo texto.
+# The Indeterminate does not appear here: it is the absence, and `_value_label` already resolves it.
+# Registering it again would create two locale keys for the same text.
 STATUS_KEYS = {
     STATUS_OUTDATED: "report.status.outdated",
     STATUS_UP_TO_DATE: "report.status.up_to_date",
@@ -66,18 +66,18 @@ ORIGIN_KEYS = {
 
 
 def _value_label(value: str) -> str:
-    """Rótulo das duas ausências; qualquer outro valor é dado do pacote.
+    """Label of the two absences; any other value is package data.
 
-    O `CONTEXT.md` separa Indeterminado ("o ORÁCULO não tem como saber") de Não
-    Aplicável ("não existe por definição"), e a tela precisa manter a distinção:
-    só a primeira diz ao usuário que adotar um Lock melhoraria o relatório dele.
+    `CONTEXT.md` separates Indeterminate ("the ORÁCULO has no way to know") from Not
+    Applicable ("does not exist by definition"), and the screen needs to keep the distinction:
+    only the first tells the user that adopting a Lock would improve their report.
 
     Args:
-        value: Valor da linha, já como identidade estável.
+        value: Row value, already as stable identity.
 
     Returns:
-        O rótulo traduzido quando o valor é uma das ausências; o próprio valor
-        quando é dado do pacote — nome e número não se traduzem.
+        The translated label when the value is one of the absences; the value itself
+        when it is package data — name and number are not translated.
     """
     if value == UNKNOWN:
         return t("report.value.unknown")
@@ -87,14 +87,14 @@ def _value_label(value: str) -> str:
 
 
 def format_size(size: RawMetric) -> str:
-    """Formata o Tamanho cru (bytes) na unidade legível.
+    """Formats the raw Size (bytes) into the readable unit.
 
     Args:
-        size: Bytes da Versão Usada, ou o Indeterminado quando não medido.
+        size: Bytes of the Used Version, or the Indeterminate when not measured.
 
     Returns:
-        "X.Y MB" a partir de 1 MB, "X.Y KB" abaixo disso — nunca 0 para o caso não
-        medido. KB e MB são símbolo de unidade, não palavra: não mudam com a língua.
+        "X.Y MB" from 1 MB up, "X.Y KB" below that — never 0 for the not-measured
+        case. KB and MB are unit symbols, not words: they do not change with the language.
     """
     if not isinstance(size, (int, float)):
         return _value_label(size)
@@ -105,14 +105,14 @@ def format_size(size: RawMetric) -> str:
 
 
 def format_age(age: RawMetric) -> str:
-    """Formata a Idade crua (dias inteiros) no texto da língua da tela.
+    """Formats the raw Age (whole days) into the text of the screen language.
 
     Args:
-        age: Dias desde a publicação da Versão Usada, ou o Indeterminado.
+        age: Days since the publication of the Used Version, or the Indeterminate.
 
     Returns:
-        A contagem de dias redigida pelo locale — o plural é decisão de língua e
-        por isso mora lá, não aqui.
+        The day count worded by the locale — the plural is a language decision and
+        for that reason lives there, not here.
     """
     if not isinstance(age, (int, float)):
         return _value_label(age)
@@ -123,28 +123,28 @@ def format_age(age: RawMetric) -> str:
 
 
 def status_label(status: str) -> str:
-    """Rótulo de um Status na língua da tela.
+    """Label of a Status in the screen language.
 
     Args:
-        status: Identidade estável, como `core/analysis/` a devolve.
+        status: Stable identity, as `core/analysis/` returns it.
 
     Returns:
-        O texto a exibir. A identidade segue em inglês porque é comparada para
-        montar a coluna Outdated do CSV; o que muda com a língua é só o texto.
+        The text to display. The identity stays in English because it is compared to
+        build the Outdated column of the CSV; what changes with the language is only the text.
     """
     key = STATUS_KEYS.get(status)
     return t(key) if key else _value_label(status)
 
 
 def origin_label(origin: str) -> str:
-    """Rótulo de uma Origem na língua da tela.
+    """Label of an Origin in the screen language.
 
     Args:
-        origin: Identidade estável (Produção, Desenvolvimento) ou o Não Aplicável
-            de um Fantasma, que não vem de Declaração nenhuma.
+        origin: Stable identity (Production, Development) or the Not Applicable
+            of a Ghost, which does not come from any Declaration.
 
     Returns:
-        O texto a exibir.
+        The text to display.
     """
     key = ORIGIN_KEYS.get(origin)
     return t(key) if key else _value_label(origin)
@@ -153,17 +153,17 @@ def origin_label(origin: str) -> str:
 def _metric_text(
     raw: RawMetric, from_latest: bool, formatter: Callable[[RawMetric], str]
 ) -> str:
-    """Formata Tamanho/Idade e explicita quando a referência é a versão mais recente.
+    """Formats Size/Age and makes explicit when the reference is the most recent version.
 
     Args:
-        raw: Valor cru da métrica.
-        from_latest: Se a métrica se refere à versão mais recente do PyPI, e não à
-            Versão Usada — o caso do Fantasma, que não tem Declaração.
-        formatter: `format_size` ou `format_age`.
+        raw: Raw value of the metric.
+        from_latest: Whether the metric refers to the most recent version on PyPI, and not to the
+            Used Version — the case of the Ghost, which has no Declaration.
+        formatter: `format_size` or `format_age`.
 
     Returns:
-        O texto da célula, anotado quando há número e ele descreve outra versão.
-        Sem número não há o que anotar: a nota diz de que versão o número é.
+        The cell text, annotated when there is a number and it describes another version.
+        Without a number there is nothing to annotate: the note says which version the number is of.
     """
     text = formatter(raw)
     if from_latest and isinstance(raw, (int, float)):
@@ -172,7 +172,7 @@ def _metric_text(
 
 
 def _cells(row: ReportRow) -> dict[str, str]:
-    """Traduz cada campo de uma linha para o texto da sua célula."""
+    """Translates each field of a row into its cell text."""
     from_latest = row["metrics_from_latest"]
 
     return {
@@ -187,15 +187,15 @@ def _cells(row: ReportRow) -> dict[str, str]:
 
 
 def display_rows(rows: list[ReportRow]) -> list[dict[str, str]]:
-    """Monta a tabela do relatório na língua da tela.
+    """Assembles the report table in the screen language.
 
     Args:
-        rows: Linhas como `normalize` as devolve — dado cru e identidade estável.
+        rows: Rows as `normalize` returns them — raw data and stable identity.
 
     Returns:
-        Uma linha por dependência, chaveada pelo rótulo da coluna: é a chave que o
-        Streamlit usa como cabeçalho da tabela. `metrics_from_latest` não vira
-        coluna — ele anota o Tamanho e a Idade, não é dado a exibir por si.
+        One row per dependency, keyed by the column label: it is the key that
+        Streamlit uses as the table header. `metrics_from_latest` does not become a
+        column — it annotates the Size and the Age, it is not data to display on its own.
     """
     table = []
 
@@ -206,15 +206,15 @@ def display_rows(rows: list[ReportRow]) -> list[dict[str, str]]:
     return table
 
 
-# Identidade da métrica → rótulo da caption e formatador do seu valor.
+# Metric identity → caption label and formatter of its value.
 #
-# O rótulo repete o da coluna da tabela ("Tamanho", "Idade") embora descreva outra
-# coisa: aqui é o Tamanho *somado* e a Idade *média* da categoria. Chamá-los
-# "Tamanho total" e "Idade média", que é o preciso, não cabe — `READING_MAX_WIDTH`
-# fixa o corpo em 1100px e cada métrica fica com ~148px, contra os ~172px que o
-# rótulo longo pede, então a caption quebrava em duas linhas. A precisão do rótulo
-# perdeu para a largura, de propósito; o que a métrica agrega está no `CategorySummary`
-# e em `summary_metrics`, para quem for mexer aqui.
+# The label repeats that of the table column ("Size", "Age") although it describes another
+# thing: here it is the *summed* Size and the *average* Age of the category. Calling them
+# "Total Size" and "Average Age", which is the precise wording, does not fit — `READING_MAX_WIDTH`
+# fixes the body at 1100px and each metric gets ~148px, against the ~172px that the
+# long label asks for, so the caption would break into two lines. The label's precision
+# lost to the width, on purpose; what the metric aggregates is in `CategorySummary`
+# and in `summary_metrics`, for whoever comes to work here.
 SUMMARY_METRICS: dict[str, tuple[str, Callable[[RawMetric], str]]] = {
     "size": ("report.summary.total_size", format_size),
     "age": ("report.summary.average_age", format_age),
@@ -222,20 +222,20 @@ SUMMARY_METRICS: dict[str, tuple[str, Callable[[RawMetric], str]]] = {
 
 
 def format_summary_metric(metric: SummaryMetric) -> str:
-    """Redige a caption de uma estatística de categoria, na língua da tela.
+    """Writes the caption of a category statistic, in the screen language.
 
     Args:
-        metric: Identidade e dados como `summary_metrics` os devolve.
+        metric: Identity and data as `summary_metrics` returns them.
 
     Returns:
-        A linha a exibir, anotada com quantas dependências ficaram fora da
-        agregação. A nota some quando não houve exclusão — não havia o que excluir.
+        The line to display, annotated with how many dependencies were left out of the
+        aggregation. The note disappears when there was no exclusion — there was nothing to exclude.
     """
     key, formatter = SUMMARY_METRICS[metric["metric"]]
     value = metric["value"]
 
-    # A Idade média sai fracionária e a tela conta dias inteiros; o Tamanho já é
-    # inteiro, então o mesmo arredondamento serve aos dois sem ramificar.
+    # The average Age comes out fractional and the screen counts whole days; the Size is already
+    # an integer, so the same rounding serves both without branching.
     raw: RawMetric = UNKNOWN if value is None else round(value)
     line = f"{t(key)}: {formatter(raw)}"
 

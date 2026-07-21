@@ -1,10 +1,10 @@
 """
-Comunicação com a API pública do PyPI.
+Communication with the public PyPI API.
 
-Responsabilidades:
-- Buscar, em uma única requisição a `/pypi/NAME/json`, os metadados de um pacote.
-- Extrair dessa mesma resposta a versão mais recente, o Tamanho e a Idade de uma
-  versão específica (ADR-0004), sem novas requisições.
+Responsibilities:
+- Fetch, in a single request to `/pypi/NAME/json`, a package's metadata.
+- Extract from that same response the most recent version, the Size and the Age of a
+  specific version (ADR-0004), without new requests.
 """
 
 from datetime import date, datetime
@@ -15,21 +15,21 @@ from utils.constants import PYPI_BASE_URL
 
 _TIMEOUT_SECONDS = 5
 
-# As buscas correm em paralelo (32 threads). Uma Session compartilhada mantém o
-# pool de conexões vivo entre elas, poupando o handshake TLS a cada pacote.
+# The fetches run in parallel (32 threads). A shared Session keeps the
+# connection pool alive between them, saving the TLS handshake for each package.
 _SESSION = requests.Session()
 
 
 def fetch_package_data(package_name: str) -> dict | None:
-    """Busca os metadados de um pacote no PyPI em uma única requisição.
+    """Fetches a package's metadata from PyPI in a single request.
 
     Args:
-        package_name: Nome de Distribuição do pacote (ex.: "pandas").
+        package_name: Distribution Name of the package (e.g.: "pandas").
 
     Returns:
-        O JSON de `/pypi/NAME/json` já parseado, ou ``None`` quando o pacote não
-        existe no PyPI (privado/interno) ou há falha de rede — sem quebrar a
-        análise dos demais pacotes.
+        The already-parsed JSON of `/pypi/NAME/json`, or ``None`` when the package does
+        not exist on PyPI (private/internal) or there is a network failure — without breaking the
+        analysis of the other packages.
     """
     url = f"{PYPI_BASE_URL}/{package_name}/json"
 
@@ -43,40 +43,40 @@ def fetch_package_data(package_name: str) -> dict | None:
 
 
 def get_latest_version(data: dict) -> str:
-    """Extrai a versão mais recente dos metadados já buscados.
+    """Extracts the most recent version from the already-fetched metadata.
 
     Args:
-        data: Metadados já buscados via `fetch_package_data`.
+        data: Metadata already fetched via `fetch_package_data`.
 
     Returns:
-        A versão publicada, ou "" quando a resposta não a traz — uma resposta
-        malformada é indisponibilidade de um pacote, não motivo para abortar a
-        análise dos demais.
+        The published version, or "" when the response does not bring it — a malformed
+        response is unavailability of a package, not a reason to abort the
+        analysis of the others.
     """
     return data.get("info", {}).get("version", "")
 
 
 def _release_files(data: dict, version: str) -> list[dict]:
-    """Arquivos publicados de uma versão (vazio se a versão não existir)."""
+    """Published files of a version (empty if the version does not exist)."""
     return data.get("releases", {}).get(version, [])
 
 
 def get_release_size(data: dict, version: str) -> int | None:
-    """Tamanho em bytes de uma versão: bytes do wheel, com sdist como fallback.
+    """Size in bytes of a version: the wheel's bytes, with sdist as fallback.
 
     Args:
-        data: Metadados já buscados via `fetch_package_data`.
-        version: Versão exata cujo Tamanho se quer (a Versão Usada).
+        data: Metadata already fetched via `fetch_package_data`.
+        version: Exact version whose Size is wanted (the Used Version).
 
     Returns:
-        Os bytes de um wheel (`bdist_wheel`); na falta de wheel, os do sdist;
-        ``None`` quando a versão não tem artefatos ou não existe na resposta.
+        The bytes of a wheel (`bdist_wheel`); in the absence of a wheel, those of the sdist;
+        ``None`` when the version has no artifacts or does not exist in the response.
 
-    Um pacote com wheels por plataforma publica dezenas de artefatos da mesma
-    versão, de tamanhos bem diferentes. A escolha é fixada pela ordem alfabética do
-    nome do arquivo, não pela ordem em que o PyPI devolveu: o ADR-0004 exige que o
-    mesmo pacote dê sempre o mesmo número, senão a série temporal da US-07 inventa
-    variação que não houve.
+    A package with per-platform wheels publishes dozens of artifacts of the same
+    version, of quite different sizes. The choice is fixed by the alphabetical order of the
+    file name, not by the order in which PyPI returned them: ADR-0004 requires that the
+    same package always give the same number, otherwise the US-07 time series invents
+    variation that never happened.
     """
     files = _release_files(data, version)
     if not files:
@@ -91,7 +91,7 @@ def get_release_size(data: dict, version: str) -> int | None:
 
 
 def _parse_upload_time(raw: str) -> date | None:
-    """Converte o `upload_time` do PyPI (ISO, UTC ingênuo) em data."""
+    """Converts PyPI's `upload_time` (ISO, naive UTC) into a date."""
     if not raw:
         return None
     try:
@@ -103,19 +103,19 @@ def _parse_upload_time(raw: str) -> date | None:
 def get_release_age_days(
     data: dict, version: str, today: date | None = None
 ) -> int | None:
-    """Idade em dias de uma versão: hoje menos a data de publicação dela.
+    """Age in days of a version: today minus its publication date.
 
-    A data de publicação da versão é o `upload_time` mais antigo entre seus
-    artefatos (ADR-0004).
+    The version's publication date is the oldest `upload_time` among its
+    artifacts (ADR-0004).
 
     Args:
-        data: Metadados já buscados via `fetch_package_data`.
-        version: Versão exata cuja Idade se quer (a Versão Usada).
-        today: Data de referência; usa `date.today()` quando omitida.
+        data: Metadata already fetched via `fetch_package_data`.
+        version: Exact version whose Age is wanted (the Used Version).
+        today: Reference date; uses `date.today()` when omitted.
 
     Returns:
-        Dias inteiros desde a publicação, ou ``None`` quando a versão não existe
-        ou não traz `upload_time`.
+        Whole days since publication, or ``None`` when the version does not exist
+        or does not bring `upload_time`.
     """
     files = _release_files(data, version)
     upload_dates = [
