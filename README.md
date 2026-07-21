@@ -1,3 +1,5 @@
+<div align="center">
+
 # ORÁCULO
 
 *[English version](README.en.md)*
@@ -8,6 +10,8 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.56-FF4B4B?logo=streamlit&logoColor=white)
 ![managed by uv](https://img.shields.io/badge/managed%20by-uv-6340AC)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+
+</div>
 
 Ferramenta web de auditoria de dependências de projetos Python. Cruza o que um
 Projeto-Alvo **declara** depender com o que seu código **realmente importa**, e confronta
