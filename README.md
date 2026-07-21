@@ -1,10 +1,26 @@
 # ORÁCULO
 
+*[English version](README.en.md)*
+
 **O**rganizador e **R**astreador **A**utomático de **C**ódigo, **U**so de **L**ibraries e **O**corrências.
+
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.56-FF4B4B?logo=streamlit&logoColor=white)
+![managed by uv](https://img.shields.io/badge/managed%20by-uv-6340AC)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
 Ferramenta web de auditoria de dependências de projetos Python. Cruza o que um
 Projeto-Alvo **declara** depender com o que seu código **realmente importa**, e confronta
 ambos com o PyPI para reportar Zumbis, Fantasmas e Desatualizadas.
+
+> **Contexto:** trabalho acadêmico (RP III, Marco I) mantido como peça de portfólio — a
+> interface tem o inglês como padrão ([ADR-0009](docs/adr/0009-locales-em-json-sem-biblioteca-de-i18n.md)),
+> e a documentação segue em português.
+
+![Relatório da auto-auditoria do ORÁCULO](docs/assets/report.png)
+
+*Relatório da auto-auditoria: o ORÁCULO analisando o próprio código — 0 Zumbis, 0 Fantasmas,
+Índice de Saúde 85%.*
 
 ---
 
@@ -260,3 +276,17 @@ streamlit run main.py
 > O próprio ORÁCULO é um Projeto-Alvo válido — auditá-lo é a forma mais rápida de testar.
 
 ---
+
+## Licença
+
+Distribuído sob a licença [MIT](LICENSE) — © 2026 Pietro Prauchner, Rafael Lopes, Lorenzo
+Ficher e Inaurrara.
+
+## Autores
+
+Trabalho do grupo-03 (RP III, Marco I):
+
+- **Pietro Prauchner** — [@PPrauchner](https://github.com/PPrauchner)
+- **Rafael Lopes** — [@rjnlopes03](https://github.com/rjnlopes03)
+- **Lorenzo Ficher** — [@lorenzoficher](https://github.com/lorenzoficher)
+- **Inaurrara** — [@Inaurrara](https://github.com/Inaurrara)

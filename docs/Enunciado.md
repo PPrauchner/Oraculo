@@ -1,3 +1,5 @@
+*[English version](Enunciado.en.md)*
+
 Projetos Python acumulam dependências ao longo do tempo, e é comum que bibliotecas fiquem desatualizadas, sem uso ou com vulnerabilidades conhecidas.
 
 O objetivo deste projeto é desenvolver uma ferramenta que:

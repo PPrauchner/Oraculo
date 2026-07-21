@@ -1,3 +1,5 @@
+*[English version](0002-declaracao-define-o-conjunto-lock-define-a-versao.en.md)*
+
 # Declaração define o conjunto, Lock define a versão
 
 A Declaração (`pyproject.toml`, `requirements.txt`) diz **quais** pacotes são diretos mas

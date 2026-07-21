@@ -1,3 +1,5 @@
+*[English version](0011-dependencia-e-typeddict-nao-classe-de-dominio.en.md)*
+
 # A dependência é um `TypedDict`, não uma classe de domínio
 
 A Regra 01 do enunciado exige **paradigma procedural: sem classes de domínio**. Este ADR

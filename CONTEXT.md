@@ -1,3 +1,5 @@
+*[English version](CONTEXT.en.md)*
+
 # ORÁCULO
 
 **O**rganizador e **R**astreador **A**utomático de **C**ódigo, **U**so de **L**ibraries e
