@@ -36,7 +36,7 @@ def read_zip_file(file_bytes: bytes) -> zipfile.ZipFile:
         zip_ref = zipfile.ZipFile(io.BytesIO(file_bytes))
         return zip_ref
     except zipfile.BadZipFile:
-        print("O arquivo enviado não é um ZIP válido.")
+        print("The uploaded file is not a valid ZIP.")
         return None
 
 
@@ -57,7 +57,7 @@ def tar_file(file_bytes: bytes) -> tarfile.TarFile:
         tar_ref = tarfile.open(fileobj=io.BytesIO(file_bytes))
         return tar_ref
     except tarfile.TarError:
-        print("O arquivo enviado não é um TAR válido.")
+        print("The uploaded file is not a valid TAR.")
         return None
 
 
@@ -78,7 +78,7 @@ def tar_gz_file(file_bytes: bytes) -> tarfile.TarFile:
         tar_ref = tarfile.open(fileobj=io.BytesIO(file_bytes), mode="r:gz")
         return tar_ref
     except tarfile.TarError:
-        print("O arquivo enviado não é um TAR.GZ válido.")
+        print("The uploaded file is not a valid TAR.GZ.")
         return None
 
 

@@ -38,7 +38,7 @@ def fetch_package_data(package_name: str) -> dict | None:
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as error:
-        print(f"Não foi possível checar o pacote '{package_name}' no PyPI. ({error})")
+        print(f"Could not check package '{package_name}' on PyPI. ({error})")
         return None
 
 

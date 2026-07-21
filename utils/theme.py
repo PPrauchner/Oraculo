@@ -33,7 +33,7 @@ def theme_color(token: str) -> str:
     color = st.get_option(f"theme.{token}")
 
     if color is None:
-        raise KeyError(f"token '{token}' não está na paleta de .streamlit/config.toml")
+        raise KeyError(f"token '{token}' is not in the palette of .streamlit/config.toml")
 
     return color
 
