@@ -46,6 +46,28 @@ def test_format_error_interpolates_the_parameters_of_the_code():
     assert "C:/alvo" in rendered
 
 
+@pytest.mark.parametrize(
+    "language, expected",
+    [
+        ("en", "Path not found: C:/alvo"),
+        ("pt", "Caminho não encontrado: C:/alvo"),
+    ],
+)
+def test_format_error_interpolates_in_the_language_of_the_screen(
+    monkeypatch: pytest.MonkeyPatch, language: str, expected: str
+):
+    """O erro interpolado sai na língua da tela: inglês em `en`, português em `pt`.
+
+    Junta num caso só as duas garantias que a mensagem de erro no locale fecha —
+    resolver pelo código na língua da requisição e interpolar o parâmetro de
+    `core/`. Se `format_error` ignorasse a língua da tela, `pt` renderizaria o texto
+    inglês com o caminho e este teste falharia.
+    """
+    _screen_language(monkeypatch, language)
+
+    assert format_error(("directory_not_found", {"path": "C:/alvo"})) == expected
+
+
 def test_format_error_renders_a_code_without_parameters():
     assert format_error(("source_missing", {})) == translate(
         error_key("source_missing"), DEFAULT_LANGUAGE
