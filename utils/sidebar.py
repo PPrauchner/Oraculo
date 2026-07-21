@@ -17,41 +17,42 @@ from utils.theme import theme_color
 import streamlit as st
 
 
+def _apply_language() -> None:
+    """Copies the picked language into `?lang=`, the single source the screen reads.
+
+    Runs in the selectbox `on_change`, which Streamlit fires before the rerun that follows a
+    real interaction. Writing the param before the body re-runs is what makes the next run
+    read the new language from top to bottom — the screen comes out whole in the new language,
+    not half in each (issue #53).
+    """
+    st.query_params[LANGUAGE_PARAM] = st.session_state["language_choice"]
+
+
 def language_selector() -> None:
     """Offers the available languages and stores the choice in the URL.
 
     Each option appears in its own language (`language.name`), so adding a
     file in `locales/` is enough for the language to appear here — with no new `if` (ADR-0009).
-    The widget does not use `key`: the language lives in `?lang=`, and having both storing the
-    same thing would create two sources of truth that disagree on refresh.
+
+    `?lang=` stays the single source of truth for the rendered language: `current_language()`
+    reads it and every label resolves from it at render time. The selectbox carries a `key`
+    only so its `on_change` can copy the pick into the URL, and `index` seeds it from `?lang=`
+    on a fresh session, so a shared link opens with the selector already on its language. The
+    rerun Streamlit fires for a real interaction carries the widget states, so the loaded Target
+    Project and the marked Exclusions survive by the normal compaction — no manual `st.rerun()`
+    and no reasserting the whole state, which is what used to crash the `file_uploader` (issue #53).
     """
     languages = available_languages()
     current = current_language()
 
-    chosen = st.selectbox(
+    st.selectbox(
         t("sidebar.language"),
         options=languages,
         index=languages.index(current),
         format_func=lambda language: translate("language.name", language),
+        key="language_choice",
+        on_change=_apply_language,
     )
-
-    if chosen != current:
-        st.query_params[LANGUAGE_PARAM] = chosen
-
-        # The sidebar runs before the page body, so the `st.rerun()` below
-        # aborts the script before the page registers its widgets — and Streamlit
-        # discards the state of every widget that was not registered in the run. Without
-        # reasserting the keys, changing the language would erase the loaded Target Project and
-        # the marked Exclusions: an appearance selector cannot cost the work
-        # already done. Reassigning marks the key as set by the user, which is what
-        # makes it survive.
-        for key in list(st.session_state.keys()):
-            st.session_state[key] = st.session_state[key]
-
-        # Without the rerun the screen comes out half in each language: what was already rendered
-        # above read the old parameter. There is no loop — after the rerun the choice and the
-        # URL agree, and the condition becomes false.
-        st.rerun()
 
 
 def sidebar() -> None:
