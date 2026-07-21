@@ -17,6 +17,7 @@ nível para que as seções coubessem na hierarquia. O que se afere aqui continu
 língua do título, não o tamanho dele.
 """
 
+import ast
 from pathlib import Path
 
 import pytest
@@ -115,6 +116,81 @@ def test_choosing_a_language_retranslates_the_screen():
 
     assert app.header[0].value == translate("home.title", "pt")
     assert app.sidebar.selectbox[0].label == translate("sidebar.language", "pt")
+
+
+def test_the_selector_persists_its_choice_by_key():
+    """A escolha vive numa `key` — é o que habilita o `on_change` a escrever `?lang=`.
+
+    Sem `key`, a troca de língua dependia de um `st.rerun()` manual seguido de reafirmar
+    todo o `session_state`, laço que estourava ao reatribuir `file_uploaded` (issue #53).
+    O `on_change` lê a escolha desta chave e a copia para a URL.
+    """
+    app = _run()
+
+    app.sidebar.selectbox[0].set_value("pt").run()
+
+    assert app.session_state["language_choice"] == "pt"
+
+
+def _sidebar_tree() -> ast.Module:
+    """Árvore de `utils/sidebar.py` — o guarda estrutural lê o código, não a docstring."""
+    source = (PROJECT_ROOT / "utils" / "sidebar.py").read_text(encoding="utf-8")
+    return ast.parse(source)
+
+
+def _has_self_assignment(tree: ast.Module) -> bool:
+    """Há alguma atribuição `x = x` — o tell do laço que reafirmava o estado.
+
+    Compara alvo e valor pela forma da AST, então pega `st.session_state[key] =
+    st.session_state[key]` sem depender do nome da variável de iteração.
+    """
+    return any(
+        isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and ast.dump(node.targets[0]) == ast.dump(node.value)
+        for node in ast.walk(tree)
+    )
+
+
+def _calls_rerun(tree: ast.Module) -> bool:
+    """Há alguma chamada `*.rerun(...)` no código — a docstring pode citá-la à vontade."""
+    return any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "rerun"
+        for node in ast.walk(tree)
+    )
+
+
+def test_the_selector_no_longer_reasserts_the_whole_session_state():
+    """O laço que reafirmava todas as chaves saiu — era ele que derrubava a home.
+
+    Reafirmar `st.session_state[key] = st.session_state[key]` para toda chave alcançava
+    `file_uploaded`, um widget em que o Streamlit proíbe atribuição por `session_state`.
+    Com o `on_change` o rerun é interação real, carrega os widget_states, e o estado
+    sobrevive pela compactação normal: o laço e o `st.rerun()` manual deixaram de existir
+    (issue #53). A suíte é cega ao crash em si (`runtime.exists()` é falso sob `AppTest`),
+    então este guarda estrutural é o que impede o laço de voltar.
+    """
+    tree = _sidebar_tree()
+
+    assert not _has_self_assignment(tree)
+    assert not _calls_rerun(tree)
+
+
+def test_switching_language_leaves_no_label_from_the_old_one(visible_text, foreign_labels):
+    """A tela sai inteira na língua nova, não metade em cada (issue #53).
+
+    O `on_change` escreve `?lang=` antes do rerun que o Streamlit dispara, então a
+    execução seguinte relê o parâmetro novo do início ao fim. Se o parâmetro só valesse
+    daqui a uma execução, o corpo já renderizado sairia na língua antiga — o risco que a
+    issue aponta.
+    """
+    app = _run("en")
+
+    app.sidebar.selectbox[0].set_value("pt").run()
+
+    assert visible_text(app).isdisjoint(foreign_labels("pt"))
 
 
 @pytest.mark.parametrize("language", available_languages())
