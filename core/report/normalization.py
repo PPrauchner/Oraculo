@@ -111,7 +111,7 @@ def build_export_rows(
 
     rows: list[ExportRow] = []
     for dep in dependencies:
-        package = dep.get("package", "N/A")
+        package = dep.get("package", ORIGIN_UNAVAILABLE)
 
         if package in zombie_names:
             category = CATEGORY_ZOMBIE
@@ -130,8 +130,8 @@ def build_export_rows(
                 "category": category,
                 # A Ghost has no Declaration, so it has no Origin (CONTEXT.md).
                 "origin": dep.get("origin", ORIGIN_UNAVAILABLE),
-                "used_version": dep.get("used_version", "N/A"),
-                "pypi_version": dep.get("pypi_version", "N/A"),
+                "used_version": dep.get("used_version", ORIGIN_UNAVAILABLE),
+                "pypi_version": dep.get("pypi_version", ORIGIN_UNAVAILABLE),
                 "outdated": outdated,
                 "size": dep.get("size", UNKNOWN),
                 "age": dep.get("age", UNKNOWN),
