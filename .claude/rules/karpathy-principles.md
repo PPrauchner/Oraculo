@@ -1,3 +1,5 @@
+*[English version](karpathy-principles.en.md)*
+
 # Princípios de Comportamento (Karpathy)
 
 Diretrizes para reduzir erros comuns em coding com IA.

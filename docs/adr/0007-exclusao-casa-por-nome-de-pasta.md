@@ -1,3 +1,5 @@
+*[English version](0007-exclusao-casa-por-nome-de-pasta.en.md)*
+
 # A Exclusão casa por nome de pasta, em qualquer profundidade
 
 O multiselect oferecia pastas que o filtro era incapaz de excluir. `get_unique_folders`

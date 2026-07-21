@@ -1,3 +1,5 @@
+*[English version](python-conventions.en.md)*
+
 # Convenções de Código — Python
 
 > Complementa [`code-conventions.md`](./code-conventions.md). Só se aplica a

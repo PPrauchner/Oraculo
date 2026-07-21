@@ -1,3 +1,5 @@
+*[English version](0009-locales-em-json-sem-biblioteca-de-i18n.en.md)*
+
 # Locales em JSON, sem biblioteca de i18n
 
 O ORÁCULO passa a oferecer a interface em português e inglês. O caminho canônico para isso é

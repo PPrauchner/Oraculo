@@ -1,3 +1,5 @@
+*[English version](0003-dependencias-de-desenvolvimento-nunca-sao-zumbis.en.md)*
+
 # Dependências de Desenvolvimento nunca são Zumbis
 
 Todas as Declarações encontradas são unidas para formar o conjunto auditado — inclusive

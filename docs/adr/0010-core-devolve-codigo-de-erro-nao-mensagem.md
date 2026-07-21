@@ -1,3 +1,5 @@
+*[English version](0010-core-devolve-codigo-de-erro-nao-mensagem.en.md)*
+
 # `core/` devolve código de erro, não mensagem pronta
 
 O invariante diz que `core/` não conhece Streamlit, e ao pé da letra ele era respeitado: nenhum

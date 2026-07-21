@@ -1,3 +1,5 @@
+*[English version](0006-fonte-de-arquivos-e-duas-funcoes.en.md)*
+
 # A fonte de arquivos são duas funções, não um tipo
 
 O ADR-0001 decidiu ingerir o Projeto-Alvo por upload **e** por diretório, e apontou o custo

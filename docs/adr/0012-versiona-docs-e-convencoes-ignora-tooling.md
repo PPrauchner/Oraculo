@@ -1,3 +1,5 @@
+*[English version](0012-versiona-docs-e-convencoes-ignora-tooling.en.md)*
+
 # Documentação e convenções versionam; a config de tooling do `.claude/` fica de fora
 
 O `.gitignore` que veio no PR #20 excluía `CLAUDE.md` e `.claude/` inteiros — só o

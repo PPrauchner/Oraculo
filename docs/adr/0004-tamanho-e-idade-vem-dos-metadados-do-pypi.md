@@ -1,3 +1,5 @@
+*[English version](0004-tamanho-e-idade-vem-dos-metadados-do-pypi.en.md)*
+
 # Tamanho e Idade vêm dos metadados do PyPI
 
 O enunciado exige Tamanho e Idade sem definir de quê. Definimos Tamanho como os bytes do

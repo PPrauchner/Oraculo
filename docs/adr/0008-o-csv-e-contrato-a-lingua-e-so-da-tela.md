@@ -1,3 +1,5 @@
+*[English version](0008-o-csv-e-contrato-a-lingua-e-so-da-tela.en.md)*
+
 # O CSV é contrato; a língua é só da tela
 
 O ORÁCULO vai ganhar um seletor de língua (pt-BR / en). Ao mesmo tempo, as chaves dos

@@ -1,3 +1,5 @@
+*[English version](CLAUDE.en.md)*
+
 # CLAUDE.md — ORÁCULO
 
 Ferramenta de auditoria de dependências Python (Streamlit). Recebe um Projeto-Alvo, cruza

@@ -1,3 +1,5 @@
+*[English version](code-conventions.en.md)*
+
 # Convenções de Código
 
 > Lido pelo agente ao escrever ou revisar código. Para o modelo de domínio, ver

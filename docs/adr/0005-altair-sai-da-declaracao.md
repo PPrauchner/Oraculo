@@ -1,3 +1,5 @@
+*[English version](0005-altair-sai-da-declaracao.en.md)*
+
 # altair sai da Declaração; só-restrição não vira isenção
 
 O `pyproject.toml` declarava `altair<5` e nenhum módulo do projeto importa altair — um
