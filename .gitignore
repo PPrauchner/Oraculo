@@ -9,3 +9,4 @@ __pycache__/
 # efemero current-issue — fica de fora por construcao.
 .claude/*
 !.claude/rules/
+.claude/
