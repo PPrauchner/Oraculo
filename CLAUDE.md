@@ -16,7 +16,6 @@ requisitos vêm de lá, não de intuição de produto.
 | [`CONTEXT.md`](./CONTEXT.md) | **Glossário do domínio.** Zumbi, Fantasma, Versão Usada, Tamanho, Idade têm definição exata. Use esses termos. |
 | [`docs/adr/`](./docs/adr/) | **Por que** as decisões não-óbvias são como são. Leia antes de "consertar" algo que parece errado. |
 | [`docs/Enunciado.md`](./docs/Enunciado.md) | Requisitos e histórias de usuário (US-01…US-07). |
-| [`.claude/rules/`](./.claude/rules/) | Convenções de código, Python e princípios de trabalho. |
 
 ## Stack e comandos
 

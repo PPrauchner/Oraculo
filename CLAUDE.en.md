@@ -16,7 +16,6 @@ requirements come from there, not from product intuition.
 | [`CONTEXT.en.md`](./CONTEXT.en.md) | **Domain glossary.** Zombie, Ghost, Used Version, Size, Age have an exact definition. Use these terms. |
 | [`docs/adr/`](./docs/adr/) | **Why** the non-obvious decisions are the way they are. Read before "fixing" something that looks wrong. |
 | [`docs/Enunciado.en.md`](./docs/Enunciado.en.md) | Requirements and user stories (US-01…US-07). |
-| [`.claude/rules/`](./.claude/rules/) | Conventions for code, Python and working principles. |
 
 ## Stack and commands
 

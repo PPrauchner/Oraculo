@@ -1,5 +1,8 @@
 *[Versão em português](0012-versiona-docs-e-convencoes-ignora-tooling.md)*
 
+> **Amended by [ADR-0013](0013-claude-inteiro-fora-do-git.en.md):** `.claude/rules/` is no
+> longer versioned. The rest of this decision still holds.
+
 # Documentation and conventions are versioned; the `.claude/` tooling config stays out
 
 The `.gitignore` that came in PR #20 ignored `CLAUDE.md` and `.claude/` entirely — only

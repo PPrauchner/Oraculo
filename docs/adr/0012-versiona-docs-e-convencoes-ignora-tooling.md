@@ -1,5 +1,8 @@
 *[English version](0012-versiona-docs-e-convencoes-ignora-tooling.en.md)*
 
+> **Alterado pelo [ADR-0013](0013-claude-inteiro-fora-do-git.md):** `.claude/rules/` deixa
+> de ser versionado. O resto desta decisão continua valendo.
+
 # Documentação e convenções versionam; a config de tooling do `.claude/` fica de fora
 
 O `.gitignore` que veio no PR #20 excluía `CLAUDE.md` e `.claude/` inteiros — só o
