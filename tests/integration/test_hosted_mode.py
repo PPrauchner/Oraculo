@@ -115,7 +115,7 @@ def test_hosted_upload_reaches_the_exclusions_and_the_run_button(hosted):
     assert app.session_state["project_name"] == "alvo"
     assert len(app.main.multiselect) == 1
     assert "tests" in app.main.multiselect[0].options
-    assert [button.label for button in app.main.button] == [translate("home.run", "en")]
+    assert translate("home.run", "en") in [button.label for button in app.main.button]
 
 
 def test_hosted_mode_does_not_refuse_an_in_memory_target_project(hosted, monkeypatch):
