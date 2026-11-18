@@ -6,6 +6,7 @@
 
   "home.title": "Iniciar Auditoria",
   "home.intro": "Informe o Projeto-Alvo por upload de archive ou por diretório local",
+  "home.intro.hosted": "Informe o Projeto-Alvo por upload de archive",
   "home.source.header": "Informe o Projeto-Alvo",
   "home.mode.label": "Como trazer o Projeto-Alvo:",
   "home.mode.upload": "Upload de archive",

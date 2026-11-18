@@ -3,7 +3,8 @@ Módulo responsável pela página inicial da aplicação.
 
 
 Permite ao usuário:
-- Informar o Projeto-Alvo por upload de archive ou por diretório local (ADR-0001)
+- Informar o Projeto-Alvo por upload de archive ou por diretório local (ADR-0001);
+  no modo hospedado, só por upload (ADR-0014)
 - Configurar opções de análise (Exclusões, etc.)
 
 
@@ -22,6 +23,7 @@ from utils.sidebar import sidebar
 from utils.functions import EXTRATORES
 from utils.messages import format_error
 from utils.i18n import t
+from utils.hosting import is_hosted
 from core.ingestion.decompressor import process_uploaded_file
 from core.ingestion.filter import get_unique_folders, validate_project_structure
 from core.ingestion.source import ProjectSource, open_directory
@@ -47,7 +49,12 @@ def principal_interface():
     # rebaixa a linha de apoio a peso e cor secundários — o cinza sai do tema e
     # acompanha os modos claro e escuro sozinho (issue #50).
     st.header(t("home.title"))
-    st.caption(t("home.intro"))
+    # Hospedada, a home só oferece o upload (ADR-0014): a linha de apoio não promete
+    # o diretório que a tela não tem.
+    if is_hosted():
+        st.caption(t("home.intro.hosted"))
+    else:
+        st.caption(t("home.intro"))
 
 
 def _clear_source():
@@ -121,6 +128,31 @@ def _entering_by_directory():
     _load_source(directory, directory.resolve().name)
 
 
+def _entering_the_source():
+    """Recebe o Projeto-Alvo pelos modos de ingestão que esta execução oferece."""
+    # Hospedado, o caminho digitado resolveria no servidor, não na máquina de quem
+    # usa (ADR-0014). Com um modo só, o rádio perde o sentido: a home mostra direto
+    # o upload.
+    if is_hosted():
+        _entering_by_upload()
+        return
+
+    # Uma fonte por vez: com os dois campos visíveis, "qual vale quando os
+    # dois estão preenchidos" vira uma pergunta sem resposta óbvia.
+    mode = st.radio(
+        t("home.mode.label"),
+        [UPLOAD_MODE, DIRECTORY_MODE],
+        horizontal=True,
+        key="ingestion_mode",
+        format_func=_mode_label,
+    )
+
+    if mode == UPLOAD_MODE:
+        _entering_by_upload()
+    else:
+        _entering_by_directory()
+
+
 def entering_data():
     # A coluna da fonte carrega o campo de caminho e a dropzone, que precisam de
     # largura; a das Configurações carrega uma linha — ou o multiselect, ou a frase
@@ -131,20 +163,7 @@ def entering_data():
     # modos claro e escuro sozinha, sem folha de estilo própria (issue #39).
     with col1.container(border=True):
         st.subheader(t("home.source.header"))
-        # Uma fonte por vez: com os dois campos visíveis, "qual vale quando os
-        # dois estão preenchidos" vira uma pergunta sem resposta óbvia.
-        mode = st.radio(
-            t("home.mode.label"),
-            [UPLOAD_MODE, DIRECTORY_MODE],
-            horizontal=True,
-            key="ingestion_mode",
-            format_func=_mode_label,
-        )
-
-        if mode == UPLOAD_MODE:
-            _entering_by_upload()
-        else:
-            _entering_by_directory()
+        _entering_the_source()
 
     with col2.container(border=True):
         st.subheader(t("home.settings.header"))
