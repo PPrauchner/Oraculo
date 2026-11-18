@@ -14,7 +14,7 @@ o PyPI para avaliar a saúde das dependências.
 ### O que é analisado
 
 **Projeto-Alvo**:
-O projeto Python cujas dependências estão sendo auditadas. Nunca é o ORÁCULO em si.
+O projeto Python cujas dependências estão sendo auditadas. Pode ser o próprio ORÁCULO (auto-auditoria) — mas o papel de *quem audita* nunca se confunde com o de *quem é auditado*.
 _Avoid_: projeto, input, upload
 
 **Declaração**:

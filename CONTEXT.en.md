@@ -15,7 +15,7 @@ assess dependency health.
 ### What gets analysed
 
 **Target Project**:
-The Python project whose dependencies are being audited. Never ORÁCULO itself.
+The Python project whose dependencies are being audited. May be ORÁCULO itself (self-audit) — but the role of *the auditor* is never confused with that of *the audited*.
 _Avoid_: project, input, upload
 
 **Declaration**:
