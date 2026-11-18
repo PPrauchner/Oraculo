@@ -6,6 +6,7 @@
 
   "home.title": "Start Audit",
   "home.intro": "Provide the Target Project by uploading an archive or pointing to a local directory",
+  "home.intro.hosted": "Provide the Target Project by uploading an archive",
   "home.source.header": "Provide the Target Project",
   "home.mode.label": "How to provide the Target Project:",
   "home.mode.upload": "Upload archive",
