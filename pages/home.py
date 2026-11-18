@@ -5,6 +5,7 @@ Módulo responsável pela página inicial da aplicação.
 Permite ao usuário:
 - Informar o Projeto-Alvo por upload de archive ou por diretório local (ADR-0001);
   no modo hospedado, só por upload (ADR-0014)
+- Auditar o Projeto de Exemplo num clique, sem fonte nenhuma (issue #58)
 - Configurar opções de análise (Exclusões, etc.)
 
 
@@ -26,6 +27,7 @@ from utils.i18n import t
 from utils.hosting import is_hosted
 from core.ingestion.decompressor import process_uploaded_file
 from core.ingestion.filter import get_unique_folders, validate_project_structure
+from core.ingestion.sample_project import SAMPLE_PROJECT_NAME, sample_project
 from core.ingestion.source import ProjectSource, open_directory
 
 sidebar()
@@ -81,6 +83,33 @@ def _load_source(source: ProjectSource, project_name: str) -> None:
 
     if error is not None:
         st.error(format_error(error))
+
+
+def _load_sample_project() -> None:
+    """Troca o Projeto-Alvo pelo Projeto de Exemplo, sem Exclusões.
+
+    Roda como callback do botão, antes do rerun: é o único ponto em que a chave do
+    multiselect de Exclusões ainda pode ser reescrita. As pastas marcadas eram do
+    Projeto-Alvo anterior e não valem para o exemplo.
+    """
+    st.session_state["ignore_folders"] = []
+    _load_source(sample_project(), SAMPLE_PROJECT_NAME)
+
+
+def sample_action():
+    """Oferece o Projeto de Exemplo: o relatório inteiro num clique (issue #58).
+
+    Fica acima da fonte, e não dentro dela, de propósito: não depende do seletor de
+    modo de ingestão, que o modo hospedado esconde (ADR-0014). E precisa vir antes
+    dele — o upload vazio abaixo esqueceria a fonte que o callback acabou de
+    registrar; o `switch_page` encerra a execução antes disso.
+    """
+    if st.button(
+        t("home.sample"),
+        help=t("home.sample.help"),
+        on_click=_load_sample_project,
+    ):
+        st.switch_page("pages/loading.py")
 
 
 def _entering_by_upload():
@@ -203,6 +232,7 @@ def principal_action():
 
 
 principal_interface()
+sample_action()
 st.divider()
 entering_data()
 principal_action()
