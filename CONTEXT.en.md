@@ -18,6 +18,14 @@ assess dependency health.
 The Python project whose dependencies are being audited. May be ORÁCULO itself (self-audit) — but the role of *the auditor* is never confused with that of *the audited*.
 _Avoid_: project, input, upload
 
+**Sample Project**:
+A small Target Project built into ORÁCULO, which the home audits in one click, with no upload and
+no directory. It lives in memory, as data (`core/ingestion/sample_project.py`), and not as a
+folder with a real Declaration: that is why not even the self-audit sees its dependencies. It
+exists to show the whole report — it has a Zombie, a Ghost, a Healthy and an Outdated one — and
+brings a Lock that resolves the Used Version of every Declared Dependency.
+_Avoid_: demo, test project, mock
+
 **Declaration**:
 The file where the Target Project states which packages it depends on (`pyproject.toml`,
 `requirements.txt`, `requirements-dev.txt`, `environment.yml`). Defines **which** packages
