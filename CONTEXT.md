@@ -17,6 +17,14 @@ o PyPI para avaliar a saúde das dependências.
 O projeto Python cujas dependências estão sendo auditadas. Pode ser o próprio ORÁCULO (auto-auditoria) — mas o papel de *quem audita* nunca se confunde com o de *quem é auditado*.
 _Avoid_: projeto, input, upload
 
+**Projeto de Exemplo**:
+Projeto-Alvo pequeno embutido no ORÁCULO, que a home audita num clique, sem upload e sem
+diretório. Vive em memória, como dado (`core/ingestion/sample_project.py`), e não como pasta com
+Declaração real: por isso nem a auto-auditoria enxerga as dependências dele. Existe para mostrar
+o relatório inteiro — tem Zumbi, Fantasma, Saudável e Desatualizada — e traz um Lock que resolve a
+Versão Usada de toda Dependência Declarada.
+_Avoid_: demo, projeto de teste, mock
+
 **Declaração**:
 Arquivo onde o Projeto-Alvo enuncia de quais pacotes ele depende (`pyproject.toml`,
 `requirements.txt`, `requirements-dev.txt`, `environment.yml`). Define **quais** pacotes são

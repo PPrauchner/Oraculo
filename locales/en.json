@@ -6,6 +6,7 @@
 
   "home.title": "Start Audit",
   "home.intro": "Provide the Target Project by uploading an archive or pointing to a local directory",
+  "home.intro.hosted": "Provide the Target Project by uploading an archive",
   "home.source.header": "Provide the Target Project",
   "home.mode.label": "How to provide the Target Project:",
   "home.mode.upload": "Upload archive",
@@ -15,6 +16,8 @@
   "home.directory.label": "Path to the Target Project directory",
   "home.directory.placeholder": "C:\\Users\\you\\projects\\my-project",
   "home.directory.help": "ORÁCULO runs on your machine, so a local path works.",
+  "home.sample": "Analyze a sample project",
+  "home.sample.help": "No project at hand? See the report of a small Target Project built into ORÁCULO.",
   "home.settings.header": "Settings",
   "home.settings.ignore_folders": "Folders to ignore:",
   "home.settings.no_source": "The folders you can exclude appear here once you provide the Target Project.",

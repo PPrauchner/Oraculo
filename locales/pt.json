@@ -6,6 +6,7 @@
 
   "home.title": "Iniciar Auditoria",
   "home.intro": "Informe o Projeto-Alvo por upload de archive ou por diretório local",
+  "home.intro.hosted": "Informe o Projeto-Alvo por upload de archive",
   "home.source.header": "Informe o Projeto-Alvo",
   "home.mode.label": "Como trazer o Projeto-Alvo:",
   "home.mode.upload": "Upload de archive",
@@ -15,6 +16,8 @@
   "home.directory.label": "Caminho do diretório do Projeto-Alvo",
   "home.directory.placeholder": "C:\\Users\\voce\\projetos\\meu-projeto",
   "home.directory.help": "O ORÁCULO roda na sua máquina, então o caminho local resolve.",
+  "home.sample": "Analisar um projeto de exemplo",
+  "home.sample.help": "Sem projeto à mão? Veja o relatório de um Projeto-Alvo pequeno, embutido no ORÁCULO.",
   "home.settings.header": "Configurações",
   "home.settings.ignore_folders": "Pastas a ignorar:",
   "home.settings.no_source": "As pastas que você pode excluir aparecem aqui depois que o Projeto-Alvo for informado.",
