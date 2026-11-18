@@ -98,3 +98,17 @@ Consequências das decisões nos ADRs. Violar isso é regressão, não estilo:
   nunca foi nome de produto, só pasta de trabalho. Documentação e código já usam o nome
   novo (issues #23, #24, #31) — o nome antigo só sobrevive de propósito em
   `docs/grills_logs/`, que é registro histórico point-in-time.
+
+## Agent skills
+
+### Issue tracker
+
+Issues vivem no GitHub Issues de `PPrauchner/Oraculo`, via `gh`. Ver `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Os cinco papéis usam labels de mesmo nome (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). Ver `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Contexto único: `CONTEXT.md` e `docs/adr/` na raiz. Ver `docs/agents/domain.md`.

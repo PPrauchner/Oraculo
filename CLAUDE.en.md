@@ -98,3 +98,17 @@ Consequences of the decisions in the ADRs. Violating this is regression, not sty
   never a product name, only a working folder. Documentation and code already use the new name
   (issues #23, #24, #31) — the old name only survives on purpose in `docs/grills_logs/`, which
   is a point-in-time historical record.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in the GitHub Issues of `PPrauchner/Oraculo`, via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five roles use labels of the same name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the root. See `docs/agents/domain.md`.
